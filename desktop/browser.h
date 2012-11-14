@@ -95,6 +95,17 @@ void browser_window_set_scale(struct browser_window *bw, float scale, bool all);
 float browser_window_get_scale(struct browser_window *bw);
 
 /**
+ * Copy an area of the browser window to the given x,y co-ordinates.
+ * Source and destination may overlap.
+ *
+ * \param bw	browser window
+ * \param rect	area to copy
+ * \param x	x-coordinate of destination to copy to
+ * \param y	y-coordinate of destination to copy to
+ */
+void browser_window_copy_box(struct browser_window *bw, struct rect *rect, int x, int y);
+
+/**
  * Get access to any content, link URLs and objects (images) currently
  * at the given (x, y) coordinates.
  *

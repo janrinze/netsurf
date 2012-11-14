@@ -1036,6 +1036,36 @@ void ami_update_quals(struct gui_window_2 *gwin)
 	}
 }
 
+bool ami_ns_to_screen_coords(struct gui_window_2 *gwin, int *x, int *y)
+{
+	ULONG xs, ys;
+	int ns_x = *x;
+	int ns_y = *y;
+	struct IBox *bbox;
+
+	GetAttr(SPACE_AreaBox, (Object *)gwin->objects[GID_BROWSER], (ULONG *)&bbox);
+
+	ns_x *= gwin->bw->scale;
+	ns_y *= gwin->bw->scale;
+
+	if((ns_x < 0) || (ns_x > bbox->Width) || (ns_y < 0) || (ns_y > bbox->Height))
+		return false;
+
+	ami_get_hscroll_pos(gwin, (ULONG *)&xs);
+	ami_get_vscroll_pos(gwin, (ULONG *)&ys);
+
+	ns_x += xs;
+	ns_y += ys;
+
+	ns_x += bbox->Left;
+	ns_y += bbox->Top;
+	
+	*x = ns_x;
+	*y = ns_y;
+
+	return true;	
+}
+
 bool ami_mouse_to_ns_coords(struct gui_window_2 *gwin, int *x, int *y,
 	int mouse_x, int mouse_y)
 {
@@ -3563,6 +3593,37 @@ void ami_do_redraw(struct gui_window_2 *g)
 	g->redraw_scroll = false;
 	g->redraw_required = false;
 	g->new_content = false;
+}
+
+bool gui_window_copy_box(struct gui_window *g, const struct rect *rect, int x, int y)
+{
+	struct IBox *bbox;
+	struct gui_window_2 *gwin = g->shared;
+	int src_x = rect->x0;
+	int src_y = rect->y0;
+	int dest_x = x;
+	int dest_y = y;
+	int src_x1 = rect->x1;
+	int src_y1 = rect->y1;
+printf("%ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y);
+	if(ami_ns_to_screen_coords(gwin, &src_x, &src_y) == false) return false;
+	if(ami_ns_to_screen_coords(gwin, &src_x1, &src_y1) == false) return false;
+	if(ami_ns_to_screen_coords(gwin, &dest_x, &dest_y) == false) return false;
+printf("== %ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y);
+
+	BltBitMapTags(BLITA_SrcType, BLITT_RASTPORT,
+					BLITA_Source, gwin->win->RPort,
+					BLITA_SrcX, src_x,
+					BLITA_SrcY, src_y,
+					BLITA_DestType, BLITT_RASTPORT, 
+					BLITA_Dest, gwin->win->RPort,
+					BLITA_DestX, dest_x,
+					BLITA_DestY, dest_y,
+					BLITA_Width, src_x1 - src_x,
+					BLITA_Height, src_y1 - src_y,
+					TAG_DONE);
+					
+	return true;
 }
 
 void ami_refresh_window(struct gui_window_2 *gwin)

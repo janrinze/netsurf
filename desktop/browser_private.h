@@ -110,6 +110,10 @@ struct browser_window {
 
 	struct scrollbar *scroll_x;  /**< Horizontal scroll. */
 	struct scrollbar *scroll_y;  /**< Vertical scroll. */
+	
+	/** previous scroll offsets */
+	int prev_scroll_x;
+	int prev_scroll_y;
 
 	/** scale of window contents */
 	float scale;

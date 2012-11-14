@@ -79,6 +79,19 @@ void gui_window_set_title(struct gui_window *g, const char *title);
 void gui_window_redraw_window(struct gui_window *g);
 void gui_window_update_box(struct gui_window *g,
 		const struct rect *rect);
+		
+/**
+ * Copy an area of the displayed gui_window to the co-ordinates
+ * specified by x,y.  NB: source and destination may overlap.
+ *
+ * \param g The window to perform the copy on.
+ * \param rect The rectangle to copy.
+ * \param x The X co-ordinate to copy to.
+ * \param y The Y co-ordinate to copy to.
+ * \return true if the region could be copied, false otherwise.
+ */
+bool gui_window_copy_box(struct gui_window *g, const struct rect *rect, int x, int y);
+
 bool gui_window_get_scroll(struct gui_window *g, int *sx, int *sy);
 void gui_window_set_scroll(struct gui_window *g, int sx, int sy);
 void gui_window_scroll_visible(struct gui_window *g, int x0, int y0,

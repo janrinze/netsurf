@@ -1947,6 +1947,38 @@ void browser_window_update_box(struct browser_window *bw, struct rect *rect)
 }
 
 
+/* exported interface, documented in browser.h */
+void browser_window_copy_box(struct browser_window *bw, struct rect *rect, int x, int y)
+{
+	int pos_x;
+	int pos_y;
+	struct browser_window *top;
+
+	assert(bw);
+
+	if (bw->window != NULL) {
+		/* Front end window */
+		if(gui_window_copy_box(bw->window, rect, x, y) == false) {
+			gui_window_update_box(bw->window, rect);
+		}
+	} else {
+		/* Core managed browser window */
+		browser_window_get_position(bw, true, &pos_x, &pos_y);
+
+		top = browser_window_get_root(bw);
+
+		rect->x0 += pos_x / bw->scale;
+		rect->y0 += pos_y / bw->scale;
+		rect->x1 += pos_x / bw->scale;
+		rect->y1 += pos_y / bw->scale;
+
+		if(gui_window_copy_box(top->window, rect, x + pos_x, y + pos_y) == false) {
+			gui_window_update_box(top->window, rect);
+		}
+	}
+}
+
+
 /**
  * Stop all fetching activity in a browser window.
  *
