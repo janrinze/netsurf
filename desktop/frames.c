@@ -70,38 +70,38 @@ void browser_window_scroll_callback(void *client_data,
 			int cur_x = scrollbar_get_offset(bw->scroll_x);
 			int cur_y = scrollbar_get_offset(bw->scroll_y);
 			
-			if(cur_x > bw->prev_scroll_x) {
-				copyrect.x0 = cur_x;
-				copyrect.x1 = copyrect.x0 + bw->width - (cur_x - bw->prev_scroll_x);
-				dest_x = bw->prev_scroll_x;
-
-				rect.x0 = copyrect.x0;				
-				rect.x1 = copyrect.x0 + bw->width - (cur_x - bw->prev_scroll_x);
-			} else {
-				copyrect.x0 = bw->prev_scroll_x;
-				copyrect.x1 = copyrect.x0 + bw->width - (bw->prev_scroll_x - cur_x);
-				dest_x = cur_x;
-				
-				rect.x0 = cur_x;
-				rect.x1 = cur_x + bw->width - (bw->prev_scroll_x - cur_x);
-			}
-
 			if(cur_y > bw->prev_scroll_y) {
-				copyrect.y0 = cur_y;
-				copyrect.y1 = copyrect.y0 + bw->height - (cur_y - bw->prev_scroll_y);
-				dest_y = bw->prev_scroll_y;
+				copyrect.y0 = cur_y - bw->prev_scroll_y;
+				copyrect.y1 = bw->height;
+				dest_y = 0;
 				
-				rect.y0 = copyrect.y0;				
-				rect.y1 = copyrect.y0 + bw->height - (cur_y - bw->prev_scroll_y);
+				rect.y0 = bw->height - copyrect.y0;				
+				rect.y1 = bw->height;
 			} else {
-				copyrect.y0 = bw->prev_scroll_y;
-				copyrect.y1 = copyrect.y0 + bw->height - (bw->prev_scroll_y - cur_y);
-				dest_y = cur_y;
+				copyrect.y0 = 0;
+				copyrect.y1 = bw->height - (cur_y - bw->prev_scroll_y);
+				dest_y = cur_y - bw->prev_scroll_y;
 
-				rect.y0 = cur_y;
-				rect.y1 = cur_y + bw->height - (bw->prev_scroll_y - cur_y);
+				rect.y0 = 0;
+				rect.y1 = cur_y - bw->prev_scroll_y;
 			}
 
+			if(cur_x > bw->prev_scroll_x) {
+				copyrect.x0 = cur_x - bw->prev_scroll_x;
+				copyrect.x1 = bw->width;
+				dest_x = 0;
+				
+				rect.x0 = bw->height - copyrect.x0;				
+				rect.x1 = bw->height;
+			} else {
+				copyrect.x0 = 0;
+				copyrect.x1 = bw->width - (cur_x - bw->prev_scroll_x);
+				dest_x = cur_x - bw->prev_scroll_x;
+
+				rect.x0 = 0;
+				rect.x1 = cur_x - bw->prev_scroll_x;
+			}
+			
 			browser_window_copy_box(bw, &copyrect, dest_x, dest_y);
 			browser_window_update_box(bw, &rect);
 			
