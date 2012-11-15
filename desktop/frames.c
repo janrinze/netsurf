@@ -63,27 +63,39 @@ void browser_window_scroll_callback(void *client_data,
 		if (bw->browser_window_type == BROWSER_WINDOW_IFRAME) {
 			html_redraw_a_box(bw->parent->current_content, bw->box);
 		} else {
-			struct rect rect;
+			struct rect rect_x;
+			struct rect rect_y;
 			struct rect copyrect;
 			int dest_x = 0;
 			int dest_y = 0;
 			int cur_x = scrollbar_get_offset(bw->scroll_x);
 			int cur_y = scrollbar_get_offset(bw->scroll_y);
 			
+			rect_y.x0 = 0;				
+			rect_y.x1 = bw->width;
+			rect_x.y0 = 0;				
+			rect_x.y1 = bw->height;
+	
 			if(cur_y > bw->prev_scroll_y) {
 				copyrect.y0 = cur_y - bw->prev_scroll_y;
 				copyrect.y1 = bw->height;
 				dest_y = 0;
 				
-				rect.y0 = bw->height - copyrect.y0;				
-				rect.y1 = bw->height;
+				rect_y.y0 = bw->height - copyrect.y0;				
+				rect_y.y1 = bw->height;
+				
+				rect_x.y0 = 0;				
+				rect_x.y1 = rect_y.y0;
 			} else {
 				copyrect.y0 = 0;
 				copyrect.y1 = bw->height - (cur_y - bw->prev_scroll_y);
 				dest_y = cur_y - bw->prev_scroll_y;
 
-				rect.y0 = 0;
-				rect.y1 = cur_y - bw->prev_scroll_y;
+				rect_y.y0 = 0;
+				rect_y.y1 = cur_y - bw->prev_scroll_y;
+				
+				rect_x.y0 = rect_y.y1;				
+				rect_x.y1 = bw->height;
 			}
 
 			if(cur_x > bw->prev_scroll_x) {
@@ -91,19 +103,20 @@ void browser_window_scroll_callback(void *client_data,
 				copyrect.x1 = bw->width;
 				dest_x = 0;
 				
-				rect.x0 = bw->height - copyrect.x0;				
-				rect.x1 = bw->height;
+				rect_x.x0 = bw->height - copyrect.x0;				
+				rect_x.x1 = bw->height;
 			} else {
 				copyrect.x0 = 0;
 				copyrect.x1 = bw->width - (cur_x - bw->prev_scroll_x);
 				dest_x = cur_x - bw->prev_scroll_x;
 
-				rect.x0 = 0;
-				rect.x1 = cur_x - bw->prev_scroll_x;
+				rect_x.x0 = 0;
+				rect_x.x1 = cur_x - bw->prev_scroll_x;
 			}
 			
 			browser_window_copy_box(bw, &copyrect, dest_x, dest_y);
-			browser_window_update_box(bw, &rect);
+			browser_window_update_box(bw, &rect_y);
+			browser_window_update_box(bw, &rect_x);
 			
 			bw->prev_scroll_x = scrollbar_get_offset(bw->scroll_x);
 			bw->prev_scroll_y = scrollbar_get_offset(bw->scroll_y);

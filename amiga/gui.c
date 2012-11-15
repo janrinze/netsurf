@@ -3611,6 +3611,8 @@ printf("%ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y
 	if(ami_ns_to_screen_coords(gwin, &dest_x, &dest_y) == false) return false;
 printf("== %ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y);
 
+	if(nsoption_bool(faster_scroll) == false) return false; /* for testing */
+
 	BltBitMapTags(BLITA_SrcType, BLITT_RASTPORT,
 					BLITA_Source, gwin->win->RPort,
 					BLITA_SrcX, src_x,
