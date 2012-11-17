@@ -1963,16 +1963,19 @@ void browser_window_copy_box(struct browser_window *bw, struct rect *rect, int x
 		}
 	} else {
 		/* Core managed browser window */
+		int off_x = scrollbar_get_offset(bw->scroll_x) - bw->prev_scroll_x;
+		int off_y = scrollbar_get_offset(bw->scroll_y) - bw->prev_scroll_x;
+		
 		browser_window_get_position(bw, true, &pos_x, &pos_y);
 
 		top = browser_window_get_root(bw);
 
-		rect->x0 += pos_x / bw->scale;
-		rect->y0 += pos_y / bw->scale;
-		rect->x1 += pos_x / bw->scale;
-		rect->y1 += pos_y / bw->scale;
+		rect->x0 += (pos_x + off_x) / bw->scale;
+		rect->y0 += (pos_y + off_y) / bw->scale;
+		rect->x1 += (pos_x + off_x) / bw->scale;
+		rect->y1 += (pos_y + off_y) / bw->scale;
 
-		if(gui_window_copy_box(top->window, rect, x + pos_x, y + pos_y) == false) {
+		if(gui_window_copy_box(top->window, rect, x + pos_x + off_x, y + pos_y + off_y) == false) {
 			gui_window_update_box(top->window, rect);
 		}
 	}

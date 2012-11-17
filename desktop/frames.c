@@ -70,7 +70,7 @@ void browser_window_scroll_callback(void *client_data,
 			int dest_y;
 			int cur_x = scrollbar_get_offset(bw->scroll_x);
 			int cur_y = scrollbar_get_offset(bw->scroll_y);
-			
+
 			rect_y.x0 = 0;				
 			rect_y.x1 = bw->width;
 			rect_x.y0 = 0;				
