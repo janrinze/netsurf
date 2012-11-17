@@ -3613,18 +3613,10 @@ printf("== %ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, des
 
 	if(nsoption_bool(faster_scroll) == false) return false; /* for testing */
 
-	BltBitMapTags(BLITA_SrcType, BLITT_RASTPORT,
-					BLITA_Source, gwin->win->RPort,
-					BLITA_SrcX, src_x,
-					BLITA_SrcY, src_y,
-					BLITA_DestType, BLITT_RASTPORT, 
-					BLITA_Dest, gwin->win->RPort,
-					BLITA_DestX, dest_x,
-					BLITA_DestY, dest_y,
-					BLITA_Width, src_x1 - src_x,
-					BLITA_Height, src_y1 - src_y,
-					TAG_DONE);
-					
+	ClipBlit(gwin->win->RPort, src_x, src_y,
+			gwin->win->RPort, dest_x, dest_y,
+			src_x1 - src_x, src_y1 - src_y, 0xC0);
+
 	return true;
 }
 
