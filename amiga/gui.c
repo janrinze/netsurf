@@ -1049,7 +1049,7 @@ bool ami_ns_to_screen_coords(struct gui_window_2 *gwin, int *x, int *y)
 	ns_y *= gwin->bw->scale;
 
 	if((ns_x < 0) || (ns_x > bbox->Width) || (ns_y < 0) || (ns_y > bbox->Height))
-		return false;
+		/* outside screen bounds, but we don't care yet - return false */;
 
 	ami_get_hscroll_pos(gwin, (ULONG *)&xs);
 	ami_get_vscroll_pos(gwin, (ULONG *)&ys);
