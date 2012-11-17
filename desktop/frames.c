@@ -66,8 +66,8 @@ void browser_window_scroll_callback(void *client_data,
 			struct rect rect_x;
 			struct rect rect_y;
 			struct rect copyrect;
-			int dest_x = 0;
-			int dest_y = 0;
+			int dest_x;
+			int dest_y;
 			int cur_x = scrollbar_get_offset(bw->scroll_x);
 			int cur_y = scrollbar_get_offset(bw->scroll_y);
 			
@@ -77,41 +77,41 @@ void browser_window_scroll_callback(void *client_data,
 			rect_x.y1 = bw->height;
 	
 			if(cur_y > bw->prev_scroll_y) {
-				copyrect.y0 = cur_y - bw->prev_scroll_y;
-				copyrect.y1 = bw->height;
-				dest_y = 0;
+				copyrect.y0 = cur_y;
+				copyrect.y1 = copyrect.y0 + bw->height - (cur_y - bw->prev_scroll_y);
+				dest_y = bw->prev_scroll_y;
 				
-				rect_y.y0 = bw->height - copyrect.y0;				
-				rect_y.y1 = bw->height;
+				rect_y.y0 = copyrect.y0;				
+				rect_y.y1 = copyrect.y0 + bw->height - (cur_y - bw->prev_scroll_y);
 				
 				rect_x.y0 = 0;				
 				rect_x.y1 = rect_y.y0;
 			} else {
-				copyrect.y0 = 0;
-				copyrect.y1 = bw->height - (cur_y - bw->prev_scroll_y);
-				dest_y = cur_y - bw->prev_scroll_y;
+				copyrect.y0 = bw->prev_scroll_y;
+				copyrect.y1 = copyrect.y0 + bw->height - (bw->prev_scroll_y - cur_y);
+				dest_y = cur_y;
 
-				rect_y.y0 = 0;
-				rect_y.y1 = cur_y - bw->prev_scroll_y;
+				rect_y.y0 = cur_y;
+				rect_y.y1 = cur_y + bw->height - (bw->prev_scroll_y - cur_y);
 				
 				rect_x.y0 = rect_y.y1;				
 				rect_x.y1 = bw->height;
 			}
 
 			if(cur_x > bw->prev_scroll_x) {
-				copyrect.x0 = cur_x - bw->prev_scroll_x;
-				copyrect.x1 = bw->width;
-				dest_x = 0;
+				copyrect.x0 = cur_x;
+				copyrect.x1 = copyrect.x0 + bw->width - (cur_x - bw->prev_scroll_x);
+				dest_x = bw->prev_scroll_x;
 				
-				rect_x.x0 = bw->height - copyrect.x0;				
-				rect_x.x1 = bw->height;
+				rect_x.x0 = copyrect.x0;				
+				rect_x.x1 = copyrect.x0 + bw->width - (cur_x - bw->prev_scroll_x);
 			} else {
-				copyrect.x0 = 0;
-				copyrect.x1 = bw->width - (cur_x - bw->prev_scroll_x);
-				dest_x = cur_x - bw->prev_scroll_x;
+				copyrect.x0 = bw->prev_scroll_x;
+				copyrect.x1 = copyrect.x0 + bw->width - (bw->prev_scroll_x - cur_x);
+				dest_x = cur_x;
 
-				rect_x.x0 = 0;
-				rect_x.x1 = cur_x - bw->prev_scroll_x;
+				rect_x.x0 = cur_x;
+				rect_x.x1 = cur_x + bw->width - (bw->prev_scroll_x - cur_x);
 			}
 			
 			browser_window_copy_box(bw, &copyrect, dest_x, dest_y);
