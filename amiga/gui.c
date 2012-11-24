@@ -1036,7 +1036,7 @@ void ami_update_quals(struct gui_window_2 *gwin)
 	}
 }
 
-bool ami_ns_to_screen_coords(struct gui_window_2 *gwin, int *x, int *y)
+bool ami_ns_to_screen_coords(struct gui_window_2 *gwin, int *x, int *y, bool adjust)
 {
 	ULONG xs, ys;
 	int ns_x = *x;
@@ -1048,15 +1048,21 @@ bool ami_ns_to_screen_coords(struct gui_window_2 *gwin, int *x, int *y)
 	ns_x *= gwin->bw->scale;
 	ns_y *= gwin->bw->scale;
 
-	if((ns_x < 0) || (ns_x > bbox->Width) || (ns_y < 0) || (ns_y > bbox->Height))
-		/* outside screen bounds, but we don't care yet - return false */;
-
 	ami_get_hscroll_pos(gwin, (ULONG *)&xs);
 	ami_get_vscroll_pos(gwin, (ULONG *)&ys);
 
-	ns_x += xs;
-	ns_y += ys;
+	ns_x -= xs;
+	ns_y -= ys;
 
+	if((ns_x < 0) || (ns_x > bbox->Width) || (ns_y < 0) || (ns_y > bbox->Height)) {
+		if(adjust == false) return false;
+		
+		if(ns_x < 0) ns_x = 0;
+		if(ns_x > bbox->Width) ns_x = bbox->Width;
+		if(ns_y < 0) ns_y = 0;
+		if(ns_x > bbox->Height) ns_y = bbox->Height;
+	}
+	
 	ns_x += bbox->Left;
 	ns_y += bbox->Top;
 	
@@ -3606,9 +3612,9 @@ bool gui_window_copy_box(struct gui_window *g, const struct rect *rect, int x, i
 	int src_x1 = rect->x1;
 	int src_y1 = rect->y1;
 printf("%ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y);
-	if(ami_ns_to_screen_coords(gwin, &src_x, &src_y) == false) return false;
-	if(ami_ns_to_screen_coords(gwin, &src_x1, &src_y1) == false) return false;
-	if(ami_ns_to_screen_coords(gwin, &dest_x, &dest_y) == false) return false;
+	if(ami_ns_to_screen_coords(gwin, &src_x, &src_y, true) == false) return false;
+	if(ami_ns_to_screen_coords(gwin, &src_x1, &src_y1, true) == false) return false;
+	if(ami_ns_to_screen_coords(gwin, &dest_x, &dest_y, true) == false) return false;
 printf("== %ld,%ld,%ld,%ld,%ld,%ld\n", src_x, src_y, src_x1, src_y1, dest_x, dest_y);
 
 	if(nsoption_bool(faster_scroll) == false) return false; /* for testing */
