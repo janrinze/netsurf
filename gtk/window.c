@@ -29,6 +29,7 @@
 #include "content/hlcache.h"
 #include "gtk/window.h"
 #include "desktop/browser_private.h"
+#include "desktop/history_core.h"
 #include "desktop/mouse.h"
 #include "desktop/options.h"
 #include "desktop/searchweb.h"
@@ -37,6 +38,7 @@
 #include "gtk/compat.h"
 #include "gtk/gui.h"
 #include "gtk/scaffolding.h"
+#include "gtk/search.h"
 #include "gtk/plotters.h"
 #include "gtk/schedule.h"
 #include "gtk/tabs.h"
@@ -577,6 +579,32 @@ static gboolean nsgtk_window_keypress_event(GtkWidget *widget,
 			value = nsgtk_adjustment_get_upper(vscroll) - alloc.height;
 
 		gtk_adjustment_set_value(vscroll, value);
+		break;
+
+	case GDK_KEY(Forward):
+		if (g->bw && history_back_available(g->bw->history)) {
+			/* clear potential search effects */
+			browser_window_search_destroy_context(g->bw);
+
+			nsgtk_search_set_forward_state(true, g->bw);
+			nsgtk_search_set_back_state(true, g->bw);
+
+			history_forward(g->bw, g->bw->history);
+			nsgtk_window_update_back_forward(g->scaffold);
+		}
+		break;
+
+	case GDK_KEY(Back):
+		if (g->bw && history_back_available(g->bw->history)) {
+			/* clear potential search effects */
+			browser_window_search_destroy_context(g->bw);
+
+			nsgtk_search_set_forward_state(true, g->bw);
+			nsgtk_search_set_back_state(true, g->bw);
+
+			history_back(g->bw, g->bw->history);
+			nsgtk_window_update_back_forward(g->scaffold);
+		}
 		break;
 
 	default:

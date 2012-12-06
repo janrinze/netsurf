@@ -313,7 +313,7 @@ void nsgtk_scaffolding_destroy(nsgtk_scaffolding *g)
 /**
  * Update the back and forward button sensitivity.
  */
-static void nsgtk_window_update_back_forward(struct gtk_scaffolding *g)
+void nsgtk_window_update_back_forward(struct gtk_scaffolding *g)
 {
 	int width, height;
 	struct browser_window *bw = nsgtk_get_browser_window(g->top_level);

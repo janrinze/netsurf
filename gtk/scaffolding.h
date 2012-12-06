@@ -144,6 +144,7 @@ void nsgtk_scaffolding_set_top_level(struct gui_window *g);
 
 void nsgtk_scaffolding_destroy(nsgtk_scaffolding *g);
 
+void nsgtk_window_update_back_forward(struct gtk_scaffolding *g);
 void nsgtk_scaffolding_set_sensitivity(struct gtk_scaffolding *g);
 void nsgtk_scaffolding_initial_sensitivity(struct gtk_scaffolding *g);
 void nsgtk_scaffolding_popup_menu(struct gtk_scaffolding *g, gdouble x,
