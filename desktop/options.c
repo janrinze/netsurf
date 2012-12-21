@@ -67,7 +67,7 @@ struct option_entry_s option_table[] = {
 /**
  * Set an option value based on a string
  */
-static bool 
+static bool
 strtooption(const char *value, struct option_entry_s *option_entry)
 {
 	bool ret = false;
@@ -188,12 +188,12 @@ void nsoption_write(const char *path)
 	for (entry = 0; entry != option_table_entries; entry++) {
 		switch (option_table[entry].type) {
 		case OPTION_BOOL:
-			fprintf(fp, "%s:%c\n", option_table[entry].key, 
+			fprintf(fp, "%s:%c\n", option_table[entry].key,
 				*((bool *) option_table[entry].p) ? '1' : '0');
 			break;
 
 		case OPTION_INTEGER:
-			fprintf(fp, "%s:%i\n", option_table[entry].key, 
+			fprintf(fp, "%s:%i\n", option_table[entry].key,
 				*((int *) option_table[entry].p));
 			break;
 
@@ -204,12 +204,12 @@ void nsoption_write(const char *path)
 					option_table[entry].p)) << 0) |
 				((0x00FF0000 & *((colour *)
 					option_table[entry].p)) >> 16);
-			fprintf(fp, "%s:%06x\n", option_table[entry].key, 
+			fprintf(fp, "%s:%06x\n", option_table[entry].key,
 				rgbcolour);
 			break;
 
 		case OPTION_STRING:
-			if (((*((char **) option_table[entry].p)) != NULL) && 
+			if (((*((char **) option_table[entry].p)) != NULL) &&
 			    (*(*((char **) option_table[entry].p)) != 0)) {
 				fprintf(fp, "%s:%s\n", option_table[entry].key,
 					*((char **) option_table[entry].p));
@@ -231,7 +231,7 @@ void nsoption_write(const char *path)
  * \param string  The string in which to output the value.
  * \return The number of bytes written to string or -1 on error
  */
-static size_t 
+static size_t
 nsoption_output_value_html(struct option_entry_s *option,
 		size_t size, size_t pos, char *string)
 {
@@ -274,6 +274,66 @@ nsoption_output_value_html(struct option_entry_s *option,
 	return slen;
 }
 
+/**
+ * Output an option value into a string, in HTML form element format.
+ *
+ * \param option  The option to output the value of.
+ * \param size    The size of the string buffer.
+ * \param pos     The current position in string
+ * \param string  The string in which to output the value.
+ * \return The number of bytes written to string or -1 on error
+ */
+static size_t
+nsoption_output_value_html_input(struct option_entry_s *option,
+		size_t size, size_t pos, char *string)
+{
+	size_t slen = 0; /* length added to string */
+	colour rgbcolour; /* RRGGBB */
+	char hexcolour[7];
+
+	switch (option->type) {
+	case OPTION_BOOL:
+		slen = snprintf(string + pos, size - pos,
+					"<select name=\"%s\">"
+					"<option value=1 %s>Enabled"
+					"<option value=0 %s>Disabled"
+					"</select>",
+					option->key,
+					*((bool *)option->p) ? "selected" : "",
+					*((bool *)option->p) ? "" : "selected");
+		break;
+
+	case OPTION_INTEGER:
+		slen = snprintf(string + pos, size - pos,
+						"<input type=\"text\" name=\"%s\" value=\"%i\"/>",
+						option->key, *((int *)option->p));
+		break;
+
+	case OPTION_COLOUR:
+		rgbcolour = ((0x000000FF & *((colour *) option->p)) << 16) |
+				((0x0000FF00 & *((colour *) option->p)) << 0) |
+				((0x00FF0000 & *((colour *) option->p)) >> 16);
+		slen = snprintf(string + pos, size - pos,
+				"<input type=\"text\" name=\"%s\" value=\"%06x\"/>&nbsp;"
+				"<span style=\"background-color: #%06x; color: #%06x; \">"
+				"&nbsp;&nbsp;</span>",
+				option->key, rgbcolour,
+				rgbcolour, (~rgbcolour) & 0xffffff);
+		break;
+
+	case OPTION_STRING:
+		slen = snprintf(string + pos, size - pos,
+				"<input type=\"text\" name=\"%s\" value=\"%s\"/>",
+				option->key,
+				(*((char **)option->p) != NULL) ?
+					*((char **)option->p) :
+						"NULL");
+		break;
+	}
+
+	return slen;
+}
+
 
 /**
  * Output an option value into a string, in plain text format.
@@ -284,7 +344,7 @@ nsoption_output_value_html(struct option_entry_s *option,
  * \param string  The string in which to output the value.
  * \return The number of bytes written to string or -1 on error
  */
-static size_t 
+static size_t
 nsoption_output_value_text(struct option_entry_s *option,
 		size_t size, size_t pos, char *string)
 {
@@ -321,7 +381,7 @@ nsoption_output_value_text(struct option_entry_s *option,
 }
 
 /* exported interface documented in options.h */
-void 
+void
 nsoption_commandline(int *pargc, char **argv)
 {
 	char *arg;
@@ -360,14 +420,14 @@ nsoption_commandline(int *pargc, char **argv)
 
 		LOG(("%.*s = %s",arglen,arg,val));
 
-		for (entry_loop = 0; 
-		     entry_loop < option_table_entries; 
+		for (entry_loop = 0;
+		     entry_loop < option_table_entries;
 		     entry_loop++) {
-			if (strncmp(arg, option_table[entry_loop].key, 
-				    arglen) == 0) { 
+			if (strncmp(arg, option_table[entry_loop].key,
+				    arglen) == 0) {
 				strtooption(val, option_table + entry_loop);
 				break;
-			}			
+			}
 		}
 
 		idx++;
@@ -381,7 +441,7 @@ nsoption_commandline(int *pargc, char **argv)
 }
 
 /* exported interface documented in options.h */
-int 
+int
 nsoption_snoptionf(char *string, size_t size, unsigned int option, const char *fmt)
 {
 	size_t slen = 0; /* current output string length */
@@ -440,6 +500,10 @@ nsoption_snoptionf(char *string, size_t size, unsigned int option, const char *f
 				slen += nsoption_output_value_text(option_entry,
 						size, slen, string);
 				break;
+			case 'I':
+				slen += nsoption_output_value_html_input(option_entry,
+						size, slen, string);
+				break;
 			}
 			fmtc++;
 		} else {
@@ -456,7 +520,7 @@ nsoption_snoptionf(char *string, size_t size, unsigned int option, const char *f
 }
 
 /* exported interface documented in options.h */
-void 
+void
 nsoption_dump(FILE *outf)
 {
 	char buffer[256];
