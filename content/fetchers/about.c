@@ -71,6 +71,8 @@ struct fetch_about_context {
 
 	nsurl *url; /**< The full url the fetch refers to */
 
+	struct fetch_multipart_data *post_multipart; /**< Form data */
+
 	fetch_about_handler handler;
 };
 
@@ -309,7 +311,43 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	int res = 0;
 	lwc_string *path;
 	url_func_result status;
+	struct fetch_multipart_data *post_item;
+	bool do_save = false;
+	bool valid_token = false;
+	char token[9] = {"12345678"};
 
+	/* save settings: */
+	post_item = ctx->post_multipart;
+	while (post_item != NULL) {
+
+		if (strcmp(post_item->name, "token") == 0
+			&& sctrcmp(post_item->value, token) == 0) {
+			valid_token = true;
+			if (do_save == true) {
+				break;
+			}
+		}
+
+		if (strcmp(post_item->name, "action") == 0
+			&& sctrcmp(post_item->value, "Save") == 0) {
+			do_save = true;
+			if (valid_token == true) {
+				break;
+			}
+		}
+		post_item = post_item->next;
+	}
+
+	if (do_save && valid_token) {
+		int opt = 0;
+		post_item = ctx->post_multipart;
+		while (post_item != NULL) {
+			printf("%s -> %s\n", post_item->name, post_item->value);
+			//opt = nsoption_get_index(post_item->name);
+			//nsoption_get_type(opt);
+			post_item = post_item->next;
+		}
+	}
 
 	/* content is going to return ok */
 	fetch_set_http_code(ctx->fetchh, code);
@@ -335,14 +373,15 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 			"</p>\n"
 			"<h1>NetSurf Browser Config</h1>\n"
 #ifdef NS_WITH_INTERACTIVE_ABOUT_CONFIG
-			"<form action=\"about:config\" method=\"GET\">"
+			"<form action=\"about:config\" method=\"POST\""
+			" enctype=\"multipart/form-data\">"
 #endif
 			"<table class=\"config\">\n"
 			"<tr><th></th><th></th><th></th></tr>\n");
 
 	do {
 #ifdef NS_WITH_INTERACTIVE_ABOUT_CONFIG
-	res = nsoption_snoptionf(buffer + slen, sizeof buffer - slen,
+		res = nsoption_snoptionf(buffer + slen, sizeof buffer - slen,
 				opt_loop,
 				"<tr><th>%k</th><td>%t</td><td>%I</td></tr>\n");
 #else
@@ -371,12 +410,13 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 			 "</table>\n");
 	slen += snprintf(buffer + slen, sizeof buffer - slen,
 			 "<br/><center>"
-			 "<input type=\"hidden\" name=\"token\" value=\"\" />\n"
+			 "<input type=\"hidden\" name=\"token\" value=\"%s\" />\n"
 			 "<input type=\"submit\" name=\"action\" value=\"Save\" />\n"
 			 "<input type=\"submit\" name=\"action\" value=\"Abort\" />\n"
 			 "</center><br/>\n"
 			 "</form>\n"
-			 "</table>\n</body>\n</html>\n");
+			 "</table>\n</body>\n</html>\n",
+			 token);
 #else
 	slen += snprintf(buffer + slen, sizeof buffer - slen,
 			 "</table>\n</body>\n</html>\n");
@@ -788,6 +828,10 @@ fetch_about_setup(struct fetch *fetchh,
 	ctx->fetchh = fetchh;
 	ctx->url = nsurl_ref(url);
 
+	if (post_multipart != NULL) {
+		ctx->post_multipart = fetch_multipart_data_clone(post_multipart);
+	}
+
 	RING_INSERT(ring, ctx);
 
 	return ctx;
@@ -797,6 +841,9 @@ fetch_about_setup(struct fetch *fetchh,
 static void fetch_about_free(void *ctx)
 {
 	struct fetch_about_context *c = ctx;
+	if (c->post_multipart) {
+		fetch_multipart_data_destroy(c->post_multipart);
+	}
 	nsurl_unref(c->url);
 	RING_REMOVE(ring, c);
 	free(ctx);

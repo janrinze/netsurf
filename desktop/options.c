@@ -317,7 +317,7 @@ nsoption_output_value_html_input(struct option_entry_s *option,
 				"<input type=\"text\" name=\"%s\" value=\"%06x\"/>&nbsp;"
 				"<span style=\"background-color: #%06x; color: #%06x; \">"
 				"&nbsp;&nbsp;</span>",
-				option->key, rgbcolour,
+				option->, rgbcolour,
 				rgbcolour, (~rgbcolour) & 0xffffff);
 		break;
 
