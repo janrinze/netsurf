@@ -56,6 +56,12 @@
 #include "utils/testament.h"
 #include "image/image_cache.h"
 
+#define NS_WITH_INTERACTIVE_ABOUT_CONFIG 1
+
+#ifdef NS_WITH_INTERACTIVE_ABOUT_CONFIG
+# include <openssl/rand.h>
+#endif
+
 struct fetch_about_context;
 
 typedef bool (*fetch_about_handler)(struct fetch_about_context *);
@@ -110,8 +116,6 @@ static bool fetch_about_send_header(struct fetch_about_context *ctx,
 
 	return ctx->aborted;
 }
-
-
 
 
 static bool fetch_about_blank_handler(struct fetch_about_context *ctx)
@@ -313,33 +317,22 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	url_func_result status;
 	struct fetch_multipart_data *post_item;
 	bool do_save = false;
-	bool valid_token = false;
-	char token[9] = {"12345678"};
 
 	/* save settings: */
 	post_item = ctx->post_multipart;
 	while (post_item != NULL) {
-
-		if (strcmp(post_item->name, "token") == 0
-			&& strcmp(post_item->value, token) == 0) {
-			valid_token = true;
-			if (do_save == true) {
-				break;
-			}
-		}
-
 		if (strcmp(post_item->name, "action") == 0
 			&& strcmp(post_item->value, "Set") == 0) {
-			do_save = true;
-			if (valid_token == true) {
-				break;
+			if (strcmp(fetch_get_referer_to_send(ctx->fetchh),
+						"about:config")) {
+				do_save = true;
 			}
+			break;
 		}
 		post_item = post_item->next;
 	}
 
-	if (do_save && valid_token) {
-		int opt = 0;
+	if (do_save) {
 		post_item = ctx->post_multipart;
 		while (post_item != NULL) {
 			nsoption_set_key(post_item->name, post_item->value);
@@ -357,7 +350,6 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	msg.type = FETCH_DATA;
 	msg.data.header_or_data.buf = (const uint8_t *) buffer;
 
-#define NS_WITH_INTERACTIVE_ABOUT_CONFIG 1
 	slen = snprintf(buffer, sizeof buffer,
 			"<html>\n<head>\n"
 			"<title>NetSurf Browser Config</title>\n"
@@ -408,13 +400,11 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 			 "</table>\n");
 	slen += snprintf(buffer + slen, sizeof buffer - slen,
 			 "<br/><center>"
-			 "<input type=\"hidden\" name=\"token\" value=\"%s\" />\n"
 			 "<input type=\"submit\" name=\"action\" value=\"Set\" />&nbsp;\n"
 			 "<input type=\"submit\" name=\"action\" value=\"Abort\" />\n"
 			 "</center><br/>\n"
 			 "</form>\n"
-			 "</table>\n</body>\n</html>\n",
-			 token);
+			 "</table>\n</body>\n</html>\n");
 #else
 	slen += snprintf(buffer + slen, sizeof buffer - slen,
 			 "</table>\n</body>\n</html>\n");
