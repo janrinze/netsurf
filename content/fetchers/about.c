@@ -342,7 +342,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 		int opt = 0;
 		post_item = ctx->post_multipart;
 		while (post_item != NULL) {
-			bool s = nsoption_set_key(post_item->name, post_item->value);
+			nsoption_set_key(post_item->name, post_item->value);
 			post_item = post_item->next;
 		}
 	}
