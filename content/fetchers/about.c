@@ -58,10 +58,6 @@
 
 #define NS_WITH_INTERACTIVE_ABOUT_CONFIG 1
 
-#ifdef NS_WITH_INTERACTIVE_ABOUT_CONFIG
-# include <openssl/rand.h>
-#endif
-
 struct fetch_about_context;
 
 typedef bool (*fetch_about_handler)(struct fetch_about_context *);
