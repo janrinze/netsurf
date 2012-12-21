@@ -314,11 +314,10 @@ nsoption_output_value_html_input(struct option_entry_s *option,
 				((0x0000FF00 & *((colour *) option->p)) << 0) |
 				((0x00FF0000 & *((colour *) option->p)) >> 16);
 		slen = snprintf(string + pos, size - pos,
-				"<input type=\"text\" name=\"%s\" value=\"%06x\"/>&nbsp;"
-				"<span style=\"background-color: #%06x; color: #%06x; \">"
-				"&nbsp;&nbsp;</span>",
-				option->key, rgbcolour,
-				rgbcolour, (~rgbcolour) & 0xffffff);
+				"<input style=\"color: #%06x; background-color: #%06x;\" "
+				"type=\"text\" name=\"%s\" value=\"%06x\"/>",
+				(~rgbcolour) & 0xffffff, rgbcolour,
+				option->key, rgbcolour);
 		break;
 
 	case OPTION_STRING:
