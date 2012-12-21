@@ -321,7 +321,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	while (post_item != NULL) {
 
 		if (strcmp(post_item->name, "token") == 0
-			&& sctrcmp(post_item->value, token) == 0) {
+			&& strcmp(post_item->value, token) == 0) {
 			valid_token = true;
 			if (do_save == true) {
 				break;
@@ -329,7 +329,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 		}
 
 		if (strcmp(post_item->name, "action") == 0
-			&& sctrcmp(post_item->value, "Save") == 0) {
+			&& strcmp(post_item->value, "Save") == 0) {
 			do_save = true;
 			if (valid_token == true) {
 				break;
