@@ -314,7 +314,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	struct fetch_multipart_data *post_item;
 	bool do_save = false;
 
-	/* save settings: */
+	/* verify referer when save is requested: */
 	post_item = ctx->post_multipart;
 	while (post_item != NULL) {
 		if (strcmp(post_item->name, "action") == 0
@@ -328,6 +328,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 		post_item = post_item->next;
 	}
 
+	/* save settings: */
 	if (do_save) {
 		post_item = ctx->post_multipart;
 		while (post_item != NULL) {
