@@ -327,7 +327,7 @@ nsoption_output_value_html_input(struct option_entry_s *option,
 				option->key,
 				(*((char **)option->p) != NULL) ?
 					*((char **)option->p) :
-						"NULL");
+						"");
 		break;
 	}
 
@@ -537,3 +537,20 @@ nsoption_dump(FILE *outf)
 	} while (res > 0);
 }
 
+/* exported interface documented in options.h */
+bool nsoption_set_key(const char *key, const char *value)
+{
+	bool ret = false;
+	int i;
+
+	for (i = 0; i != option_table_entries; i++) {
+		if (strcasecmp(key, option_table[i].key) != 0)
+			continue;
+
+		strtooption(value, option_table + i);
+		ret = true;
+		break;
+	}
+
+	return(ret);
+}

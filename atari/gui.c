@@ -796,6 +796,7 @@ void gui_quit(void)
 		gw = tmp;
 	}
 
+	nsoption_write(options);
 	global_history_destroy();
 	hotlist_destroy();
 	toolbar_exit();

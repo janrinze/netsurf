@@ -329,7 +329,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 		}
 
 		if (strcmp(post_item->name, "action") == 0
-			&& strcmp(post_item->value, "Save") == 0) {
+			&& strcmp(post_item->value, "Set") == 0) {
 			do_save = true;
 			if (valid_token == true) {
 				break;
@@ -342,9 +342,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 		int opt = 0;
 		post_item = ctx->post_multipart;
 		while (post_item != NULL) {
-			printf("%s -> %s\n", post_item->name, post_item->value);
-			//opt = nsoption_get_index(post_item->name);
-			//nsoption_get_type(opt);
+			bool s = nsoption_set_key(post_item->name, post_item->value);
 			post_item = post_item->next;
 		}
 	}
@@ -411,7 +409,7 @@ static bool fetch_about_config_handler(struct fetch_about_context *ctx)
 	slen += snprintf(buffer + slen, sizeof buffer - slen,
 			 "<br/><center>"
 			 "<input type=\"hidden\" name=\"token\" value=\"%s\" />\n"
-			 "<input type=\"submit\" name=\"action\" value=\"Save\" />\n"
+			 "<input type=\"submit\" name=\"action\" value=\"Set\" />&nbsp;\n"
 			 "<input type=\"submit\" name=\"action\" value=\"Abort\" />\n"
 			 "</center><br/>\n"
 			 "</form>\n"

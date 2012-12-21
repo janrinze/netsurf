@@ -179,6 +179,15 @@ int nsoption_snoptionf(char *string, size_t size, unsigned int option,
 void nsoption_commandline(int *pargc, char **argv);
 
 /**
+* Set an option by it's key
+*
+* \param name the option key to search for.
+* \param value the value (as string)
+* \return true on success, false when the option key is not found.
+*/
+bool nsoption_set_key(const char *key, const char *value);
+
+/**
  * Set default values for unset front-end specific options
  */
 void gui_options_init_defaults(void);
