@@ -51,7 +51,6 @@
 #include "desktop/knockout.h"
 #include "desktop/options.h"
 #include "desktop/scrollbar.h"
-#include "desktop/selection.h"
 #include "desktop/plotters.h"
 
 #include "javascript/js.h"
