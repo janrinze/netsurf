@@ -24,28 +24,9 @@
  * Textual input handling (implementation)
  */
 
-#include <assert.h>
-#include <ctype.h>
-#include <string.h>
-#include <dom/dom.h>
 
 #include "desktop/browser_private.h"
-#include "desktop/gui.h"
-#include "desktop/mouse.h"
-#include "desktop/scrollbar.h"
 #include "desktop/textinput.h"
-#include "render/box.h"
-#include "render/font.h"
-#include "render/form.h"
-#include "render/html_internal.h"
-#include "render/layout.h"
-#include "utils/log.h"
-#include "utils/talloc.h"
-#include "utils/utf8.h"
-#include "utils/utils.h"
-
-/* Define to enable textinput debug */
-#undef TEXTINPUT_DEBUG
 
 
 /**
