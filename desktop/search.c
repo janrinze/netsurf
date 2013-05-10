@@ -23,25 +23,10 @@
  */
 #include "utils/config.h"
 
-#include <ctype.h>
-#include <string.h>
-#include <dom/dom.h>
 #include "content/content.h"
-#include "content/hlcache.h"
 #include "desktop/browser_private.h"
-#include "desktop/gui.h"
-#include "desktop/options.h"
 #include "desktop/search.h"
-#include "desktop/selection.h"
-#include "render/box.h"
-#include "render/html.h"
-#include "render/search.h"
-#include "render/textplain.h"
 #include "utils/config.h"
-#include "utils/log.h"
-#include "utils/messages.h"
-#include "utils/url.h"
-#include "utils/utils.h"
 
 
 
