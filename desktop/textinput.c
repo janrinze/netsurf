@@ -30,7 +30,7 @@
 
 
 /**
- * Position the caret and assign a callback for key presses.
+ * Position the caret.
  *
  * \param bw		The browser window in which to place the caret
  * \param x		X coordinate of the caret
@@ -74,7 +74,7 @@ void browser_window_place_caret(struct browser_window *bw, int x, int y,
 
 
 /**
- * Removes the caret and callback for key process.
+ * Removes the caret.
  *
  * \param bw  The browser window from which to remove caret
  */
