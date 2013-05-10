@@ -33,7 +33,6 @@
 #include "desktop/gui.h"
 #include "desktop/mouse.h"
 #include "desktop/scrollbar.h"
-#include "desktop/selection.h"
 #include "desktop/textinput.h"
 #include "render/box.h"
 #include "render/font.h"
