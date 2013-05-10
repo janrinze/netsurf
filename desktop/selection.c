@@ -72,19 +72,6 @@ typedef bool (*seln_traverse_handler)(const char *text, size_t length,
 		size_t whitespace_length);
 
 
-static bool redraw_handler(const char *text, size_t length, struct box *box,
-		void *handle, const char *whitespace_text,
-		size_t whitespace_length);
-static void selection_redraw(struct selection *s, unsigned start_idx,
-		unsigned end_idx);
-static bool selected_part(struct box *box, unsigned start_idx, unsigned end_idx,
-		unsigned *start_offset, unsigned *end_offset);
-static bool traverse_tree(struct box *box, unsigned start_idx, unsigned end_idx,
-		seln_traverse_handler handler,
-		void *handle, save_text_whitespace *before, bool *first,
-		bool do_marker);
-static unsigned selection_label_subtree(struct box *box, unsigned idx);
-
 /**
  * Get the browser window containing the content a selection object belongs to.
  *
@@ -153,6 +140,37 @@ void selection_destroy(struct selection *s)
 
 
 /**
+ * Label each text box in the given box subtree with its position
+ * in a textual representation of the content.
+ *
+ * \param  s     selection object
+ * \param  node  box at root of subtree
+ * \param  idx   current position within textual representation
+ * \return updated position
+ */
+
+static unsigned selection_label_subtree(struct box *box, unsigned idx)
+{
+	struct box *child = box->children;
+
+	box->byte_offset = idx;
+
+	if (box->text)
+		idx += box->length + SPACE_LEN(box);
+
+	while (child) {
+		if (child->list_marker)
+			idx = selection_label_subtree(child->list_marker, idx);
+
+		idx = selection_label_subtree(child, idx);
+		child = child->next;
+	}
+
+	return idx;
+}
+
+
+/**
  * Initialise the selection object to use the given box subtree as its root,
  * ie. selections are confined to that subtree, whilst maintaining the current
  * selection whenever possible because, for example, it's just the page being
@@ -207,37 +225,6 @@ void selection_init(struct selection *s, struct box *root)
 	s->drag_state = DRAG_NONE;
 
 	selection_reinit(s, root);
-}
-
-
-/**
- * Label each text box in the given box subtree with its position
- * in a textual representation of the content.
- *
- * \param  s     selection object
- * \param  node  box at root of subtree
- * \param  idx   current position within textual representation
- * \return updated position
- */
-
-unsigned selection_label_subtree(struct box *box, unsigned idx)
-{
-	struct box *child = box->children;
-
-	box->byte_offset = idx;
-
-	if (box->text)
-		idx += box->length + SPACE_LEN(box);
-
-	while (child) {
-		if (child->list_marker)
-			idx = selection_label_subtree(child->list_marker, idx);
-
-		idx = selection_label_subtree(child, idx);
-		child = child->next;
-	}
-
-	return idx;
 }
 
 
@@ -398,7 +385,7 @@ void selection_track(struct selection *s, browser_mouse_state mouse,
  * \return true iff the range encloses at least part of the box
  */
 
-bool selected_part(struct box *box, unsigned start_idx, unsigned end_idx,
+static bool selected_part(struct box *box, unsigned start_idx, unsigned end_idx,
 		unsigned *start_offset, unsigned *end_offset)
 {
 	size_t box_length = box->length + SPACE_LEN(box);
@@ -451,7 +438,7 @@ bool selected_part(struct box *box, unsigned start_idx, unsigned end_idx,
  * \return false iff traversal abandoned part-way through
  */
 
-bool traverse_tree(struct box *box, unsigned start_idx, unsigned end_idx,
+static bool traverse_tree(struct box *box, unsigned start_idx, unsigned end_idx,
 		seln_traverse_handler handler,
 		void *handle, save_text_whitespace *before, bool *first,
 		bool do_marker)
@@ -594,7 +581,7 @@ static bool selection_traverse(struct selection *s,
  * \return true iff successful and traversal should continue
  */
 
-bool redraw_handler(const char *text, size_t length, struct box *box,
+static bool redraw_handler(const char *text, size_t length, struct box *box,
 		void *handle, const char *whitespace_text,
 		size_t whitespace_length)
 {
@@ -642,7 +629,8 @@ bool redraw_handler(const char *text, size_t length, struct box *box,
  * \param  end_idx    end offset (bytes) within the textual representation
  */
 
-void selection_redraw(struct selection *s, unsigned start_idx, unsigned end_idx)
+static void selection_redraw(struct selection *s,
+		unsigned start_idx, unsigned end_idx)
 {
 	struct rdw_info rdw;
 
