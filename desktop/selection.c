@@ -266,20 +266,20 @@ bool selection_click(struct selection *s, browser_mouse_state mouse,
 		}
 	}
 
-	if (!pos &&
-		((mouse & BROWSER_MOUSE_DRAG_1) ||
-		 (modkeys && (mouse & BROWSER_MOUSE_DRAG_2)))) {
+	if (!pos && ((mouse & BROWSER_MOUSE_DRAG_1) ||
+			(modkeys && (mouse & BROWSER_MOUSE_DRAG_2)))) {
 		/* drag-saving selection */
 		char *sel = selection_get_copy(s);
 		gui_drag_save_selection(top->window, sel);
 		free(sel);
-	}
-	else if (!modkeys) {
+
+	} else if (!modkeys) {
 		if (pos && (mouse & BROWSER_MOUSE_PRESS_1)) {
 		/* Clear the selection if mouse is pressed outside the
 		 * selection, Otherwise clear on release (to allow for drags) */
 
 			selection_clear(s, true);
+
 		} else if (mouse & BROWSER_MOUSE_DRAG_1) {
 			/* start new selection drag */
 
@@ -291,8 +291,8 @@ bool selection_click(struct selection *s, browser_mouse_state mouse,
 			s->drag_state = DRAG_END;
 
 			gui_start_selection(top->window);
-		}
-		else if (mouse & BROWSER_MOUSE_DRAG_2) {
+
+		} else if (mouse & BROWSER_MOUSE_DRAG_2) {
 
 			/* adjust selection, but only if there is one */
 			if (!selection_defined(s))
@@ -302,16 +302,15 @@ bool selection_click(struct selection *s, browser_mouse_state mouse,
 				selection_set_end(s, idx);
 
 				s->drag_state = DRAG_END;
-			}
-			else {
+			} else {
 				selection_set_start(s, idx);
 
 				s->drag_state = DRAG_START;
 			}
 
 			gui_start_selection(top->window);
-		}
-		else if (mouse & BROWSER_MOUSE_CLICK_2) {
+
+		} else if (mouse & BROWSER_MOUSE_CLICK_2) {
 
 			/* ignore Adjust clicks when there's no selection */
 			if (!selection_defined(s))
@@ -322,11 +321,10 @@ bool selection_click(struct selection *s, browser_mouse_state mouse,
 			else
 				selection_set_start(s, idx);
 			s->drag_state = DRAG_NONE;
-		}
-		else
+		} else {
 			return false;
-	}
-	else {
+		}
+	} else {
 		/* not our problem */
 		return false;
 	}
@@ -348,36 +346,34 @@ bool selection_click(struct selection *s, browser_mouse_state mouse,
 void selection_track(struct selection *s, browser_mouse_state mouse,
 		unsigned idx)
 {
-	if (!mouse) {
+	if (!mouse)
 		s->drag_state = DRAG_NONE;
-	}
 
 	switch (s->drag_state) {
+	case DRAG_START:
+		if (idx > s->end_idx) {
+			unsigned old_end = s->end_idx;
+			selection_set_end(s, idx);
+			selection_set_start(s, old_end);
+			s->drag_state = DRAG_END;
+		} else {
+			selection_set_start(s, idx);
+		}
+		break;
 
-		case DRAG_START:
-			if (idx > s->end_idx) {
-				unsigned old_end = s->end_idx;
-				selection_set_end(s, idx);
-				selection_set_start(s, old_end);
-				s->drag_state = DRAG_END;
-			}
-			else
-				selection_set_start(s, idx);
-			break;
+	case DRAG_END:
+		if (idx < s->start_idx) {
+			unsigned old_start = s->start_idx;
+			selection_set_start(s, idx);
+			selection_set_end(s, old_start);
+			s->drag_state = DRAG_START;
+		} else {
+			selection_set_end(s, idx);
+		}
+		break;
 
-		case DRAG_END:
-			if (idx < s->start_idx) {
-				unsigned old_start = s->start_idx;
-				selection_set_start(s, idx);
-				selection_set_end(s, old_start);
-				s->drag_state = DRAG_START;
-			}
-			else
-				selection_set_end(s, idx);
-			break;
-
-		default:
-			break;
+	default:
+		break;
 	}
 }
 
@@ -408,8 +404,8 @@ static bool selected_part(struct box *box, unsigned start_idx, unsigned end_idx,
 			*start_offset = 0;
 			*end_offset = box_length;
 			return true;
-		}
-		else if (box->byte_offset + box_length > start_idx &&
+
+		} else if (box->byte_offset + box_length > start_idx &&
 			box->byte_offset < end_idx) {
 			/* partly enclosed */
 			int offset = 0;
@@ -592,8 +588,7 @@ static bool redraw_handler(const char *text, size_t length,
 		if (y < r->r.y0) r->r.y0 = y;
 		if (x + width > r->r.x1) r->r.x1 = x + width;
 		if (y + height > r->r.y1) r->r.y1 = y + height;
-	}
-	else {
+	} else {
 		r->inited = true;
 		r->r.x0 = x;
 		r->r.y0 = y;
@@ -625,8 +620,7 @@ static void selection_redraw(struct selection *s,
 		if (!traverse_tree(s->root, start_idx, end_idx,
 				redraw_handler, &rdw, false))
 			return;
-	}
-	else {
+	} else {
 		if (s->is_html == false && end_idx > start_idx) {
 			textplain_coords_from_range(s->c, start_idx,
 							end_idx, &rdw.r);
@@ -932,9 +926,10 @@ void selection_set_start(struct selection *s, unsigned offset)
 			selection_redraw(s, s->start_idx, old_start);
 		else
 			selection_redraw(s, old_start, s->start_idx);
-	}
-	else if (selection_defined(s))
+
+	} else if (selection_defined(s)) {
 		selection_redraw(s, s->start_idx, s->end_idx);
+	}
 }
 
 
@@ -958,9 +953,10 @@ void selection_set_end(struct selection *s, unsigned offset)
 			selection_redraw(s, s->end_idx, old_end);
 		else
 			selection_redraw(s, old_end, s->end_idx);
-	}
-	else if (selection_defined(s))
+
+	} else if (selection_defined(s)) {
 		selection_redraw(s, s->start_idx, s->end_idx);
+	}
 }
 
 
