@@ -639,11 +639,6 @@ void ami_menu_update_disabled(struct gui_window *g, hlcache_handle *c)
 
 	if(nsoption_bool(kiosk_mode) == true) return;
 
-	OffMenu(win,AMI_MENU_CUT);
-	OffMenu(win,AMI_MENU_COPY);
-	OffMenu(win,AMI_MENU_PASTE);
-	OffMenu(win,AMI_MENU_CLEAR);
-
 	if(content_get_type(c) <= CONTENT_CSS)
 	{
 		OnMenu(win,AMI_MENU_SAVEAS_TEXT);
@@ -655,25 +650,37 @@ void ami_menu_update_disabled(struct gui_window *g, hlcache_handle *c)
 		{
 			OnMenu(win,AMI_MENU_COPY);
 			OnMenu(win,AMI_MENU_CLEAR);
-
-			if(browser_window_get_editor_flags(g->shared->bw) & BW_EDITOR_CAN_CUT)
-				OnMenu(win,AMI_MENU_CUT);
+		} else {
+			OffMenu(win,AMI_MENU_COPY);
+			OffMenu(win,AMI_MENU_CLEAR);	
 		}
-		if(g->c_h) OnMenu(win,AMI_MENU_PASTE);
+
+		if(browser_window_get_editor_flags(g->shared->bw) & BW_EDITOR_CAN_CUT)
+			OnMenu(win,AMI_MENU_CUT);
+		else
+			OffMenu(win,AMI_MENU_CUT);		
+		
+		if(browser_window_get_editor_flags(g->shared->bw) & BW_EDITOR_CAN_PASTE)
+			OnMenu(win,AMI_MENU_PASTE);
+		else
+			OffMenu(win,AMI_MENU_PASTE);
+
 		OnMenu(win,AMI_MENU_SELECTALL);
 		OnMenu(win,AMI_MENU_FIND);
 		OffMenu(win,AMI_MENU_SAVEAS_IFF);
 	}
 	else
 	{
+		OffMenu(win,AMI_MENU_CUT);
+		OffMenu(win,AMI_MENU_PASTE);
+		OffMenu(win,AMI_MENU_CLEAR);
+
 		OffMenu(win,AMI_MENU_SAVEAS_TEXT);
 		OffMenu(win,AMI_MENU_SAVEAS_COMPLETE);
 #ifdef WITH_PDF_EXPORT
 		OffMenu(win,AMI_MENU_SAVEAS_PDF);
 #endif
-		OffMenu(win,AMI_MENU_PASTE);
 		OffMenu(win,AMI_MENU_SELECTALL);
-		OffMenu(win,AMI_MENU_CLEAR);
 		OffMenu(win,AMI_MENU_FIND);
 
 #ifdef WITH_NS_SVG
