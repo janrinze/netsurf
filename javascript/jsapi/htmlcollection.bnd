@@ -33,13 +33,12 @@ preamble %{
 
 webidlfile "dom.idl";
 
-binding htmlcollection {
-    type js_libdom; /* the binding type */
+binding jsapi_libdom {
+	/* Generate binding for DOM html collection */
+	interface HTMLCollection;
 
-    interface HTMLCollection; /* The WebIDL interface to generate a binding for */
-
-    private "dom_html_collection *" collection;
-    private "struct html_content *" htmlc;
+	private "dom_html_collection *" collection;
+	private "struct html_content *" htmlc;
 }
 
 getter length %{

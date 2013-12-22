@@ -30,10 +30,9 @@ preamble %{
 
 webidlfile "dom.idl";
 
-binding nodelist {
-	type js_libdom; /* the binding type */
-
-	interface NodeList; /* The WebIDL interface to generate a binding for */
+binding jsapi_libdom {
+	/* Generate binding for DOM nod elist interface */
+	interface NodeList;
 
 	private "dom_nodelist *" nodelist;
 	private "struct html_content *" htmlc;

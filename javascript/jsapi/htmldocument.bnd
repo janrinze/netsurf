@@ -38,13 +38,13 @@ preamble %{
 
 #include "dom.bnd"
 
-binding document {
-	type js_libdom; /* the binding type */
+binding jsapi_libdom {
 
-	interface Document; /* Web IDL interface to generate */
+	/* generate binding for main document */
+	interface Document;
 
-	/* parameters to constructor value stored in private
-	 * context structure.
+	/* parameters to constructor value stored in private context
+	 * structure.
 	 */
 	private "dom_document *" node;
 	private "struct html_content *" htmlc;

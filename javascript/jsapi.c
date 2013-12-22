@@ -374,8 +374,7 @@ jsobject *js_newcompartment(jscontext *ctx, void *win_priv, void *doc_priv)
 		return NULL;
 	}
 
-	window_proto = jsapi_InitClass_Window(cx, NULL);
-	if (window_proto == NULL) {
+	if (jsapi_InitClass_Window(cx, NULL, &window_proto) != 1) {
 		JSLOG("Unable to initialise window class");
 		return NULL;
 	}

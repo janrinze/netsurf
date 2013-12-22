@@ -71,69 +71,61 @@ init_user_prototypes(JSContext *cx,
 	 * prototypes available.
 	 */
 	/** @todo should we be managing these prototype objects ourselves */
-	private->prototype_Document = jsapi_InitClass_Document(cx, parent);
-	if (private->prototype_Document == NULL) {
+	if (jsapi_InitClass_Document(cx, parent, &private->prototype_Document) != 1) {
 		return false;
 	}
 
-	private->prototype_Navigator = jsapi_InitClass_Navigator(cx, parent);
-	if (private->prototype_Navigator == NULL) {
+	;
+	if (jsapi_InitClass_Navigator(cx, parent, &private->prototype_Navigator) != 1 ) {
 		return false;
 	}
 
-	private->prototype_Location = jsapi_InitClass_Location(cx, parent);
-	if (private->prototype_Location == NULL) {
+	if (jsapi_InitClass_Location(cx, parent, &private->prototype_Location) != 1) {
 		return false;
 	}
 
-	private->prototype_Console = jsapi_InitClass_Console(cx, parent);
-	if (private->prototype_Console == NULL) {
+	if (jsapi_InitClass_Console(cx, parent, &private->prototype_Console) != 1) {
 		return false;
 	}
 
-	private->prototype_HTMLElement = jsapi_InitClass_HTMLElement(cx, parent);
-	if (private->prototype_HTMLElement == NULL) {
+	if (jsapi_InitClass_HTMLElement(cx, parent, private->prototype_HTMLElement) != HTMLElement_INTERFACE_COUNT) {
 		return false;
 	}
 
-	private->prototype_HTMLCollection = jsapi_InitClass_HTMLCollection(cx, parent);
-	if (private->prototype_HTMLCollection == NULL) {
+	if (jsapi_InitClass_HTMLCollection(cx, parent, &private->prototype_HTMLCollection) != 1) {
 		return false;
 	}
 
-	private->prototype_NodeList = jsapi_InitClass_NodeList(cx, parent);
-	if (private->prototype_NodeList == NULL) {
+	if (jsapi_InitClass_NodeList(cx, parent, &private->prototype_NodeList) != 1) {
 		return false;
 	}
 
-	private->prototype_Text = jsapi_InitClass_Text(cx, parent);
-	if (private->prototype_Text == NULL) {
+	if (jsapi_InitClass_Text(cx, parent, &private->prototype_Text) != 1) {
 		return false;
 	}
 
-	private->prototype_Comment = jsapi_InitClass_Comment(cx, parent);
-	if (private->prototype_Comment == NULL) {
+	if (jsapi_InitClass_Comment(cx, parent, &private->prototype_Comment) != 1) {
 		return false;
 	}
 
-	private->prototype_Node = jsapi_InitClass_Node(cx, parent);
-	if (private->prototype_Node == NULL) {
+	if (jsapi_InitClass_Node(cx, parent, &private->prototype_Node) != 1) {
 		return false;
 	}
 
-	private->prototype_Event = jsapi_InitClass_Event(cx, parent);
-	if (private->prototype_Event == NULL) {
+	if (jsapi_InitClass_Event(cx, parent, &private->prototype_Event) != 1) {
 		return false;
 	}
+
 	return true;
 }
 
 %}
 
-binding window {
-	type js_libdom; /* the binding type */
-
-	interface Window; /* Web IDL interface to generate */
+binding jsapi_libdom {
+	/* Generate binding for browser window interface*/
+	interface Window {
+		flags global, jsapi_constructor;
+	}
 
 	private "struct browser_window *" bw;
 	private "struct html_content *" htmlc;
@@ -143,7 +135,7 @@ binding window {
 	internal "JSObject *" prototype_Navigator;
 	internal "JSObject *" prototype_Location;
 	internal "JSObject *" prototype_Console;
-	internal "JSObject *" prototype_HTMLElement;
+	internal "JSObject **" prototype_HTMLElement;
 	internal "JSObject *" prototype_HTMLCollection;
 	internal "JSObject *" prototype_NodeList;
 	internal "JSObject *" prototype_Text;
@@ -160,7 +152,7 @@ binding window {
 	/** console instantiated on first use */
 	property unshared console;
 
-        /** location is unshared */
+	/** location is unshared */
 	property unshared location;
 
 	/** @todo instantiate forms, history etc. attributes */
@@ -170,6 +162,7 @@ binding window {
 }
 
 api mark %{
+	int inf;
 
 	if (private != NULL) {
 		if (private->prototype_Document != NULL) {
@@ -188,8 +181,10 @@ api mark %{
 			JSAPI_GCMARK(private->prototype_Console);
 		}
 
-		if (private->prototype_HTMLElement != NULL) {
-			JSAPI_GCMARK(private->prototype_HTMLElement);
+		for (inf = 0; inf < HTMLElement_INTERFACE_COUNT; inf++) {
+			if (private->prototype_HTMLElement[inf] != NULL) {
+				JSAPI_GCMARK(private->prototype_HTMLElement[inf]);
+			}
 		}
 
 		if (private->prototype_HTMLCollection != NULL) {
@@ -218,13 +213,10 @@ api mark %{
 	}
 %}
 
-api global %{
-%}
-
 api init %{
 	prototype = JS_NewCompartmentAndGlobalObject(cx, &JSClass_Window, NULL);
 	if (prototype == NULL) {
-		return NULL;
+		return 0;
 	}
 
 	/** @todo reconsider global object handling. future
@@ -240,20 +232,25 @@ api init %{
 	 *  Object and Array.
 	 */
 	if (!JS_InitStandardClasses(cx, prototype)) {
-		return NULL;
+		return 0;
 	}
 
 	/* add functions to prototype */
 	if (!JS_DefineFunctions(cx, prototype, jsclass_functions)) {
-		return NULL;
+		return 0;
 	}
 
 	/* add properties to prototype */
-	if (!JS_DefineProperties(cx, prototype, jsclass_properties))
-		return NULL;
+	if (!JS_DefineProperties(cx, prototype, jsclass_properties)) {
+		return 0;
+	}
 
 	/* as the global just got changed, force a GC run */
 	JS_GC(cx);
+
+	prototypes[0] = prototype;
+
+	return 1;
 %}
 
 api new %{
@@ -263,8 +260,15 @@ api new %{
 	/* the window object is the global so its prototype *is* the instance */
 	newobject = prototype;
 
+	private->prototype_HTMLElement = calloc(sizeof(JSObject *), HTMLElement_INTERFACE_COUNT);
+	if (private->prototype_HTMLElement == NULL) {
+		free(private);
+		return NULL;
+	}
+
 	if (init_user_prototypes(cx, private, prototype) == false) {
 		/* prototype initialisation failed */
+		free(private->prototype_HTMLElement);
 		free(private);
 		return NULL;
 	}

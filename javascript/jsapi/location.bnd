@@ -30,10 +30,9 @@ struct browser_window *jsapi_get_browser_window(JSContext *cx);
 
 %}
 
-binding location {
-	type js_libdom; /* the binding type */
-
-	interface Location; /* Web IDL interface to generate */
+binding jsapi_libdom {
+	/* Generate binding for location interface */
+	interface Location;
 
 	private "nsurl *" url;
 

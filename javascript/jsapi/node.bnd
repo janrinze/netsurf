@@ -28,8 +28,7 @@ preamble %{
 
 %}
 
-binding node {
-    type js_libdom; /* the binding type */
-
-    interface Node; /* Web IDL interface to generate */
+binding jsapi_libdom {
+	/* Generate binding for DOM node interface */
+	interface Node;
 }

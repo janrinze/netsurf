@@ -66,11 +66,9 @@ preamble %{
 #define NAVIGATOR_APPCODENAME "NetSurf"
 %}
 
-binding navigator {
-    type js_libdom; /* the binding type */
-
-    interface Navigator; /* Web IDL interface to generate */
-
+binding jsapi_libdom {
+	/* Generate binding for navigator interface */
+	interface Navigator;
 }
 
 getter appName %{

@@ -31,13 +31,12 @@ preamble %{
 
 #include "dom.bnd"
 
-binding text {
-    type js_libdom; /* the binding type */
+binding jsapi_libdom {
+	/* Generate binding for DOM text interface */
+	interface Text;
 
-    interface Text; /* Web IDL interface to generate */
-
-    private "dom_text *" node;
-    private "struct html_content *" htmlc; 
+	private "dom_text *" node;
+	private "struct html_content *" htmlc;
 }
 
 api finalise %{

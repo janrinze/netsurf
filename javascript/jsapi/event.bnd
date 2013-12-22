@@ -28,10 +28,9 @@ preamble %{
 
 %}
 
-binding node {
-    type js_libdom; /* the binding type */
+binding jsapi_libdom {
+	/* Generate binding for DOM event interface */
+	interface Event;
 
-    interface Event; /* Web IDL interface to generate */
-
-    private "dom_event *" event;
+	private "dom_event *" event;
 }

@@ -25,11 +25,9 @@ preamble %{
 
 %}
 
-binding navigator {
-    type js_libdom; /* the binding type */
-
-    interface Console; /* Web IDL interface to generate */
-
+binding jsapi_libdom {
+	/* Generate interface for debug console */
+	interface Console;
 }
 
 operation log %{
