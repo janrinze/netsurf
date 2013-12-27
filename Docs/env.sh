@@ -36,6 +36,7 @@ echo "USE_CPUS=${USE_CPUS}"
 export PREFIX=${TARGET_WORKSPACE}/inst-${TARGET_ABI}
 export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}::
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PREFIX}/lib
+export LIBRARY_PATH=${LIBRARY_PATH}:${PREFIX}/lib
 export PATH=${PATH}:${PREFIX}/bin
 
 NS_GIT="git://git.netsurf-browser.org"
