@@ -61,7 +61,7 @@ NS_GTK_DEB="libgtk2.0-dev libcurl3-dev libmng-dev librsvg2-dev liblcms1-dev libj
 # "_x86" for gcc4 secondary.
 HA=
 # Haiku packages
-NS_DEV_HPKG="curl${HA}_devel libpng${HA}_devel jpeg${HA}_devel openssl${HA}_devel libiconv${HA}_devel expat${HA}_devel pkgconfig${HA} html_parser"
+NS_DEV_HPKG="curl${HA}_devel libpng${HA}_devel jpeg${HA}_devel openssl${HA}_devel libiconv${HA}_devel expat${HA}_devel pkgconfig${HA} html_parser cmd:getconf"
 
 #add target specific libraries
 if [ "x${TARGET_ABI}" = "xriscos" ]; then
