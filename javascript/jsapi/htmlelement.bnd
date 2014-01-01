@@ -324,6 +324,7 @@ getter firstElementChild %{
 			/* found it */
 			jsret = jsapi_new_HTMLElement(cx,
 						      NULL,
+						      "HTMLElement",
 						      NULL,
 						      (dom_element *)element,
 						      private->htmlc);
@@ -360,6 +361,7 @@ getter lastElementChild %{
 			/* found it */
 			jsret = jsapi_new_HTMLElement(cx,
 						      NULL,
+						      "HTMLElement",
 						      NULL,
 						      (dom_element *)element,
 						      private->htmlc);
@@ -394,6 +396,7 @@ getter previousElementSibling %{
 			/* found it */
 			jsret = jsapi_new_HTMLElement(cx,
 						      NULL,
+						      "HTMLElement",
 						      NULL,
 						      (dom_element *)element,
 						      private->htmlc);
@@ -427,6 +430,7 @@ getter nextElementSibling %{
 			/* found it */
 			jsret = jsapi_new_HTMLElement(cx,
 						      NULL,
+						      "HTMLElement",
 						      NULL,
 						      (dom_element *)element,
 						      private->htmlc);

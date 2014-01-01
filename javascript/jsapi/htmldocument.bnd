@@ -144,7 +144,7 @@ getter documentElement %{
 	}
 
 	if (element != NULL) {
-		jsret = jsapi_new_HTMLElement(cx, NULL, NULL, element, private->htmlc);
+		jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, element, private->htmlc);
 	}
 %}
 
@@ -162,7 +162,7 @@ getter head %{
 	if (element != NULL) {
 		head = libdom_find_first_element(element, corestring_lwc_head) ;
 		if (head != NULL) {
-			jsret = jsapi_new_HTMLElement(cx, NULL, NULL, (dom_element *)head, private->htmlc);
+			jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, (dom_element *)head, private->htmlc);
 		}
 		dom_node_unref(element);
 	}
@@ -184,7 +184,7 @@ getter body %{
 	if (element != NULL) {
 		body = libdom_find_first_element(element, corestring_lwc_body) ;
 		if (body != NULL) {
-			jsret = jsapi_new_HTMLElement(cx, NULL, NULL, (dom_element *)body, private->htmlc);
+			jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, (dom_element *)body, private->htmlc);
 		}
 		dom_node_unref(element);
 	}
@@ -210,7 +210,7 @@ operation getElementById %{
 	}
 
 	if (element != NULL) {
-	      jsret = jsapi_new_HTMLElement(cx, NULL, NULL, element, private->htmlc);
+		jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, element, private->htmlc);
 	}
 %}
 
@@ -337,7 +337,7 @@ operation createElement %{
 			return JS_FALSE;
 		}
 
-		jsret = jsapi_new_HTMLElement(cx, NULL, NULL, element, private->htmlc);
+		jsret = jsapi_new_HTMLElement(cx, NULL, localName, NULL, element, private->htmlc);
 	}
 
 	JSDBG("returning jsobject %p",jsret);

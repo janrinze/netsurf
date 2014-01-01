@@ -64,7 +64,7 @@ api getproperty %{
 		}
 
 		if (domnode != NULL) {
-			jsret = jsapi_new_HTMLElement(cx, NULL, NULL, (dom_element *)domnode, private->htmlc);
+			jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, (dom_element *)domnode, private->htmlc);
 
 			JSDBG("return object:%p", jsret);
 
@@ -92,7 +92,7 @@ operation item %{
         }
 
         if (domnode != NULL) {
-                jsret = jsapi_new_HTMLElement(cx, NULL, NULL, (dom_element *)domnode, private->htmlc);
+                jsret = jsapi_new_HTMLElement(cx, NULL, "HTMLElement", NULL, (dom_element *)domnode, private->htmlc);
         }
 %}
 
