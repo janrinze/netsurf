@@ -58,8 +58,8 @@
  */
 
 /* native function definition with five parameters */
-#define JSAPI_FUNC(name, cx, argc, vp) \
-	jsapi_func_##name(cx, JSObject *jsapi_this, argc, vp, jsval *jsapi_rval)
+#define JSAPI_FUNC(class, name, cx, argc, vp)				\
+	class##_##name(cx, JSObject *jsapi_this, argc, vp, jsval *jsapi_rval)
 
 /* native function return value - No macro available */
 #define JSAPI_FUNC_RVAL(cx, vp) (jsapi_rval)
@@ -74,8 +74,8 @@
 #define JSAPI_JSVAL_IS_OBJECT(v) JSVAL_IS_OBJECT(v)
 
 /* native function specifier with five parameters and no JS_FS macro */
-#define JSAPI_FS(name, nargs, flags) \
-	{ #name, jsapi_func_##name, nargs, flags, 0 }
+#define JSAPI_FS(class, name, nargs, flags)		\
+	{ #name, class##_##name, nargs, flags, 0 }
 
 /* native function specifier list end */
 #define JSAPI_FS_END { NULL, NULL, 0, 0, 0 }
@@ -176,12 +176,12 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
  */
 
 /* five parameter jsapi native call */
-#define JSAPI_FUNC(name, cx, argc, vp) \
-	jsapi_func_##name(cx, JSObject *jsapi_this, argc, vp, jsval *jsapi_rval)
+#define JSAPI_FUNC(class, name, cx, argc, vp)				\
+	class##_##name(cx, JSObject *jsapi_this, argc, vp, jsval *jsapi_rval)
 
 /* five parameter function descriptor */
-#define JSAPI_FS(name, nargs, flags) \
-	JS_FS(#name, jsapi_func_##name, nargs, flags, 0)
+#define JSAPI_FS(class, name, nargs, flags)			\
+	JS_FS(#name, class##_##name, nargs, flags, 0)
 
 /* function descriptor end */
 #define JSAPI_FS_END JS_FS_END
@@ -287,11 +287,11 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 /************************** Spidermonkey 1.8.5 **************************/
 
 /* three parameter jsapi native call */
-#define JSAPI_FUNC(name, cx, argc, vp) jsapi_func_##name(cx, argc, vp)
+#define JSAPI_FUNC(class, name, cx, argc, vp) class##_##name(cx, argc, vp)
 
 /* three parameter function descriptor */
-#define JSAPI_FS(name, nargs, flags) \
-	JS_FS(#name, jsapi_func_##name, nargs, flags)
+#define JSAPI_FS(class, name, nargs, flags)		\
+	JS_FS(#name, class##_##name, nargs, flags)
 
 /* function descriptor end */
 #define JSAPI_FS_END JS_FS_END
