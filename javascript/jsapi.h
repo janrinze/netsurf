@@ -84,9 +84,10 @@
 
 
 /* native proprty definition */
-#define JSAPI_PROP(name, cx, obj, vp) \
-	jsapi_property_##name(cx, obj, jsval jsapi_id, vp)
-#define JSAPI_STRICTPROP JSAPI_PROP
+#define JSAPI_PROP_GET(class, name, cx, obj, vp)		\
+	property_get_##class##_##name(cx, obj, jsval jsapi_id, vp)
+#define JSAPI_PROP_SET(class, name, cx, obj, vp)		\
+	property_set_##class##_##name(cx, obj, jsval jsapi_id, vp)
 
 /* native property return value */
 #define JSAPI_PROP_RVAL(cx, vp) (*(vp))
@@ -98,12 +99,12 @@
 #define JSAPI_PROP_IDVAL(cx, vp) (*(vp) = jsapi_id)
 
 /* native property specifier */
-#define JSAPI_PS(name, fnname, tinyid, flags)				\
-	{ name , tinyid , flags , jsapi_property_##fnname##_get , jsapi_property_##fnname##_set }
+#define JSAPI_PS_RW(name, fnname, tinyid, flags)			\
+	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
 
 /* native property specifier with no setter */
-#define JSAPI_PS_RO(name, fnname, tinyid, flags)				\
-	{ name , tinyid , flags | JSPROP_READONLY, jsapi_property_##fnname##_get , NULL }
+#define JSAPI_PS_RO(name, fnname, tinyid, flags)			\
+	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
 
 /* native property specifier list end */
 #define JSAPI_PS_END { NULL, 0, 0, NULL, NULL }
@@ -204,9 +205,10 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 
 
 /* proprty native calls */
-#define JSAPI_PROP(name, cx, obj, vp) \
-	jsapi_property_##name(cx, obj, jsval jsapi_id, vp)
-#define JSAPI_STRICTPROP JSAPI_PROP
+#define JSAPI_PROP_GET(class, name, cx, obj, vp)			\
+	property_get_##class##_##name(cx, obj, jsval jsapi_id, vp)
+#define JSAPI_PROP_SET(class, name, cx, obj, vp)			\
+	property_set_##class##_##name(cx, obj, jsval jsapi_id, vp)
 
 /* native property return value */
 #define JSAPI_PROP_RVAL JS_RVAL
@@ -218,11 +220,11 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 #define JSAPI_PROP_IDVAL(cx, vp) (*(vp) = jsapi_id)
 
 /* property specifier */
-#define JSAPI_PS(name, fnname, tinyid, flags)				\
-	{ name , tinyid , flags , jsapi_property_##fnname##_get , jsapi_property_##fnname##_set }
+#define JSAPI_PS_RW(name, fnname, tinyid, flags)			\
+	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
 
-#define JSAPI_PS_RO(name, fnname, tinyid, flags)				\
-	{ name , tinyid , flags | JSPROP_READONLY, jsapi_property_##fnname##_get , NULL }
+#define JSAPI_PS_RO(name, fnname, tinyid, flags)			\
+	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
 
 #define JSAPI_PS_END { NULL, 0, 0, NULL, NULL }
 
@@ -317,10 +319,10 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 #define JSAPI_THIS_OBJECT(cx,vp) JS_THIS_OBJECT(cx,vp)
 
 /* proprty native calls */
-#define JSAPI_PROP(name, cx, obj, vp) \
-	jsapi_property_##name(cx, obj, jsid jsapi_id, vp)
-#define JSAPI_STRICTPROP(name, cx, obj, vp) \
-	jsapi_property_##name(cx, obj, jsid jsapi_id, JSBool strict, vp)
+#define JSAPI_PROP_GET(class, name, cx, obj, vp)			\
+	property_get_##class##_##name(cx, obj, jsid jsapi_id, vp)
+#define JSAPI_PROP_SET(class, name, cx, obj, vp)			\
+	property_set_##class##_##name(cx, obj, jsid jsapi_id, JSBool strict, vp)
 
 /* native property return value */
 #define JSAPI_PROP_RVAL JS_RVAL
@@ -332,19 +334,19 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 #define JSAPI_PROP_IDVAL(cx, vp) JS_IdToValue(cx, jsapi_id, vp)
 
 /* property specifier */
-#define JSAPI_PS(name, fnname, tinyid, flags) {			\
+#define JSAPI_PS_RW(name, fnname, tinyid, flags) {		\
 		name,						\
-		tinyid,						\
-		flags,						\
-		jsapi_property_##fnname##_get,			\
-		jsapi_property_##fnname##_set			\
+		JSCLASS_TINYID_##tinyid,		\
+		flags | JSPROP_ENUMERATE,					\
+		property_get_##fnname ,			\
+		property_set_##fnname			\
 	}
 
 #define JSAPI_PS_RO(name, fnname, tinyid, flags) {		\
 		name,						\
-		tinyid,						\
-		flags | JSPROP_READONLY,			\
-		jsapi_property_##fnname##_get,			\
+		JSCLASS_TINYID_##tinyid,		\
+		flags | JSPROP_ENUMERATE | JSPROP_READONLY,			\
+		property_get_##fnname ,			\
 		NULL						\
 	}
 
