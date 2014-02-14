@@ -99,12 +99,20 @@
 #define JSAPI_PROP_IDVAL(cx, vp) (*(vp) = jsapi_id)
 
 /* native property specifier */
-#define JSAPI_PS_RW(name, fnname, tinyid, flags)			\
-	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
+#define JSAPI_PS_RW(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE, property_get_##class##_##name , property_set_##class##_##name }
 
 /* native property specifier with no setter */
-#define JSAPI_PS_RO(name, fnname, tinyid, flags)			\
-	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
+#define JSAPI_PS_RO(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##class##_##name , NULL }
+
+/* native property specifier using tinyid */
+#define JSAPI_PS_ID_RW(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
+
+/* native property specifier with no setter using tinyid */
+#define JSAPI_PS_ID_RO(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
 
 /* native property specifier list end */
 #define JSAPI_PS_END { NULL, 0, 0, NULL, NULL }
@@ -219,12 +227,22 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 /* native property ID value as a jsval */
 #define JSAPI_PROP_IDVAL(cx, vp) (*(vp) = jsapi_id)
 
-/* property specifier */
-#define JSAPI_PS_RW(name, fnname, tinyid, flags)			\
-	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
+/* native property specifier */
+#define JSAPI_PS_RW(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE, property_get_##class##_##name , property_set_##class##_##name }
 
-#define JSAPI_PS_RO(name, fnname, tinyid, flags)			\
-	{ name , JSCLASS_TINYID_##tinyid , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
+/* native property specifier with no setter */
+#define JSAPI_PS_RO(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##class##_##name , NULL }
+
+/* native property specifier using tinyid */
+#define JSAPI_PS_ID_RW(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
+
+/* native property specifier with no setter using tinyid */
+#define JSAPI_PS_ID_RO(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
+
 
 #define JSAPI_PS_END { NULL, 0, 0, NULL, NULL }
 
@@ -333,22 +351,21 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx,
 /* native property ID value as a jsval */
 #define JSAPI_PROP_IDVAL(cx, vp) JS_IdToValue(cx, jsapi_id, vp)
 
-/* property specifier */
-#define JSAPI_PS_RW(name, fnname, tinyid, flags) {		\
-		name,						\
-		JSCLASS_TINYID_##tinyid,		\
-		flags | JSPROP_ENUMERATE,					\
-		property_get_##fnname ,			\
-		property_set_##fnname			\
-	}
+/* native property specifier */
+#define JSAPI_PS_RW(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE, property_get_##class##_##name , property_set_##class##_##name }
 
-#define JSAPI_PS_RO(name, fnname, tinyid, flags) {		\
-		name,						\
-		JSCLASS_TINYID_##tinyid,		\
-		flags | JSPROP_ENUMERATE | JSPROP_READONLY,			\
-		property_get_##fnname ,			\
-		NULL						\
-	}
+/* native property specifier with no setter */
+#define JSAPI_PS_RO(class, name, flags)					\
+	{ #name , JSCLASS_TINYID_NONE , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##class##_##name , NULL }
+
+/* native property specifier using tinyid */
+#define JSAPI_PS_ID_RW(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE, property_get_##fnname , property_set_##fnname }
+
+/* native property specifier with no setter using tinyid */
+#define JSAPI_PS_ID_RO(class, name, flags, fnname)			\
+	{ #name , JSCLASS_TINYID_##class##_##name , flags | JSPROP_ENUMERATE | JSPROP_READONLY, property_get_##fnname , NULL }
 
 #define JSAPI_PS_END { NULL, 0, 0, NULL, NULL }
 
