@@ -208,6 +208,9 @@ NSOPTION_INTEGER(max_cached_fetch_handles, 6)
 /** Suppress debug output from cURL. */
 NSOPTION_BOOL(suppress_curl_debug, true)
 
+/** Allow cURL to use HTTP 2.0 */
+NSOPTION_BOOL(enable_http2, false)
+
 /** Whether to allow target="_blank" */
 NSOPTION_BOOL(target_blank, true)
 

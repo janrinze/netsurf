@@ -223,6 +223,13 @@ void fetch_curl_register(void)
 	SETOPT(CURLOPT_LOW_SPEED_TIME, 180L);
 	SETOPT(CURLOPT_NOSIGNAL, 1L);
 	SETOPT(CURLOPT_CONNECTTIMEOUT, 30L);
+#if LIBCURL_VERSION_NUM >= 0x072400
+	/* We've been built against libcurl 7.36.0 or later: enable HTTP 2.0 */
+	if (nsoption_bool(enable_http2)) {
+		LOG(("Enabling HTTP 2.0"));
+		SETOPT(CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+	}
+#endif
 
 	if (nsoption_charp(ca_bundle) && 
 	    strcmp(nsoption_charp(ca_bundle), "")) {
