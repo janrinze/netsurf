@@ -224,13 +224,6 @@ void fetch_curl_register(void)
 	SETOPT(CURLOPT_LOW_SPEED_TIME, 180L);
 	SETOPT(CURLOPT_NOSIGNAL, 1L);
 	SETOPT(CURLOPT_CONNECTTIMEOUT, 30L);
-#if LIBCURL_VERSION_NUM >= 0x072400
-	/* We've been built against libcurl 7.36.0 or later: enable HTTP 2.0 */
-	if (nsoption_bool(enable_http2)) {
-		LOG(("Enabling HTTP 2.0"));
-		SETOPT(CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
-	}
-#endif
 
 	if (nsoption_charp(ca_bundle) && 
 	    strcmp(nsoption_charp(ca_bundle), "")) {
@@ -600,6 +593,9 @@ fetch_curl_set_options(struct curl_fetch_info *f)
 {
 	CURLcode code;
 	const char *auth;
+	lwc_string *scheme;
+	size_t scheme_len;
+	bool scheme_is_https;
 
 #undef SETOPT
 #define SETOPT(option, value) { \
@@ -642,6 +638,22 @@ fetch_curl_set_options(struct curl_fetch_info *f)
 	} else {
 		SETOPT(CURLOPT_USERPWD, NULL);
 	}
+
+#if LIBCURL_VERSION_NUM >= 0x072400
+	/* We've been built against libcurl 7.36.0 or later: enable HTTP 2.0 */
+	if (nsoption_bool(enable_http2) == true) {
+		if (scheme = nsurl_get_component(f->url, NSURL_SCHEME)) {
+			if (lwc_string_isequal(scheme, corestring_lwc_https,
+					&scheme_is_https) == lwc_error_ok) {
+				if (scheme_is_https == true) {
+					LOG(("Enabling HTTP/2.0 for this fetch"));
+					SETOPT(CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+				}
+			}
+			lwc_string_unref(scheme);
+		}
+	}
+#endif
 
 	/* set up proxy options */
 	if (nsoption_bool(http_proxy) && 
