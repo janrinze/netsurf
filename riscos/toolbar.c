@@ -1579,7 +1579,7 @@ bool ro_toolbar_set_button_order(struct toolbar *toolbar, char order[])
 void ro_toolbar_set_button_shaded_state(struct toolbar *toolbar,
 		button_bar_action action, bool shaded)
 {
-	if (toolbar == NULL && toolbar->buttons == NULL)
+	if (toolbar == NULL || toolbar->buttons == NULL)
 		return;
 
 	ro_gui_button_bar_shade_button(toolbar->buttons, action, shaded);
@@ -1686,7 +1686,7 @@ void ro_toolbar_set_content_favicon(struct toolbar *toolbar,
 
 void ro_toolbar_update_urlsuggest(struct toolbar *toolbar)
 {
-	if (toolbar != NULL && toolbar->url != NULL)
+	if (toolbar == NULL || toolbar->url == NULL)
 		return;
 
 	ro_gui_url_bar_update_urlsuggest(toolbar->url);

@@ -17,6 +17,8 @@
  */
 
 /* NetSurf core includes */
+#include "content/backing_store.h"
+#include "content/fetchers/resource.h"
 #include "content/urldb.h"
 #include "css/utils.h"
 #include "desktop/browser_history.h"
@@ -24,7 +26,6 @@
 #include "desktop/hotlist.h"
 #include "desktop/mouse.h"
 #include "desktop/netsurf.h"
-#include "utils/nsoption.h"
 #include "desktop/save_complete.h"
 #include "desktop/scrollbar.h"
 #include "desktop/searchweb.h"
@@ -33,10 +34,10 @@
 #include "image/ico.h"
 #include "utils/log.h"
 #include "utils/messages.h"
+#include "utils/nsoption.h"
 #include "utils/utf8.h"
 #include "utils/utils.h"
-#include "utils/url.h"
-#include "content/fetchers/resource.h"
+#include "utils/file.h"
 
 /* NetSurf Amiga platform includes */
 #include "amiga/arexx.h"
@@ -210,7 +211,6 @@ static void ami_schedule_redraw_remove(struct gui_window_2 *gwin);
 static bool gui_window_get_scroll(struct gui_window *g, int *sx, int *sy);
 static void gui_window_set_scroll(struct gui_window *g, int sx, int sy);
 static void gui_window_remove_caret(struct gui_window *g);
-static void gui_set_search_ico(hlcache_handle *ico);
 static void gui_window_place_caret(struct gui_window *g, int x, int y, int height, const struct rect *clip);
 
 
@@ -221,43 +221,138 @@ static void gui_window_place_caret(struct gui_window *g, int x, int y, int heigh
 		nsoptions[NSOPTION_##OPTION].value.i = VALUE;	\
 	nsoptions_default[NSOPTION_##OPTION].value.i = VALUE
 
-/**
- * Return the filename part of a full path
- *
- * \param path full path and filename
- * \return filename (will be freed with free())
- */
 
-static char *filename_from_path(char *path)
+/**
+ * Generate a posix path from one or more component elemnts.
+ *
+ * If a string is allocated it must be freed by the caller.
+ *
+ * @param[in,out] str pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the complete path.
+ * @param[in,out] size The size of the space available if \a str not
+ *                     NULL on input and if not NULL set to the total
+ *                     output length on output.
+ * @param[in] nemb The number of elements.
+ * @param[in] ... The elements of the path as string pointers.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
+ */
+static nserror amiga_vmkpath(char **str, size_t *size, size_t nelm, va_list ap)
 {
-	return strdup(FilePart(path));
+	const char *elm[16];
+	size_t elm_len[16];
+	size_t elm_idx;
+	char *fname;
+	size_t fname_len = 0;
+
+	/* check the parameters are all sensible */
+	if ((nelm == 0) || (nelm > 16)) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if ((*str != NULL) && (size == NULL)) {
+		/* if the caller is providing the buffer they must say
+		 * how much space is available.
+		 */
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	/* calculate how much storage we need for the complete path
+	 * with all the elements.
+	 */
+	for (elm_idx = 0; elm_idx < nelm; elm_idx++) {
+		elm[elm_idx] = va_arg(ap, const char *);
+		/* check the argument is not NULL */
+		if (elm[elm_idx] == NULL) {
+			return NSERROR_BAD_PARAMETER;
+		}
+		elm_len[elm_idx] = strlen(elm[elm_idx]);
+		fname_len += elm_len[elm_idx];
+	}
+	fname_len += nelm; /* allow for separators and terminator */
+
+	/* ensure there is enough space */
+	fname = *str;
+	if (fname != NULL) {
+		if (fname_len > *size) {
+			return NSERROR_NOSPACE;
+		}
+	} else {
+		fname = malloc(fname_len);
+		if (fname == NULL) {
+			return NSERROR_NOMEM;
+		}
+	}
+
+	/* copy the first element complete */
+	memmove(fname, elm[0], elm_len[0]);
+	fname[elm_len[0]] = 0;
+
+	/* add the remaining elements */
+	for (elm_idx = 1; elm_idx < nelm; elm_idx++) {
+		if (!AddPart(fname, elm[elm_idx], fname_len)) {
+			break;
+		}
+	}
+
+	*str = fname;
+	if (size != NULL) {
+		*size = fname_len;
+	}
+
+	return NSERROR_OK;
 }
 
 /**
- * Add a path component/filename to an existing path
+ * Get the basename of a file using posix path handling.
  *
- * \param path buffer containing path + free space
- * \param length length of buffer "path"
- * \param newpart string containing path component to add to path
- * \return true on success
+ * This gets the last element of a path and returns it.
+ *
+ * @param[in] path The path to extract the name from.
+ * @param[in,out] str Pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the path element.
+ * @param[in,out] size The size of the space available if \a
+ *                     str not NULL on input and set to the total
+ *                     output length on output.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
  */
-
-static bool path_add_part(char *path, int length, const char *newpart)
+static nserror amiga_basename(const char *path, char **str, size_t *size)
 {
-	if(AddPart(path, newpart, length)) return true;
-		else return false;
+	const char *leafname;
+	char *fname;
+
+	if (path == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	leafname = FilePart(path);
+	if (leafname == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	fname = strdup(leafname);
+	if (fname == NULL) {
+		return NSERROR_NOMEM;
+	}
+
+	*str = fname;
+	if (size != NULL) {
+		*size = strlen(fname);
+	}
+	return NSERROR_OK;
 }
+
+
 
 STRPTR ami_locale_langs(void)
 {
 	struct Locale *locale;
-	STRPTR acceptlangs = NULL, acceptlangs2 = NULL;
-	int i;
+	STRPTR acceptlangs = NULL;
 	char *remapped;
 
 	if(locale = OpenLocale(NULL))
 	{
-		for(i=0;i<10;i++)
+		for(int i = 0; i < 10; i++)
 		{
 			if(locale->loc_PrefLanguages[i])
 			{
@@ -266,7 +361,7 @@ STRPTR ami_locale_langs(void)
 				{
 					if(acceptlangs)
 					{
-						acceptlangs2 = acceptlangs;
+						STRPTR acceptlangs2 = acceptlangs;
 						acceptlangs = ASPrintf("%s, %s",acceptlangs2, remapped);
 						FreeVec(acceptlangs2);
 						acceptlangs2 = NULL;
@@ -290,13 +385,15 @@ STRPTR ami_locale_langs(void)
 bool ami_gui_map_filename(char **remapped, const char *path, const char *file, const char *map)
 {
 	BPTR fh = 0;
-	char mapfile[1024];
+	char *mapfile = NULL;
+	size_t mapfile_size = 0;
 	char buffer[1024];
 	char *realfname;
 	bool found = false;
 
-	strcpy(mapfile, path);
-	path_add_part(mapfile, 1024, map);
+	netsurf_mkpath(&mapfile, &mapfile_size, 2, path, map);
+
+	if(mapfile == NULL) return false;
 
 	if(fh = FOpen(mapfile, MODE_OLDFILE, 0))
 	{
@@ -324,18 +421,20 @@ bool ami_gui_map_filename(char **remapped, const char *path, const char *file, c
 	if(found == false) *remapped = strdup(file);
 		else LOG(("Remapped %s to %s in path %s using %s", file, *remapped, path, map));
 
+	free(mapfile);
+
 	return found;
 }
 
 bool ami_gui_check_resource(char *fullpath, const char *file)
 {
-	bool free_rmap = false;
 	bool found = false;
 	char *remapped;
 	BPTR lock = 0;
+	size_t fullpath_len = 1024;
 
 	ami_gui_map_filename(&remapped, fullpath, file, "Resource.map");
-	path_add_part(fullpath, 1024, remapped);
+	netsurf_mkpath(&fullpath, &fullpath_len, 2, fullpath, remapped);
 
 	LOG(("Checking for %s", fullpath));
 	
@@ -358,6 +457,7 @@ bool ami_locate_resource(char *fullpath, const char *file)
 	BPTR lock = 0;
 	bool found = false;
 	char *remapped;
+	size_t fullpath_len = 1024;
 
 	/* Check NetSurf user data area first */
 
@@ -385,7 +485,7 @@ bool ami_locate_resource(char *fullpath, const char *file)
 		{
 			ami_gui_map_filename(&remapped, "PROGDIR:Resources",
 				locale->loc_PrefLanguages[i], "LangNames");
-			path_add_part(fullpath, 1024, remapped);
+			netsurf_mkpath(&fullpath, &fullpath_len, 2, fullpath, remapped);
 
 			found = ami_gui_check_resource(fullpath, file);
 		}
@@ -464,7 +564,7 @@ colour_option_from_pen(UWORD pen,
 			   struct Screen *screen,
 			   colour def_colour)
 {
-	ULONG colour[3];
+	ULONG colr[3];
 	struct DrawInfo *drinfo;
 
 	if((option < NSOPTION_SYS_COLOUR_START) ||
@@ -480,12 +580,12 @@ colour_option_from_pen(UWORD pen,
 			if(pen == AMINS_SCROLLERPEN) pen = ami_system_colour_scrollbar_fgpen(drinfo);
 
 			/* Get the colour of the pen being used for "pen" */
-			GetRGB32(screen->ViewPort.ColorMap, drinfo->dri_Pens[pen], 1, (ULONG *)&colour);
+			GetRGB32(screen->ViewPort.ColorMap, drinfo->dri_Pens[pen], 1, (ULONG *)&colr);
 
 			/* convert it to a color */
-			def_colour = ((colour[0] & 0xff000000) >> 24) |
-				((colour[1] & 0xff000000) >> 16) |
-				((colour[2] & 0xff000000) >> 8);
+			def_colour = ((colr[0] & 0xff000000) >> 24) |
+				((colr[1] & 0xff000000) >> 16) |
+				((colr[2] & 0xff000000) >> 8);
 
 			FreeScreenDrawInfo(screen, drinfo);
 		}
@@ -549,7 +649,6 @@ static void ami_set_screen_defaults(struct Screen *screen)
 static nserror ami_set_options(struct nsoption_s *defaults)
 {
 	STRPTR tempacceptlangs;
-	BPTR lock = 0;
 	char temp[1024];
 
 	/* The following line disables the popupmenu.class select menu
@@ -558,11 +657,6 @@ static nserror ami_set_options(struct nsoption_s *defaults)
 	*/
 
 	nsoption_set_bool(core_select_menu, true);
-
-	#ifndef NS_AMIGA_CAIRO
-	/* Ensure we get some output when Cairo not available */
-	nsoption_set_int(cairo_renderer, 0);
-	#endif
 
 	if((!nsoption_charp(accept_language)) || 
 	   (nsoption_charp(accept_language)[0] == '\0') ||
@@ -591,9 +685,6 @@ static nserror ami_set_options(struct nsoption_s *defaults)
 	nsoption_setnull_charp(ca_bundle,
 			       (char *)strdup("PROGDIR:Resources/ca-bundle"));
 
-	
-	search_engines_file_location = nsoption_charp(search_engines_file);
-
 	sprintf(temp, "%s/FontGlyphCache", current_user_dir);
 	nsoption_setnull_charp(font_unicode_file,
 			       (char *)strdup(temp));
@@ -607,15 +698,16 @@ static nserror ami_set_options(struct nsoption_s *defaults)
 
 	if (nsoption_charp(font_unicode) == NULL)
 	{
+		BPTR lock = 0;
 		/* Search for some likely candidates */
 
-		if(lock=Lock("FONTS:Code2000.font",ACCESS_READ))
+		if(lock = Lock("FONTS:Code2000.font", ACCESS_READ))
 		{
 			UnLock(lock);
 			nsoption_set_charp(font_unicode, 
 					   (char *)strdup("Code2000"));
 		}
-		else if(lock=Lock("FONTS:Bitstream Cyberbit.font",ACCESS_READ))
+		else if(lock = Lock("FONTS:Bitstream Cyberbit.font", ACCESS_READ))
 		{
 			UnLock(lock);
 			nsoption_set_charp(font_unicode,
@@ -639,7 +731,7 @@ void ami_amiupdate(void)
 {
 	/* Create AppPath location for AmiUpdate use */
 
-	BPTR lock = 0, amiupdatefh = 0;
+	BPTR lock = 0;
 
 	if(((lock = Lock("ENVARC:AppPaths",SHARED_LOCK)) == 0))
 	{
@@ -651,6 +743,7 @@ void ami_amiupdate(void)
 	if(lock = Lock("PROGDIR:", ACCESS_READ))
 	{
 		char filename[1024];
+		BPTR amiupdatefh;
 
 		DevNameFromLock(lock,(STRPTR)&filename,1024L,DN_FULLPATH);
 
@@ -764,7 +857,7 @@ void ami_openscreen(void)
 			}
 		}
 
-		screen_signal = AllocSignal(-1);
+		if(screen_signal == -1) screen_signal = AllocSignal(-1);
 		LOG(("Screen signal %d", screen_signal));
 		scrn = OpenScreenTags(NULL,
 					SA_DisplayID, id,
@@ -783,6 +876,9 @@ void ami_openscreen(void)
 		}
 		else
 		{
+			FreeSignal(screen_signal);
+			screen_signal = -1;
+
 			if(scrn = LockPubScreen("NetSurf"))
 			{
 				locked_screen = TRUE;
@@ -900,7 +996,7 @@ static void gui_init2(int argc, char** argv)
 	ami_cookies_initialise();
 	ami_global_history_initialise();
 
-	search_web_provider_details(nsoption_int(search_provider));
+	search_web_select_provider(nsoption_int(search_provider));
 
 	if (notalreadyrunning && 
 	    (nsoption_bool(startup_no_window) == false))
@@ -931,10 +1027,6 @@ static void gui_init2(int argc, char** argv)
 		struct WBArg *wbarg;
 		int first=0,i=0;
 		char fullpath[1024];
-
-		if (notalreadyrunning && 
-		    (nsoption_bool(startup_no_window) == false))
-			ami_openscreenfirst();
 
 		for(i=0,wbarg=WBenchMsg->sm_ArgList;i<WBenchMsg->sm_NumArgs;i++,wbarg++)
 		{
@@ -1226,7 +1318,6 @@ bool ami_spacebox_to_ns_coords(struct gui_window_2 *gwin, int *x, int *y,
 bool ami_mouse_to_ns_coords(struct gui_window_2 *gwin, int *x, int *y,
 	int mouse_x, int mouse_y)
 {
-	int xs, ys;
 	int ns_x, ns_y;
 	struct IBox *bbox;
 
@@ -1448,17 +1539,15 @@ static void gui_window_set_icon(struct gui_window *g, hlcache_handle *icon)
 
 void ami_handle_msg(void)
 {
-	struct IntuiMessage *message = NULL;
 	ULONG class,result,storage = 0,x,y,xs,ys,width=800,height=600;
 	uint16 code,quals;
 	struct IBox *bbox;
 	struct nsObject *node;
 	struct nsObject *nnode;
 	struct gui_window_2 *gwin = NULL;
-	struct MenuItem *item;
 	struct InputEvent *ie;
 	struct Node *tabnode;
-	int i, nskey;
+	int nskey;
 	struct browser_window *closedbw;
 	struct timeval curtime;
 	static int drag_x_move = 0, drag_y_move = 0;
@@ -1785,18 +1874,17 @@ void ami_handle_msg(void)
 						break;
 
 						case GID_URL:
+						{
+							nserror ret;
+							nsurl *url;
 							GetAttr(STRINGA_TextVal,
 								(Object *)gwin->objects[GID_URL],
 								(ULONG *)&storage);
-							if(utf8 = ami_to_utf8_easy((const char *)storage)) {
-								if(search_is_url((char *)utf8) == false)
-								{
-									utf8 = search_web_from_term(utf8);
-								}
+							utf8 = ami_to_utf8_easy((const char *)storage);
 
-								if (nsurl_create((char *)utf8, &url) != NSERROR_OK) {
-									warn_user("NoMemory", 0);
-								} else {
+							ret = search_web_omni(utf8, SEARCH_WEB_OMNI_NONE, &url);
+							ami_utf8_free(utf8);
+							if (ret == NSERROR_OK) {
 									browser_window_navigate(gwin->bw,
 											url,
 											NULL,
@@ -1805,29 +1893,32 @@ void ami_handle_msg(void)
 											NULL,
 											NULL);
 									nsurl_unref(url);
-								}
-								ami_utf8_free(utf8);
-							} else {
-								warn_user("NoMemory", 0);
 							}
+							if (ret != NSERROR_OK) {
+								warn_user(messages_get_errorcode(ret), 0);
+							}
+						}
 						break;
 
 						case GID_TOOLBARLAYOUT:
 							/* Need fixing: never gets here */
-							search_web_retrieve_ico(false);
+							search_web_select_provider(-1);
 						break;
 
 						case GID_SEARCHSTRING:
+						{
+							nserror ret;
+							nsurl *url;
+
 							GetAttr(STRINGA_TextVal,
 								(Object *)gwin->objects[GID_SEARCHSTRING],
 								(ULONG *)&storage);
-							if(utf8 = ami_to_utf8_easy((const char *)storage)) {
-								storage = (ULONG)search_web_from_term(utf8);
-								ami_utf8_free(utf8);
 
-								if (nsurl_create((char *)storage, &url) != NSERROR_OK) {
-									warn_user("NoMemory", 0);
-								} else {
+							utf8 = ami_to_utf8_easy((const char *)storage);
+
+							ret = search_web_omni(utf8, SEARCH_WEB_OMNI_SEARCHONLY, &url);
+							ami_utf8_free(utf8);
+							if (ret == NSERROR_OK) {
 									browser_window_navigate(gwin->bw,
 											url,
 											NULL,
@@ -1835,11 +1926,13 @@ void ami_handle_msg(void)
 											NULL,
 											NULL,
 											NULL);
-									nsurl_unref(url);
-								}
-							} else {
-								warn_user("NoMemory", 0);
+								nsurl_unref(url);
 							}
+							if (ret != NSERROR_OK) {
+								warn_user(messages_get_errorcode(ret), 0);
+							}
+
+						}
 						break;
 
 						case GID_HOME:
@@ -2152,6 +2245,7 @@ void ami_handle_msg(void)
 								} while(tab=ntab);
 							}
 
+							refresh_favicon = TRUE;
 							gwin->bw->reformat_pending = true;
 							ami_schedule_redraw(gwin, true);
 						break;
@@ -2164,7 +2258,6 @@ void ami_handle_msg(void)
 
 				case WMHI_ICONIFY:
 				{
-					struct DiskObject *dobj;
 					struct bitmap *bm;
 
 					bm = urldb_get_thumbnail(hlcache_handle_get_url(gwin->bw->current_content));
@@ -2236,7 +2329,7 @@ void ami_handle_msg(void)
 
 	if(refresh_search_ico)
 	{
-		gui_set_search_ico(NULL);
+		search_web_select_provider(-1);
 		refresh_search_ico = FALSE;
 	}
 
@@ -2748,8 +2841,6 @@ void ami_try_quit(void)
 
 static void gui_quit(void)
 {
-	int i;
-
 	ami_theme_throbber_free();
 
 	urldb_save(nsoption_charp(url_file));
@@ -3170,8 +3261,6 @@ gui_window_create(struct browser_window *bw,
 		gui_window_create_flags flags)
 {
 	struct gui_window *g = NULL;
-	bool closegadg=TRUE;
-	struct Node *node;
 	ULONG curx=nsoption_int(window_x),cury=nsoption_int(window_y),curw=nsoption_int(window_width),curh=nsoption_int(window_height);
 	char nav_west[100],nav_west_s[100],nav_west_g[100];
 	char nav_east[100],nav_east_s[100],nav_east_g[100];
@@ -3555,7 +3644,7 @@ gui_window_create(struct browser_window *bw,
 									GA_TabCycle, TRUE,
 									STRINGA_Buffer, g->shared->svbuffer,
 									STRINGVIEW_Header, URLHistory_GetList(),
-							StringEnd,
+							TAG_DONE),
 
 						LAYOUT_AddChild, g->shared->objects[GID_FAVE] = ButtonObject,
 							GA_ID, GID_FAVE,
@@ -3785,7 +3874,10 @@ gui_window_create(struct browser_window *bw,
 	glob = &browserglob;
 
 	if(locked_screen) UnlockPubScreen(NULL,scrn);
-	search_web_retrieve_ico(false);
+
+	/* set web search provider */
+	search_web_select_provider(nsoption_int(search_provider));
+	refresh_search_ico = TRUE;
 
 	ScreenToFront(scrn);
 
@@ -4171,9 +4263,7 @@ static void ami_do_redraw_limits(struct gui_window *g, struct browser_window *bw
 	struct IBox *bbox;
 	ULONG cur_tab = 0;
 	ULONG sx, sy;
-	struct rect clip;
-	struct RastPort *temprp;
-	int posx, posy;
+
 	struct redraw_context ctx = {
 		.interactive = true,
 		.background_images = true,
@@ -4296,13 +4386,10 @@ static void gui_window_update_box(struct gui_window *g, const struct rect *rect)
 
 static void ami_do_redraw(struct gui_window_2 *gwin)
 {
-	struct Region *reg = NULL;
 	struct Rectangle rect;
-	hlcache_handle *c;
 	ULONG hcurrent,vcurrent,xoffset,yoffset,width=800,height=600,x0=0,y0=0;
 	struct IBox *bbox;
 	ULONG oldh = gwin->oldh, oldv=gwin->oldv;
-	bool morescroll = false;
 	struct RastPort *temprp;
 
 	if(browser_window_redraw_ready(gwin->bw) == false) return;
@@ -4313,8 +4400,6 @@ static void ami_do_redraw(struct gui_window_2 *gwin)
 
 	gwin->bw->window->scrollx = hcurrent;
 	gwin->bw->window->scrolly = vcurrent;
-
-	c = gwin->bw->current_content;
 
 	width=bbox->Width;
 	height=bbox->Height;
@@ -4340,7 +4425,6 @@ static void ami_do_redraw(struct gui_window_2 *gwin)
 	if(gwin->redraw_scroll)
 	{
 		struct rect rect;
-		int x0, y0, x1, y1;
 		
 		gwin->bw->window->c_h_temp = gwin->bw->window->c_h;
 		gui_window_remove_caret(gwin->bw->window);
@@ -4431,7 +4515,7 @@ void ami_refresh_window(struct gui_window_2 *gwin)
 
 	struct IBox *bbox;
 	int x0, x1, y0, y1, sx, sy;
-	struct RegionRectangle *regrect, *nregrect;
+	struct RegionRectangle *regrect;
 
 	sx = gwin->bw->window->scrollx;
 	sy = gwin->bw->window->scrolly;
@@ -4692,12 +4776,14 @@ static uint32 ami_set_favicon_render_hook(struct Hook *hook, APTR space,
 }
 
 /**
- * set gui display of a retrieved favicon representing the search
- * provider
- * \param ico may be NULL for local calls; then access current cache from
- * search_web_ico()
+ * Gui callback when search provider details are updated.
+ *
+ * \param provider_name The providers name.
+ * \param ico_bitmap The icon bitmap representing the provider.
+ * \return NSERROR_OK on success else error code.
  */
-static void gui_set_search_ico(hlcache_handle *ico)
+static nserror gui_search_web_provider_update(const char *provider_name,
+	struct bitmap *ico_bitmap)
 {
 	struct BitMap *bm = NULL;
 	struct IBox *bbox;
@@ -4705,16 +4791,13 @@ static void gui_set_search_ico(hlcache_handle *ico)
 	struct nsObject *node;
 	struct nsObject *nnode;
 	struct gui_window_2 *gwin;
-	char fname[100];
-	struct bitmap *ico_bitmap;
 
-	if(IsMinListEmpty(window_list))	return;
-	if(nsoption_bool(kiosk_mode) == true) return;
+	if(IsMinListEmpty(window_list))	return NSERROR_BAD_PARAMETER;
+	if(nsoption_bool(kiosk_mode) == true) return NSERROR_BAD_PARAMETER;
 
-	if (ico == NULL) ico = search_web_ico();
-	ico_bitmap = content_get_bitmap(ico);
-	if ((ico != NULL) && (ico_bitmap != NULL))
+	if (ico_bitmap != NULL) {
 		bm = ami_bitmap_get_native(ico_bitmap, 16, 16, NULL);
+	}
 
 	node = (struct nsObject *)GetHead((struct List *)window_list);
 
@@ -4728,7 +4811,7 @@ static void gui_set_search_ico(hlcache_handle *ico)
 
 			RefreshSetGadgetAttrs((struct Gadget *)gwin->objects[GID_SEARCH_ICON],
 				gwin->win, NULL,
-				GA_HintInfo, search_web_provider_name(),
+				GA_HintInfo, provider_name,
 				TAG_DONE);
 
 			EraseRect(gwin->win->RPort, bbox->Left, bbox->Top,
@@ -4764,6 +4847,8 @@ static void gui_set_search_ico(hlcache_handle *ico)
 			}
 		}
 	} while(node = nnode);
+
+	return NSERROR_OK;
 }
 
 static uint32 ami_set_search_ico_render_hook(struct Hook *hook, APTR space,
@@ -4819,9 +4904,6 @@ static void gui_window_place_caret(struct gui_window *g, int x, int y, int heigh
 
 static void gui_window_remove_caret(struct gui_window *g)
 {
-	struct IBox *bbox;
-	int xs,ys;
-
 	if(!g) return;
 	if(g->c_h == 0) return;
 
@@ -4880,9 +4962,7 @@ void ami_scroller_hook(struct Hook *hook,Object *object,struct IntuiMessage *msg
 	ULONG gid;
 	struct gui_window_2 *gwin = hook->h_Data;
 	struct IntuiWheelData *wheel;
-	Object *reqrefresh = NULL;
 	struct Node *node = NULL;
-	char *urltxt;
 	nsurl *url;
 
 	switch(msg->Class)
@@ -4955,8 +5035,7 @@ void ami_scroller_hook(struct Hook *hook,Object *object,struct IntuiMessage *msg
 bool ami_text_box_at_point(struct gui_window_2 *gwin, ULONG *x, ULONG *y)
 {
 	struct IBox *bbox;
-	ULONG xs,ys,width,height;
-	int box_x=0,box_y=0;
+	ULONG xs, ys, width, height;
 	struct contextual_content data;
 
 	GetAttr(SPACE_AreaBox, (Object *)gwin->objects[GID_BROWSER],
@@ -5127,9 +5206,13 @@ static struct gui_window_table amiga_window_table = {
 	.save_link = gui_window_save_link,
 };
 
+/* amiga file handling operations */
+static struct gui_file_table amiga_file_table = {
+	.mkpath = amiga_vmkpath,
+	.basename = amiga_basename,
+};
+
 static struct gui_fetch_table amiga_fetch_table = {
-	.filename_from_path = filename_from_path,
-	.path_add_part = path_add_part,
 	.filetype = fetch_filetype,
 	.path_to_url = path_to_url,
 	.url_to_path = url_to_path,
@@ -5137,12 +5220,15 @@ static struct gui_fetch_table amiga_fetch_table = {
 	.get_resource_url = gui_get_resource_url,
 };
 
+static struct gui_search_web_table amiga_search_web_table = {
+	.provider_update = gui_search_web_provider_update,
+};
+
 static struct gui_browser_table amiga_browser_table = {
 	.poll = gui_poll,
 	.schedule = ami_schedule,
 
 	.quit = gui_quit,
-	.set_search_ico = gui_set_search_ico,
 	.launch_url = gui_launch_url,
 	.create_form_select_menu = gui_create_form_select_menu,
 	.cert_verify = gui_cert_verify,
@@ -5156,19 +5242,28 @@ int main(int argc, char** argv)
 	char messages[100];
 	char script[1024];
 	char temp[1024];
+	STRPTR current_user_cache = NULL;
 	BPTR lock = 0;
 	int32 user = 0;
 	nserror ret;
 	Object *splash_window = ami_gui_splash_open();
-	struct gui_table amiga_gui_table = {
+	struct netsurf_table amiga_table = {
 		.browser = &amiga_browser_table,
 		.window = &amiga_window_table,
 		.clipboard = amiga_clipboard_table,
 		.download = amiga_download_table,
 		.fetch = &amiga_fetch_table,
+		.file = &amiga_file_table,
 		.utf8 = amiga_utf8_table,
 		.search = amiga_search_table,
+		.search_web = &amiga_search_web_table,
+		.llcache = filesystem_llcache_table,
 	};
+
+	ret = netsurf_register(&amiga_table);
+	if (ret != NSERROR_OK) {
+		die("NetSurf operation table failed registration");
+	}
 
 	/* Open popupmenu.library just to check the version.
 	 * Versions older than 53.11 are dangerous, so we
@@ -5191,6 +5286,9 @@ int main(int argc, char** argv)
 		UnLock(lock);
 
 	current_user_options = ASPrintf("%s/Choices", current_user_dir);
+	current_user_cache = ASPrintf("%s/Cache", current_user_dir);
+
+	if(lock = CreateDirTree(current_user_cache)) UnLock(lock);
 
 	ami_mime_init("PROGDIR:Resources/mimetypes");
 	sprintf(temp, "%s/mimetypes.user", current_user_dir);
@@ -5199,7 +5297,7 @@ int main(int argc, char** argv)
 	ami_schedule_create();
 
 	amiga_plugin_hack_init();
-	amiga_datatypes_init();
+	ret = amiga_datatypes_init();
 
 	/* initialise logging. Not fatal if it fails but not much we
 	 * can do about it either.
@@ -5216,12 +5314,15 @@ int main(int argc, char** argv)
 
 	if (ami_locate_resource(messages, "Messages") == false)
 		die("Cannot open Messages file");
-	ret = netsurf_init(messages, &amiga_gui_table);
+	ret = netsurf_init(messages, current_user_cache);
 	if (ret != NSERROR_OK) {
 		die("NetSurf failed to initialise");
 	}
 
-	amiga_icon_init();
+	if(current_user_cache != NULL) FreeVec(current_user_cache);
+	ret = amiga_icon_init();
+
+	search_web_init(nsoption_charp(search_engines_file));
 
 	gui_init(argc, argv);
 	gui_init2(argc, argv);

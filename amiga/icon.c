@@ -39,6 +39,7 @@
 #include "amiga/os3support.h"
 #include "amiga/bitmap.h"
 #include "amiga/icon.h"
+#include "amiga/misc.h"
 #include "desktop/plotters.h"
 #include "image/bitmap.h"
 #include "content/content_protected.h"
@@ -139,7 +140,7 @@ bool amiga_icon_convert(struct content *c)
 	ULONG size;
 	int width = 0, height = 0;
 	long format = 0;
-	int err = 0;
+	int err;
 	uint8 r, g, b, a;
 	ULONG offset;
 	const char *url;
@@ -365,7 +366,7 @@ void amiga_icon_superimpose_favicon_internal(struct hlcache_handle *icon, struct
 	ULONG *icondata1, *icondata2;
 	ULONG width, height;
 	long format = 0;
-	int err = 0;
+	int err;
 
 	if(dobj == NULL) return;
 
@@ -420,11 +421,10 @@ void amiga_icon_superimpose_favicon_internal(struct hlcache_handle *icon, struct
 void amiga_icon_superimpose_favicon(char *path, struct hlcache_handle *icon, char *type)
 {
 	struct DiskObject *dobj = NULL;
-	struct BitMap *bm = NULL;
 	ULONG *icondata1, *icondata2;
 	ULONG width, height;
 	long format = 0;
-	int err = 0;
+	int err;
 	ULONG trans1, pals1;
 	ULONG trans2, pals2;
 	struct ColorRegister *pal1;

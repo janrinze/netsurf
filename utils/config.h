@@ -31,11 +31,22 @@
 char *strndup(const char *s, size_t n);
 #endif
 
-#if (defined(_GNU_SOURCE) || defined(__APPLE__) || defined(__HAIKU__))
+#if (defined(_GNU_SOURCE) || defined(__APPLE__) || defined(__HAIKU__) || defined(__OpenBSD__))
 #define HAVE_STRCASESTR
 #else
 #undef HAVE_STRCASESTR
 char *strcasestr(const char *haystack, const char *needle);
+#endif
+
+/* Although these platforms might have strftime or strptime they
+ * appear not to support the time_t seconds format specifier.
+ */
+#if (defined(_WIN32) || defined(riscos) || defined(__HAIKU__) || defined(__BEOS__) || defined(__amigaos4__) || defined(__AMIGA__) || defined(__MINT__))
+#undef HAVE_STRPTIME
+#undef HAVE_STRFTIME
+#else
+#define HAVE_STRPTIME
+#define HAVE_STRFTIME
 #endif
 
 /* For some reason, UnixLib defines this unconditionally. 

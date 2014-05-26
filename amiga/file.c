@@ -36,7 +36,6 @@
 #include "desktop/save_text.h"
 
 #include "utils/messages.h"
-#include "utils/url.h"
 
 #include <proto/asl.h>
 #include <proto/dos.h>
@@ -49,8 +48,6 @@ static struct Hook aslhookfunc;
 static const ULONG ami_file_asl_mime_hook(struct Hook *mh,
 		struct FileRequester *fr, struct AnchorPathOld *ap)
 {
-	BPTR file = 0;
-	char buffer[10];
 	char fname[1024];
 	BOOL ret = FALSE;
 	char *mt = NULL;
@@ -151,23 +148,19 @@ void ami_file_save(int type, char *fname, struct Window *win,
 		struct hlcache_handle *object, struct hlcache_handle *favicon,
 		struct browser_window *bw)
 {
-	BPTR lock = 0;
+	BPTR lock, fh;
 	const char *source_data;
 	ULONG source_size;
 	struct bitmap *bm;
-	BPTR fh=0;
 
 	ami_update_pointer(win, GUI_POINTER_WAIT);
 
-	if(ami_download_check_overwrite(fname, win, 0))
-	{
-		switch(type)
-		{
+	if(ami_download_check_overwrite(fname, win, 0)) {
+		switch(type) {
 			case AMINS_SAVE_SOURCE:
-				if((source_data = content_get_source_data(object, &source_size)))
-				{
-					if(fh = FOpen(fname, MODE_NEWFILE,0))
-					{
+				if((source_data = content_get_source_data(object, &source_size))) {
+					BPTR fh;
+					if(fh = FOpen(fname, MODE_NEWFILE,0)) {
 						FWrite(fh, source_data, 1, source_size);
 						FClose(fh);
 					}
@@ -179,8 +172,7 @@ void ami_file_save(int type, char *fname, struct Window *win,
 			break;
 
 			case AMINS_SAVE_COMPLETE:
-				if(lock = CreateDir(fname))
-				{
+				if(lock = CreateDir(fname)) {
 					UnLock(lock);
 					save_complete(object, fname, ami_file_set_type);
 					amiga_icon_superimpose_favicon(fname, favicon, NULL);
@@ -195,15 +187,13 @@ void ami_file_save(int type, char *fname, struct Window *win,
 			break;
 
 			case AMINS_SAVE_IFF:
-				if((bm = content_get_bitmap(object)))
-				{
+				if((bm = content_get_bitmap(object))) {
 					bm->url = (char *)nsurl_access(hlcache_handle_get_url(object));
 					bm->title = (char *)content_get_title(object);
 					bitmap_save(bm, fname, 0);
 				}
 #ifdef WITH_NS_SVG
-				else if(ami_mime_compare(object, "svg") == true)
-				{
+				else if(ami_mime_compare(object, "svg") == true) {
 					ami_save_svg(object, fname);
 				}
 #endif

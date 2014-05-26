@@ -68,6 +68,9 @@ struct ssl_cert_info;
 struct hlcache_handle;
 struct download_context;
 struct nsurl;
+struct gui_file_table;
+struct gui_llcache_table;
+struct gui_search_web_table;
 
 typedef struct nsnsclipboard_styles {
 	size_t start;			/**< Start of run */
@@ -318,28 +321,6 @@ struct gui_fetch_table {
 	/* Mandantory entries */
 
 	/**
-	 * Return the filename part of a full path
-	 *
-	 * @note used in curl fetcher
-	 *
-	 * \param path full path and filename
-	 * \return filename (will be freed with free())
-	 */
-	char *(*filename_from_path)(char *path);
-
-	/**
-	 * Add a path component/filename to an existing path
-	 *
-	 * @note used in save complete and file fetcher
-	 *
-	 * \param path buffer containing path + free space
-	 * \param length length of buffer "path"
-	 * \param newpart string containing path component to add to path
-	 * \return true on success
-	 */
-	bool (*path_add_part)(char *path, int length, const char *newpart);
-
-	/**
 	 * Determine the MIME type of a local file.
 	 *
 	 * @note used in file fetcher
@@ -387,7 +368,8 @@ struct gui_fetch_table {
 	/**
 	 * Find a MIME type for a local file
 	 *
-	 * @note used in file fetcher
+	 * @note only used in curl fetcher on RISC OS otherwise its a
+	 * strdup of filetype.
 	 *
 	 * \param ro_path RISC OS style path to file on disk
 	 * \return MIME type string (on heap, caller should free), or NULL
@@ -395,6 +377,7 @@ struct gui_fetch_table {
 	char *(*mimetype)(const char *ro_path);
 
 };
+
 
 
 /**
@@ -508,15 +491,6 @@ struct gui_browser_table {
 	void (*quit)(void);
 
 	/**
-	 * set gui display of a retrieved favicon representing the
-	 * search provider
-	 *
-	 * \param ico may be NULL for local calls; then access current
-	 * cache from search_web_ico()
-	 */
-	void (*set_search_ico)(struct hlcache_handle *ico);
-
-	/**
 	 * core has no fetcher for url
 	 */
 	void (*launch_url)(const char *url);
@@ -539,12 +513,12 @@ struct gui_browser_table {
 
 };
 
-
-/** Graphical user interface function table
+/**
+ * NetSurf operation function table
  *
- * function table implementing GUI interface to browser core
+ * Function table implementing interface operations for the browser core.
  */
-struct gui_table {
+struct netsurf_table {
 
 	/**
 	 * Browser table.
@@ -567,6 +541,15 @@ struct gui_table {
 	struct gui_fetch_table *fetch;
 
 	/**
+	 * File table
+	 *
+	 * Provides file and filename operations to the core. The
+	 * table is optional and may be NULL in which case the default
+	 * posix compliant operations will be used.
+	 */
+	struct gui_file_table *file;
+
+	/**
 	 * UTF8 table.
 	 *
 	 * Provides for conversion between the gui local character
@@ -576,12 +559,29 @@ struct gui_table {
 	struct gui_utf8_table *utf8;
 
 	/**
-	 *
 	 * Page search table.
 	 *
 	 * Provides routines for the interactive text search on a page.
 	 */
 	struct gui_search_table *search;
+
+	/**
+	 * Web search table.
+	 *
+	 * Used by the web search provider system. The table is
+	 * optional and may be NULL which uses the default empty
+	 * implementation.
+	 */
+	struct gui_search_web_table *search_web;
+
+	/**
+	 * Low level cache table.
+	 *
+	 * Used by the low level cache to push objects to persistant
+	 * storage. The table is optional and may be NULL which
+	 * uses the default implementation.
+	 */
+	struct gui_llcache_table *llcache;
 };
 
 

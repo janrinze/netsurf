@@ -72,7 +72,7 @@ struct gui_download_window {
 	struct dlnode *dln;
 	struct browser_window *bw;
 	struct download_context *ctx;
-	char *url;
+	const char *url;
 	char fname[1024];
 	int result;
 };
@@ -88,8 +88,7 @@ int downloads_in_progress = 0;
 static struct gui_download_window *gui_download_window_create(download_context *ctx,
 		struct gui_window *gui)
 {
-	const char *url = download_context_get_url(ctx);
-	const char *mime_type = download_context_get_mime_type(ctx);
+	const char *url = nsurl_access(download_context_get_url(ctx));
 	unsigned long total_size = download_context_get_total_length(ctx);
 	struct gui_download_window *dw;
 	char *dl_filename = ami_utf8_easy(download_context_get_filename(ctx));
@@ -132,7 +131,7 @@ static struct gui_download_window *gui_download_window_create(download_context *
 	dw->size = total_size;
 	dw->downloaded = 0;
 	if(gui) dw->bw = gui->shared->bw;
-	dw->url = (char *)strdup((char *)url);
+	dw->url = url;
 
 	va[0] = (APTR)dw->downloaded;
 	va[1] = (APTR)dw->size;
@@ -230,11 +229,12 @@ static nserror gui_download_window_data(struct gui_download_window *dw,
 static void gui_download_window_done(struct gui_download_window *dw)
 {
 	struct dlnode *dln,*dln2 = NULL;
-	struct browser_window *bw = dw->bw;
+	struct browser_window *bw;
 	bool queuedl = false;
 	STRPTR sendcmd = NULL;
 
 	if(!dw) return;
+	bw = dw->bw;
 
 	if((nsoption_bool(download_notify)) && (dw->result == AMINS_DLOAD_OK))
 	{
@@ -260,7 +260,6 @@ static void gui_download_window_done(struct gui_download_window *dw)
 
 	FClose(dw->fh);
 	SetComment(dw->fname, dw->url);
-	if(dw->url) free(dw->url);
 
 	downloads_in_progress--;
 
@@ -346,7 +345,6 @@ void ami_free_download_list(struct List *dllist)
 void 
 gui_window_save_link(struct gui_window *g, const char *url, const char *title)
 {
-	BPTR fh = 0;
 	char fname[1024];
 	STRPTR openurlstring,linkname;
 	struct DiskObject *dobj = NULL;
@@ -368,6 +366,8 @@ gui_window_save_link(struct gui_window *g, const char *url, const char *title)
 
 		if(ami_download_check_overwrite(fname, g->shared->win, 0))
 		{
+			BPTR fh;
+
 			if(fh = FOpen(fname,MODE_NEWFILE,0))
 			{
 				/* TODO: Should be URLOpen on OS4.1 */
@@ -400,8 +400,6 @@ BOOL ami_download_check_overwrite(const char *file, struct Window *win, ULONG si
 	/* Return TRUE if file can be (over-)written */
 	int32 res = 0;
 	BPTR lock = 0;
-	BPTR fh = 0;
-	int64 oldsize = 0;
 	char *overwritetext;
 
 	if(nsoption_bool(ask_overwrite) == false) return TRUE;
@@ -411,6 +409,9 @@ BOOL ami_download_check_overwrite(const char *file, struct Window *win, ULONG si
 	if(lock)
 	{
 		if(size) {
+			BPTR fh;
+			int64 oldsize = 0;
+
 			if(fh = OpenFromLock(lock)) {
 				oldsize = GetFileSize(fh);
 				Close(fh);

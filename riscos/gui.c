@@ -67,6 +67,7 @@
 #include "desktop/save_complete.h"
 #include "desktop/treeview.h"
 #include "render/font.h"
+#include "utils/file.h"
 
 #include "riscos/content-handlers/artworks.h"
 #include "riscos/bitmap.h"
@@ -636,13 +637,13 @@ void ro_gui_create_dir(char *path)
 
 void ro_gui_choose_language(void)
 {
-	char path[40];
-
 	/* if option_language exists and is valid, use that */
 	if (nsoption_charp(language)) {
+		char path[40];
 		if (2 < strlen(nsoption_charp(language)))
 			nsoption_charp(language)[2] = 0;
 		sprintf(path, "NetSurf:Resources.%s", nsoption_charp(language));
+
 		if (is_dir(path)) {
 			nsoption_setnull_charp(accept_language, 
 					strdup(nsoption_charp(language)));
@@ -735,7 +736,7 @@ static char *path_to_url(const char *path)
 	char *unix_path; /* unix path */
 	char *escurl;
 	os_error *error;
-	url_func_result url_err;
+	nserror url_err;
 	int urllen;
 	char *url; /* resulting url */
 
@@ -794,7 +795,7 @@ static char *path_to_url(const char *path)
 	/* We don't want '/' to be escaped.  */
 	url_err = url_escape(url, FILE_SCHEME_PREFIX_LEN, false, "/", &escurl);
 	free(url); url = NULL;
-	if (url_err != URL_FUNC_OK) {
+	if (url_err != NSERROR_OK) {
 		LOG(("url_escape failed: %s", url));
 		return NULL;
 	}
@@ -815,18 +816,18 @@ char *url_to_path(const char *url)
 	char *path;
 	char *filename;
 	char *respath;
-	url_func_result res; /* result from url routines */
+	nserror res; /* result from url routines */
 	char *r;
 
 	res = url_path(url, &path);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		warn_user("NoMemory", 0);
 		return NULL;
 	}
 
 	res = url_unescape(path, &respath);
 	free(path);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		return NULL;
 	}
 
@@ -1448,7 +1449,6 @@ void ro_msg_terminate_filename(wimp_full_message_data_xfer *message)
 void ro_msg_dataload(wimp_message *message)
 {
 	int file_type = message->data.data_xfer.file_type;
-	int tree_file_type = file_type;
 	char *urltxt = NULL;
 	char *title = NULL;
 	struct gui_window *g;
@@ -1471,15 +1471,12 @@ void ro_msg_dataload(wimp_message *message)
 		case FILETYPE_ACORN_URI:
 			urltxt = ro_gui_uri_file_parse(message->data.data_xfer.file_name,
 					&title);
-			tree_file_type = 0xfaf;
 			break;
 		case FILETYPE_ANT_URL:
 			urltxt = ro_gui_url_file_parse(message->data.data_xfer.file_name);
-			tree_file_type = 0xfaf;
 			break;
 		case FILETYPE_IEURL:
 			urltxt = ro_gui_ieurl_file_parse(message->data.data_xfer.file_name);
-			tree_file_type = 0xfaf;
 			break;
 
 		case FILETYPE_HTML:
@@ -1594,6 +1591,7 @@ char *ro_gui_uri_file_parse(const char *file_name, char **uri_title)
 	/* URI */
 	if (!ro_gui_uri_file_parse_line(fp, line))
 		goto uri_syntax_error;
+
 	url = strdup(line);
 	if (!url) {
 		warn_user("NoMemory", 0);
@@ -1603,7 +1601,7 @@ char *ro_gui_uri_file_parse(const char *file_name, char **uri_title)
 
 	/* title */
 	if (!ro_gui_uri_file_parse_line(fp, line))
-		goto uri_syntax_error;
+		goto uri_free;
 	if (uri_title && line[0] && ((line[0] != '*') || line[1])) {
 		*uri_title = strdup(line);
 		if (!*uri_title) /* non-fatal */
@@ -1612,6 +1610,9 @@ char *ro_gui_uri_file_parse(const char *file_name, char **uri_title)
 	fclose(fp);
 
 	return url;
+
+uri_free:
+	free(url);
 
 uri_syntax_error:
 	fclose(fp);
@@ -1855,7 +1856,6 @@ void ro_msg_dataopen(wimp_message *message)
 {
 	int file_type = message->data.data_xfer.file_type;
 	char *url = 0;
-	size_t len;
 	os_error *oserror;
 	nsurl *urlns;
 	nserror error;
@@ -1868,7 +1868,7 @@ void ro_msg_dataopen(wimp_message *message)
 		url = ro_gui_ieurl_file_parse(message->
 				data.data_xfer.file_name);
 	else if (file_type == 0x2000) {		/* application */
-		len = strlen(message->data.data_xfer.file_name);
+		size_t len = strlen(message->data.data_xfer.file_name);
 		if (len < 9 || strcmp(".!NetSurf",
 				message->data.data_xfer.file_name + len - 9))
 			return;
@@ -2050,8 +2050,7 @@ void ro_gui_screen_size(int *width, int *height)
 void ro_gui_view_source(hlcache_handle *c)
 {
 	os_error *error;
-	char full_name[256];
-	char *temp_name, *r;
+	char *temp_name;
 	wimp_full_message_data_xfer message;
 	int objtype;
 	bool done = false;
@@ -2089,11 +2088,14 @@ void ro_gui_view_source(hlcache_handle *c)
 		 * allow it to be re-used next time NetSurf is started. The
 		 * memory overhead from doing this is under 1 byte per
 		 * filename. */
+		char *r;
+		char full_name[256];
 		const char *filename = filename_request();
 		if (!filename) {
 			warn_user("NoMemory", 0);
 			return;
 		}
+
 		snprintf(full_name, 256, "%s/%s", TEMP_FILENAME_PREFIX,
 				filename);
 		full_name[255] = '\0';
@@ -2104,6 +2106,7 @@ void ro_gui_view_source(hlcache_handle *c)
 			return;
 		}
 		message.file_name[211] = '\0';
+
 		error = xosfile_save_stamped(message.file_name,
 				ro_content_filetype(c),
 				(byte *) source_data,
@@ -2279,77 +2282,177 @@ void PDF_Password(char **owner_pass, char **user_pass, char *path)
 	*owner_pass = NULL;
 }
 
-/**
- * Return the filename part of a full path
- *
- * \param path full path and filename
- * \return filename (will be freed with free())
- */
 
-static char *filename_from_path(char *path)
+#define DIR_SEP ('.')
+
+/**
+ * Generate a riscos path from one or more component elemnts.
+ *
+ * Constructs a complete path element from passed components. The
+ * second (and subsequent) components have a slash substituted for all
+ * riscos directory separators.
+ *
+ * If a string is allocated it must be freed by the caller.
+ *
+ * @param[in,out] str pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the complete path.
+ * @param[in,out] size The size of the space available if \a str not
+ *                     NULL on input and if not NULL set to the total
+ *                     output length on output.
+ * @param[in] nemb The number of elements.
+ * @param[in] ap The elements of the path as string pointers.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
+ */
+static nserror riscos_mkpath(char **str, size_t *size, size_t nelm, va_list ap)
 {
-	char *leafname;
+	const char *elm[16];
+	size_t elm_len[16];
+	size_t elm_idx;
+	char *fname;
+	size_t fname_len = 0;
+	char *curp;
+	size_t idx;
+
+	/* check the parameters are all sensible */
+	if ((nelm == 0) || (nelm > 16)) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if ((*str != NULL) && (size == NULL)) {
+		/* if the caller is providing the buffer they must say
+		 * how much space is available.
+		 */
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	/* calculate how much storage we need for the complete path
+	 * with all the elements.
+	 */
+	for (elm_idx = 0; elm_idx < nelm; elm_idx++) {
+		elm[elm_idx] = va_arg(ap, const char *);
+		/* check the argument is not NULL */
+		if (elm[elm_idx] == NULL) {
+			return NSERROR_BAD_PARAMETER;
+		}
+		elm_len[elm_idx] = strlen(elm[elm_idx]);
+		fname_len += elm_len[elm_idx];
+	}
+	fname_len += nelm; /* allow for separators and terminator */
+
+	/* ensure there is enough space */
+	fname = *str;
+	if (fname != NULL) {
+		if (fname_len > *size) {
+			return NSERROR_NOSPACE;
+		}
+	} else {
+		fname = malloc(fname_len);
+		if (fname == NULL) {
+			return NSERROR_NOMEM;
+		}
+	}
+
+	/* copy the elements in with directory separator */
+	curp = fname;
+
+	/* first element is not altered */
+	memmove(curp, elm[0], elm_len[0]);
+	curp += elm_len[0];
+	/* ensure there is a delimiter */
+	if (curp[-1] != DIR_SEP) {
+		*curp = DIR_SEP;
+		curp++;
+	}
+
+	/* subsequent elemnts have slashes substituted with directory
+	 * separators.
+	 */
+	for (elm_idx = 1; elm_idx < nelm; elm_idx++) {
+		for (idx = 0; idx < elm_len[elm_idx]; idx++) {
+			if (elm[elm_idx][idx] == DIR_SEP) {
+				*curp = '/';
+			} else {
+				*curp = elm[elm_idx][idx];
+			}
+			curp++;
+		}
+		*curp = DIR_SEP;
+		curp++;
+	}
+	curp[-1] = 0; /* NULL terminate */
+
+	assert((curp - fname) <= (int)fname_len);
+
+	*str = fname;
+	if (size != NULL) {
+		*size = fname_len;
+	}
+
+	return NSERROR_OK;
+
+}
+
+
+/**
+ * Get the basename of a file using posix path handling.
+ *
+ * This gets the last element of a path and returns it. The returned
+ * element has all forward slashes translated into riscos directory
+ * separators.
+ *
+ * @param[in] path The path to extract the name from.
+ * @param[in,out] str Pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the path element.
+ * @param[in,out] size The size of the space available if \a
+ *                     str not NULL on input and set to the total
+ *                     output length on output.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
+ */
+static nserror riscos_basename(const char *path, char **str, size_t *size)
+{
+	const char *leafname;
+	char *fname;
 	char *temp;
-	int leaflen;
 
-	temp = strrchr(path, '.');
-	if (!temp)
-		temp = path; /* already leafname */
-	else
-		temp += 1;
+	if (path == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
 
-	leaflen = strlen(temp);
-
-	leafname = malloc(leaflen + 1);
+	leafname = strrchr(path, DIR_SEP);
 	if (!leafname) {
-		LOG(("malloc failed"));
-		return NULL;
+		leafname = path;
+	} else {
+		leafname += 1;
 	}
-	memcpy(leafname, temp, leaflen + 1);
 
+	fname = strdup(leafname);
+	if (fname == NULL) {
+		return NSERROR_NOMEM;
+	}
+
+	/** @todo check this leafname translation is actually required */
 	/* and s/\//\./g */
-	for (temp = leafname; *temp; temp++)
-		if (*temp == '/')
-			*temp = '.';
-
-	return leafname;
-}
-
-/**
- * Add a path component/filename to an existing path
- *
- * \param path buffer containing platform-native format path + free space
- * \param length length of buffer "path"
- * \param newpart string containing unix-format path component to add to path
- * \return true on success
- */
-
-static bool path_add_part(char *path, int length, const char *newpart)
-{
-	size_t path_len = strlen(path);
-
-	/* Append directory separator, if there isn't one */
-	if (path[path_len - 1] != '.') {
-		strncat(path, ".", length);
-		path_len += 1;
+	for (temp = fname; *temp != 0; temp++) {
+		if (*temp == '/') {
+			*temp = DIR_SEP;
+		}
 	}
 
-	strncat(path, newpart, length);
-
-	/* Newpart is either a directory name, or a file leafname
- 	 * Either way, we must replace all dots with forward slashes */
-	for (path = path + path_len; *path; path++) {
-		if (*path == '.')
-			*path = '/';
+	*str = fname;
+	if (size != NULL) {
+		*size = strlen(fname);
 	}
-
-	return true;
+	return NSERROR_OK;
 }
 
+
+static struct gui_file_table riscos_file_table = {
+	.mkpath = riscos_mkpath,
+	.basename = riscos_basename,
+};
 
 static struct gui_fetch_table riscos_fetch_table = {
-	.filename_from_path = filename_from_path,
-	.path_add_part = path_add_part,
 	.filetype = fetch_filetype,
 	.path_to_url = path_to_url,
 	.url_to_path = url_to_path,
@@ -2375,20 +2478,25 @@ int main(int argc, char** argv)
 {
 	char path[40];
 	int length;
-	char logging_env[2];
 	os_var_type type;
 	int used = -1;  /* slightly better with older OSLib versions */
 	os_error *error;
 	nserror ret;
-	struct gui_table riscos_gui_table = {
+	struct netsurf_table riscos_table = {
 		.browser = &riscos_browser_table,
 		.window = riscos_window_table,
 		.clipboard = riscos_clipboard_table,
 		.download = riscos_download_table,
 		.fetch = &riscos_fetch_table,
+		.file = &riscos_file_table,
 		.utf8 = riscos_utf8_table,
 		.search = riscos_search_table,
 	};
+
+	ret = netsurf_register(&riscos_table);
+	if (ret != NSERROR_OK) {
+		die("NetSurf operation table failed registration");
+	}
 
 	/* Consult NetSurf$Logging environment variable to decide if logging
 	 * is required. */
@@ -2397,6 +2505,7 @@ int main(int argc, char** argv)
 	if (error != NULL || type != os_VARTYPE_STRING || used != -2) {
 		verbose_log = true;
 	} else {
+		char logging_env[2];
 		error = xos_read_var_val("NetSurf$Logging", logging_env,
 				sizeof(logging_env), 0, os_VARTYPE_STRING,
 				&used, NULL, &type);
@@ -2433,7 +2542,7 @@ int main(int argc, char** argv)
 	}
 
 	/* common initialisation */
-	ret = netsurf_init(path, &riscos_gui_table);
+	ret = netsurf_init(path, NULL);
 	if (ret != NSERROR_OK) {
 		die("NetSurf failed to initialise");
 	}

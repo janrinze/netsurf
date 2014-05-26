@@ -993,44 +993,6 @@ static void *myrealloc(void *ptr, size_t len, void *pw)
 	return realloc(ptr, len);
 }
 
-/**
- * Return the filename part of a full path
- *
- * \param path full path and filename
- * \return filename (will be freed with free())
- */
-
-static char *filename_from_path(char *path)
-{
-	char *leafname;
-
-	leafname = strrchr(path, '/');
-	if (!leafname)
-		leafname = path;
-	else
-		leafname += 1;
-
-	return strdup(leafname);
-}
-
-/**
- * Add a path component/filename to an existing path
- *
- * \param path buffer containing path + free space
- * \param length length of buffer "path"
- * \param newpart string containing path component to add to path
- * \return true on success
- */
-
-static bool path_add_part(char *path, int length, const char *newpart)
-{
-	if(path[strlen(path) - 1] != '/')
-		strncat(path, "/", length);
-
-	strncat(path, newpart, length);
-
-	return true;
-}
 
 static struct gui_clipboard_table beos_clipboard_table = {
 	gui_get_clipboard,
@@ -1038,8 +1000,6 @@ static struct gui_clipboard_table beos_clipboard_table = {
 };
 
 static struct gui_fetch_table beos_fetch_table = {
-	filename_from_path,
-        path_add_part,
         fetch_filetype,
         path_to_url,
         url_to_path,
@@ -1064,13 +1024,18 @@ int main(int argc, char** argv)
 {
 	nserror ret;
 	BPath options;
-	struct gui_table beos_gui_table = {
+	struct netsurf_table beos_table = {
 		&beos_browser_table,
 		beos_window_table,
 		beos_download_table,
 		&beos_clipboard_table,
                 &beos_fetch_table
 	};
+
+        ret = netsurf_register(&beos_table);
+        if (ret != NSERROR_OK) {
+		die("NetSurf operation table failed registration");
+        }
 
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &options, true) == B_OK) {
 		options.Append("x-vnd.NetSurf");
@@ -1097,7 +1062,7 @@ int main(int argc, char** argv)
 
 	/* common initialisation */
 	BPath messages = get_messages_path();
-	ret = netsurf_init(messages.Path(), &beos_gui_table);
+        ret = netsurf_init(messages.Path(), NULL);
 	if (ret != NSERROR_OK) {
 		die("NetSurf failed to initialise");
 	}
@@ -1116,13 +1081,18 @@ int gui_init_replicant(int argc, char** argv)
 {
 	nserror ret;
 	BPath options;
-	struct gui_table beos_gui_table = {
+	struct netsurf_table beos_table = {
 		&beos_browser_table,
 		beos_window_table,
 		beos_download_table,
 		&beos_clipboard_table,
                 &beos_fetch_table
 	};
+
+        ret = netsurf_register(&beos_table);
+        if (ret != NSERROR_OK) {
+		die("NetSurf operation table failed registration");
+        }
 
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &options, true) == B_OK) {
 		options.Append("x-vnd.NetSurf");
@@ -1145,7 +1115,7 @@ int gui_init_replicant(int argc, char** argv)
 
 	/* common initialisation */
 	BPath messages = get_messages_path();
-	ret = netsurf_init(messages.Path(), &beos_gui_table);
+        ret = netsurf_init(messages.Path(), NULL);
 	if (ret != NSERROR_OK) {
 		// FIXME: must not die when in replicant!
 		die("NetSurf failed to initialise");

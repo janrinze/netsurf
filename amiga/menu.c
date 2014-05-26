@@ -456,8 +456,6 @@ static struct gui_window_2 *ami_menu_layout(struct gui_window_2 *gwin)
 
 struct NewMenu *ami_create_menu(struct gui_window_2 *gwin)
 {
-	int i;
-
 	gwin->menu = AllocVecTags(sizeof(struct NewMenu) * (AMI_MENU_AREXX_MAX + 1),
 					AVT_ClearWithValue, 0, TAG_DONE);
 	ami_init_menulabs(gwin);
@@ -790,18 +788,9 @@ static void ami_menu_item_project_about(struct Hook *hook, APTR window, struct I
 				TDR_TitleString, messages_get("NetSurf"),
 				TDR_Window, gwin->win,
 				TDR_GadgetString, temp2,
-#ifndef NDEBUG
-				TDR_FormatString,"NetSurf %s\n%s\nBuild date %s\n\nhttp://www.netsurf-browser.org",
-#else
-				TDR_FormatString,"NetSurf %s\n%s\n\nhttp://www.netsurf-browser.org",
-#endif
+				TDR_FormatString,"NetSurf %s\nBuild date %s\n\nhttp://www.netsurf-browser.org",
 				TDR_Arg1,netsurf_version,
-#ifdef NS_AMIGA_CAIRO
-				TDR_Arg2,"Cairo (OS4.1+) SObjs build",
-#else
-				TDR_Arg2,"graphics.library static build",
-#endif
-				TDR_Arg3,verdate,
+				TDR_Arg2,verdate,
 				TAG_DONE);
 
 	free(temp2);
@@ -1029,7 +1018,6 @@ static void ami_menu_item_hotlist_show(struct Hook *hook, APTR window, struct In
 static void ami_menu_item_hotlist_entries(struct Hook *hook, APTR window, struct IntuiMessage *msg)
 {
 	nsurl *url = hook->h_Data;
-	nserror error;
 	struct gui_window_2 *gwin;
 	GetAttr(WINDOW_UserData, (Object *)window, (ULONG *)&gwin);
 
@@ -1096,13 +1084,13 @@ static void ami_menu_item_arexx_entries(struct Hook *hook, APTR window, struct I
 	char *script = hook->h_Data;
 	char *temp;
 	struct gui_window_2 *gwin;
-	BPTR lock = 0;
 	GetAttr(WINDOW_UserData, (Object *)window, (ULONG *)&gwin);
 
 	if(script)
 	{
 		if(temp = AllocVecTagList(1024, NULL))
 		{
+			BPTR lock;
 			if(lock = Lock(nsoption_charp(arexx_dir), SHARED_LOCK)) {
 				DevNameFromLock(lock, temp, 1024, DN_FULLPATH);
 				AddPart(temp, script, 1024);
@@ -1113,3 +1101,4 @@ static void ami_menu_item_arexx_entries(struct Hook *hook, APTR window, struct I
 		}
 	}
 }
+

@@ -17,12 +17,15 @@
  */
 
 #include "content/hlcache.h"
+#include "content/backing_store.h"
+
 #include "desktop/download.h"
+#include "desktop/searchweb.h"
 #include "desktop/gui_factory.h"
+#include "utils/file.h"
 
-/** The global GUI interface table */
-struct gui_table *guit = NULL;
-
+/** The global interface table */
+struct netsurf_table *guit = NULL;
 
 
 static void gui_default_window_set_title(struct gui_window *g, const char *title)
@@ -399,6 +402,61 @@ static nserror verify_search_register(struct gui_search_table *gst)
 	return NSERROR_OK;
 }
 
+static nserror
+gui_default_provider_update(const char *provider_name,
+			    struct bitmap *provider_bitmap)
+{
+	return NSERROR_OK;
+}
+
+static struct gui_search_web_table default_search_web_table = {
+	.provider_update = gui_default_provider_update,
+};
+
+/** verify search table is valid */
+static nserror verify_search_web_register(struct gui_search_web_table *gswt)
+{
+	/* check table is present */
+	if (gswt == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	/* mandantory operations */
+	if (gswt->provider_update == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	return NSERROR_OK;
+}
+
+/** verify low level cache persistant backing store table is valid */
+static nserror verify_llcache_register(struct gui_llcache_table *glt)
+{
+	/* check table is present */
+	if (glt == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	/* mandantory operations */
+	if (glt->store == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if (glt->fetch == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if (glt->invalidate == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if (glt->initialise == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if (glt->finalise == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	return NSERROR_OK;
+}
+
 static nsurl *gui_default_get_resource_url(const char *path)
 {
 	return NULL;
@@ -418,12 +476,6 @@ static nserror verify_fetch_register(struct gui_fetch_table *gft)
 	}
 
 	/* check the mandantory fields are set */
-	if (gft->filename_from_path == NULL) {
-		return NSERROR_BAD_PARAMETER;
-	}
-	if (gft->path_add_part == NULL) {
-		return NSERROR_BAD_PARAMETER;
-	}
 	if (gft->filetype == NULL) {
 		return NSERROR_BAD_PARAMETER;
 	}
@@ -446,13 +498,29 @@ static nserror verify_fetch_register(struct gui_fetch_table *gft)
 	return NSERROR_OK;
 }
 
+/** verify file table is valid */
+static nserror verify_file_register(struct gui_file_table *gft)
+{
+	/* check table is present */
+	if (gft == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	/* check the mandantory fields are set */
+	if (gft->mkpath == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+	if (gft->basename == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
+
+	return NSERROR_OK;
+}
+
 static void gui_default_quit(void)
 {
 }
 
-static void gui_default_set_search_ico(hlcache_handle *ico)
-{
-}
 
 static void gui_default_launch_url(const char *url)
 {
@@ -507,9 +575,6 @@ static nserror verify_browser_register(struct gui_browser_table *gbt)
 	if (gbt->quit == NULL) {
 		gbt->quit = gui_default_quit;
 	}
-	if (gbt->set_search_ico == NULL) {
-		gbt->set_search_ico = gui_default_set_search_ico;
-	}
 	if (gbt->launch_url == NULL) {
 		gbt->launch_url = gui_default_launch_url;
 	}
@@ -527,7 +592,7 @@ static nserror verify_browser_register(struct gui_browser_table *gbt)
 
 
 /* exported interface documented in desktop/gui_factory.h */
-nserror gui_factory_register(struct gui_table *gt)
+nserror gui_factory_register(struct netsurf_table *gt)
 {
 	nserror err;
 
@@ -555,6 +620,15 @@ nserror gui_factory_register(struct gui_table *gt)
 
 	/* fetch table */
 	err = verify_fetch_register(gt->fetch);
+	if (err != NSERROR_OK) {
+		return err;
+	}
+
+	/* file table */
+	if (gt->file == NULL) {
+		gt->file = default_file_table;
+	}
+	err = verify_file_register(gt->file);
 	if (err != NSERROR_OK) {
 		return err;
 	}
@@ -595,6 +669,26 @@ nserror gui_factory_register(struct gui_table *gt)
 		gt->search = &default_search_table;
 	}
 	err = verify_search_register(gt->search);
+	if (err != NSERROR_OK) {
+		return err;
+	}
+
+	/* web search table */
+	if (gt->search_web == NULL) {
+		/* set default search table */
+		gt->search_web = &default_search_web_table;
+	}
+	err = verify_search_web_register(gt->search_web);
+	if (err != NSERROR_OK) {
+		return err;
+	}
+
+	/* llcache table */
+	if (gt->llcache == NULL) {
+		/* set default backing store table */
+		gt->llcache = null_llcache_table;
+	}
+	err = verify_llcache_register(gt->llcache);
 	if (err != NSERROR_OK) {
 		return err;
 	}

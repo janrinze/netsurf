@@ -269,7 +269,7 @@ void ami_context_menu_add_submenu(Object *ctxmenuobj, ULONG cmsub, void *userdat
 							PMIA_UserData, nsurl_access(hlcache_handle_get_url(userdata)),
 							PMIA_CommKey, "B",
 						TAG_DONE),
-					TAG_DONE),
+					PMEND,
 				TAG_DONE),
 			~0);
 		break;
@@ -324,7 +324,7 @@ void ami_context_menu_add_submenu(Object *ctxmenuobj, ULONG cmsub, void *userdat
 							PMIA_UserData, userdata,
 							PMIA_Disabled, (content_get_type(userdata) != CONTENT_HTML),
 						TAG_DONE),
-					TAG_DONE),
+					PMEND,
 				TAG_DONE),
 			~0);
 		break;
@@ -364,7 +364,7 @@ void ami_context_menu_add_submenu(Object *ctxmenuobj, ULONG cmsub, void *userdat
 							PMIA_UserData, userdata,
 							PMIA_Disabled, !browser_window_stop_available(userdata),
 						TAG_DONE),
-					TAG_DONE),
+					PMEND,
 				TAG_DONE),
 			~0);
 		break;
@@ -410,7 +410,7 @@ void ami_context_menu_add_submenu(Object *ctxmenuobj, ULONG cmsub, void *userdat
 							PMIA_ID, CMID_SAVEURL,
 							PMIA_UserData, userdata,
 						TAG_DONE),
-					TAG_DONE),
+					PMEND,
 				TAG_DONE),
 			~0);
 		break;
@@ -467,7 +467,7 @@ void ami_context_menu_add_submenu(Object *ctxmenuobj, ULONG cmsub, void *userdat
 							PMIA_UserData, userdata,
 							PMIA_Disabled, !ami_mime_content_to_cmd(userdata),
 						TAG_DONE),
-					TAG_DONE),
+					PMEND,
 				TAG_DONE),
 			~0);
 		break;
@@ -982,26 +982,27 @@ static uint32 ami_context_menu_hook(struct Hook *hook,Object *item,APTR reserved
 			case CMID_SELSEARCH:
 			{
 				char *sel;
-				char *urltxt;
-				nsurl *url;
 
 				if(sel = browser_window_get_selection(gwin->bw))
 				{
-					urltxt = search_web_from_term(sel);
+					nserror ret;
+					nsurl *url;
 
-					if (nsurl_create(urltxt, &url) != NSERROR_OK) {
-						warn_user("NoMemory", 0);
-					} else {
-						browser_window_navigate(gwin->bw,
-							url,
-							NULL,
-							BW_NAVIGATE_HISTORY,
-							NULL,
-							NULL,
-							NULL);
+					ret = search_web_omni(sel, SEARCH_WEB_OMNI_NONE, &url);
+					free(sel);
+					if (ret == NSERROR_OK) {
+						ret = browser_window_navigate(gwin->bw,
+									      url,
+									      NULL,
+									      BW_NAVIGATE_HISTORY,
+									      NULL,
+									      NULL,
+									      NULL);
 						nsurl_unref(url);
 					}
-					free(sel);
+					if (ret != NSERROR_OK) {
+						warn_user(messages_get_errorcode(ret), 0);
+					}
 				}
 			}
 			break;

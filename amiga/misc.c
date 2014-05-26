@@ -43,7 +43,6 @@ void warn_user(const char *warning, const char *detail)
 	Object *req = NULL;
 	char *utf8warning = ami_utf8_easy(messages_get(warning));
 	STRPTR bodytext = NULL;
-	LONG result = 0;
 
 	LOG(("%s %s", warning, detail));
 
@@ -63,7 +62,7 @@ void warn_user(const char *warning, const char *detail)
 		TAG_DONE);
 
 	if (req) {
-		result = IDoMethod(req, RM_OPENREQ, NULL, NULL, scrn);
+		LONG result = IDoMethod(req, RM_OPENREQ, NULL, NULL, scrn);
 		DisposeObject(req);
 	}
 
@@ -108,7 +107,7 @@ void die(const char *error)
 
 char *url_to_path(const char *url)
 {
-	char *tmps, *unesc, *slash, *colon, *url2;
+	char *unesc, *slash, *colon, *url2;
 
 	if (strncmp(url, "file://", SLEN("file://")) != 0)
 		return NULL;
@@ -142,7 +141,7 @@ char *url_to_path(const char *url)
 		}
 	}
 
-	if(url_unescape(url2,&unesc) == URL_FUNC_OK)
+	if(url_unescape(url2,&unesc) == NSERROR_OK)
 		return unesc;
 
 	return (char *)url2;

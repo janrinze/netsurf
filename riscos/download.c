@@ -33,6 +33,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <curl/curl.h>
+#include <libwapcaplet/libwapcaplet.h>
+
 #include "oslib/mimemap.h"
 #include "oslib/osargs.h"
 #include "oslib/osfile.h"
@@ -48,9 +50,10 @@
 #include "utils/nsoption.h"
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "utils/url.h"
+#include "utils/nsurl.h"
 #include "utils/utf8.h"
 #include "utils/utils.h"
+#include "utils/corestrings.h"
 
 #include "riscos/gui.h"
 #include "riscos/dialog.h"
@@ -210,6 +213,60 @@ const char *ro_gui_download_temp_name(struct gui_download_window *dw)
 	return temp_name;
 }
 
+/**
+ * Try and find the correct RISC OS filetype from a download context.
+ */
+static nserror download_ro_filetype(download_context *ctx, bits *ftype_out)
+{
+	nsurl *url = download_context_get_url(ctx);
+	bits ftype = 0;
+	lwc_string *scheme;
+
+	/* If the file is local try and read its filetype */
+	scheme = nsurl_get_component(url, NSURL_SCHEME);
+	if (scheme != NULL) {
+		bool filescheme;
+		if (lwc_string_isequal(scheme,
+				       corestring_lwc_file,
+				       &filescheme) != lwc_error_ok) {
+			filescheme = false;
+		}
+
+		if (filescheme) {
+			lwc_string *path = nsurl_get_component(url, NSURL_PATH);
+			if (path != NULL && lwc_string_length(path) != 0) {
+				char *raw_path;
+				raw_path = curl_unescape(lwc_string_data(path),
+						lwc_string_length(path));
+				if (raw_path != NULL) {
+					ftype =	ro_filetype_from_unix_path(raw_path);
+					curl_free(raw_path);
+				}
+			}
+		}
+	}
+
+	/* If we still don't have a filetype (i.e. failed reading local
+	 * one or fetching a remote object), then use the MIME type.
+	 */
+	if (ftype == 0) {
+		/* convert MIME type to RISC OS file type */
+		os_error *error;
+		const char *mime_type;
+
+		mime_type = download_context_get_mime_type(ctx);
+		error = xmimemaptranslate_mime_type_to_filetype(mime_type, &ftype);
+		if (error) {
+			LOG(("xmimemaptranslate_mime_type_to_filetype: 0x%x: %s",
+			     error->errnum, error->errmess));
+			warn_user("MiscError", error->errmess);
+			ftype = 0xffd;
+		}
+	}
+
+	*ftype_out = ftype;
+	return NSERROR_OK;
+}
 
 /**
  * Create and open a download progress window.
@@ -219,18 +276,15 @@ const char *ro_gui_download_temp_name(struct gui_download_window *dw)
  *          reported
  */
 
-static struct gui_download_window *gui_download_window_create(download_context *ctx,
-		struct gui_window *gui)
+static struct gui_download_window *
+gui_download_window_create(download_context *ctx, struct gui_window *gui)
 {
-	const char *url = download_context_get_url(ctx);
-	const char *mime_type = download_context_get_mime_type(ctx);
+	nsurl *url = download_context_get_url(ctx);
 	const char *temp_name;
-	char *scheme = NULL;
 	char *filename = NULL;
 	struct gui_download_window *dw;
 	bool space_warning = false;
 	os_error *error;
-	url_func_result res;
 	char *local_path;
 	nserror err;
 	size_t i, last_dot;
@@ -248,8 +302,13 @@ static struct gui_download_window *gui_download_window_create(download_context *
 	dw->query = QUERY_INVALID;
 	dw->received = 0;
 	dw->total_size = download_context_get_total_length(ctx);
-	strncpy(dw->url, url, sizeof dw->url);
+
+	/** @todo change this to take a reference to the nsurl and use
+	 * that value directly rather than using a fixed buffer.
+	 */
+	strncpy(dw->url, nsurl_access(url), sizeof dw->url);
 	dw->url[sizeof dw->url - 1] = 0;
+
 	dw->status[0] = 0;
 	gettimeofday(&dw->start_time, 0);
 	dw->last_time = dw->start_time;
@@ -258,55 +317,12 @@ static struct gui_download_window *gui_download_window_create(download_context *
 	dw->average_rate = 0;
 	dw->average_points = 0;
 
-	/* Get scheme from URL */
-	res = url_scheme(url, &scheme);
-	if (res == URL_FUNC_NOMEM) {
-		warn_user("NoMemory", 0);
+	/* get filetype */
+	err = download_ro_filetype(ctx, &dw->file_type);
+	if (err != NSERROR_OK) {
+		warn_user(messages_get_errorcode(err), 0);
 		free(dw);
 		return 0;
-	} else if (res == URL_FUNC_OK) {
-		/* If we have a scheme and it's "file", then
-		 * attempt to use the local filetype directly */
-		if (strcasecmp(scheme, "file") == 0) {
-			char *path = NULL;
-			res = url_path(url, &path);
-			if (res == URL_FUNC_NOMEM) {
-				warn_user("NoMemory", 0);
-				free(scheme);
-				free(dw);
-				return 0;
-			} else if (res == URL_FUNC_OK) {
-				char *raw_path = curl_unescape(path,
-						strlen(path));
-				if (raw_path == NULL) {
-					warn_user("NoMemory", 0);
-					free(path);
-					free(scheme);
-					free(dw);
-					return 0;
-				}
-				dw->file_type =
-					ro_filetype_from_unix_path(raw_path);
-				curl_free(raw_path);
-				free(path);
-			}
-		}
-
-		free(scheme);
-	}
-
-	/* If we still don't have a filetype (i.e. failed reading local
-	 * one or fetching a remote object), then use the MIME type */
-	if (dw->file_type == 0) {
-		/* convert MIME type to RISC OS file type */
-		error = xmimemaptranslate_mime_type_to_filetype(mime_type,
-				&(dw->file_type));
-		if (error) {
-			LOG(("xmimemaptranslate_mime_type_to_filetype: 0x%x: %s",
-					error->errnum, error->errmess));
-			warn_user("MiscError", error->errmess);
-			dw->file_type = 0xffd;
-		}
 	}
 
 	/* open temporary output file */
@@ -378,6 +394,8 @@ static struct gui_download_window *gui_download_window_create(download_context *
 	else
 		snprintf(dw->path, RO_DOWNLOAD_MAX_PATH_LEN, "%s",
 				filename);
+
+	free(filename);
 
 	err = utf8_to_local_encoding(dw->path, 0, &local_path);
 	if (err != NSERROR_OK) {
@@ -581,7 +599,6 @@ static nserror gui_download_window_data(struct gui_download_window *dw,
 
 void ro_gui_download_update_status(struct gui_download_window *dw)
 {
-	char *received;
 	char *total_size;
 	char *speed;
 	char time[20] = "?";
@@ -603,6 +620,7 @@ void ro_gui_download_update_status(struct gui_download_window *dw)
 	total_size = human_friendly_bytesize(max(dw->received, dw->total_size));
 
 	if (dw->ctx) {
+		char *received;
 		rate = (dw->received - dw->last_received) / dt;
 		received = human_friendly_bytesize(dw->received);
 		/* A simple 'modified moving average' download rate calculation
@@ -816,9 +834,6 @@ static void gui_download_window_done(struct gui_download_window *dw)
 bool ro_gui_download_click(wimp_pointer *pointer)
 {
   	struct gui_download_window *dw;
-	char command[256] = "Filer_OpenDir ";
-	char *dot;
-	os_error *error;
 
 	dw = (struct gui_download_window *)ro_gui_wimp_event_get_user_data(pointer->w);
 	if ((pointer->buttons & (wimp_DRAG_SELECT | wimp_DRAG_ADJUST)) &&
@@ -842,6 +857,10 @@ bool ro_gui_download_click(wimp_pointer *pointer)
 		ro_gui_drag_icon(x, y, sprite);
 
 	} else if (pointer->i == ICON_DOWNLOAD_DESTINATION) {
+		os_error *error;
+		char command[256] = "Filer_OpenDir ";
+		char *dot;
+
 		strncpy(command + 14, dw->path, 242);
 		command[255] = 0;
 		dot = strrchr(command, '.');

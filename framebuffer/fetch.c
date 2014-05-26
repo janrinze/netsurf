@@ -34,42 +34,6 @@
 #include "framebuffer/findfile.h"
 #include "framebuffer/fetch.h"
 
-/**
- * Return the filename part of a full path
- *
- * \param path full path and filename
- * \return filename (will be freed with free())
- */
-static char *filename_from_path(char *path)
-{
-	char *leafname;
-
-	leafname = strrchr(path, '/');
-	if (!leafname)
-		leafname = path;
-	else
-		leafname += 1;
-
-	return strdup(leafname);
-}
-
-/**
- * Add a path component/filename to an existing path
- *
- * \param path buffer containing path + free space
- * \param length length of buffer "path"
- * \param newpart string containing path component to add to path
- * \return true on success
- */
-static bool path_add_part(char *path, int length, const char *newpart)
-{
-	if(path[strlen(path) - 1] != '/')
-		strncat(path, "/", length);
-
-	strncat(path, newpart, length);
-
-	return true;
-}
 
 /**
  * Convert a pathname to a file: URL.
@@ -107,16 +71,16 @@ static char *url_to_path(const char *url)
 {
 	char *path;
 	char *respath;
-	url_func_result res; /* result from url routines */
+	nserror res; /* result from url routines */
 
 	res = url_path(url, &path);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		return NULL;
 	}
 
 	res = url_unescape(path, &respath);
 	free(path);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		return NULL;
 	}
 
@@ -181,22 +145,13 @@ static const char *fetch_filetype(const char *unix_path)
 	return "text/html";
 }
 
-
-static char *fetch_mimetype(const char *ro_path)
-{
-	return strdup("text/plain");
-}
-
 /* table for fetch operations */
 static struct gui_fetch_table fetch_table = {
-	.filename_from_path = filename_from_path,
-	.path_add_part = path_add_part,
 	.filetype = fetch_filetype,
 	.path_to_url = path_to_url,
 	.url_to_path = url_to_path,
 
 	.get_resource_url = get_resource_url,
-	.mimetype = fetch_mimetype,
 };
 
 struct gui_fetch_table *framebuffer_fetch_table = &fetch_table;

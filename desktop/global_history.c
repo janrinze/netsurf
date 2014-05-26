@@ -19,14 +19,16 @@
 
 #include <stdlib.h>
 
-#include "content/urldb.h"
-#include "desktop/global_history.h"
-#include "desktop/treeview.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "utils/utf8.h"
 #include "utils/libdom.h"
 #include "utils/log.h"
+#include "content/urldb.h"
+
+#include "desktop/global_history.h"
+#include "desktop/treeview.h"
+#include "desktop/browser.h"
 
 #define N_DAYS 28
 #define N_SEC_PER_DAY (60 * 60 * 24)
@@ -952,10 +954,11 @@ bool global_history_has_selection(void)
 bool global_history_get_selection(nsurl **url, const char **title)
 {
 	struct global_history_entry *e;
+	enum treeview_node_type type;
 	void *v;
 
-	treeview_get_selection(gh_ctx.tree, &v);
-	if (v == NULL) {
+	type = treeview_get_selection(gh_ctx.tree, &v);
+	if (type != TREE_NODE_ENTRY || v == NULL) {
 		*url = NULL;
 		*title = NULL;
 		return false;

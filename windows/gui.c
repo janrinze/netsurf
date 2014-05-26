@@ -33,7 +33,7 @@
 #include "content/fetch.h"
 #include "css/utils.h"
 #include "desktop/browser_history.h"
-#include "desktop/browser_private.h"
+#include "desktop/browser.h"
 #include "desktop/mouse.h"
 #include "desktop/netsurf.h"
 #include "utils/nsoption.h"
@@ -43,6 +43,7 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
+#include "utils/file.h"
 
 #include "windows/window.h"
 #include "windows/about.h"
@@ -76,6 +77,22 @@ static struct nsws_pointers nsws_pointer;
 
 void gui_window_set_scroll(struct gui_window *w, int sx, int sy);
 static bool gui_window_get_scroll(struct gui_window *w, int *sx, int *sy);
+
+static void nsws_set_scale(struct gui_window *gw, float scale)
+{
+	assert(gw != NULL);
+
+	if (gw->scale == scale)
+		return;
+
+	gw->scale = scale;
+
+	if (gw->bw == NULL)
+		return;
+
+	browser_window_set_scale(gw->bw, scale, true);
+	browser_window_reformat(gw->bw, false, gw->width, gw->height);
+}
 
 
 static void win32_poll(bool active)
@@ -903,8 +920,7 @@ nsws_window_command(HWND hwnd,
 		int x, y;
 		gui_window_get_scroll(gw, &x, &y);
 		if (gw->bw != NULL) {
-			browser_window_set_scale(gw->bw, gw->bw->scale * 1.1, true);
-			browser_window_reformat(gw->bw, false, gw->width, gw->height);
+			nsws_set_scale(gw, gw->scale * 1.1);
 		}
 		gui_window_redraw_window(gw);
 		gui_window_set_scroll(gw, x, y);
@@ -915,9 +931,7 @@ nsws_window_command(HWND hwnd,
 		int x, y;
 		gui_window_get_scroll(gw, &x, &y);
 		if (gw->bw != NULL) {
-			browser_window_set_scale(gw->bw,
-						 gw->bw->scale * 0.9, true);
-			browser_window_reformat(gw->bw, false, gw->width, gw->height);
+			nsws_set_scale(gw, gw->scale * 0.9);
 		}
 		gui_window_redraw_window(gw);
 		gui_window_set_scroll(gw, x, y);
@@ -928,8 +942,7 @@ nsws_window_command(HWND hwnd,
 		int x, y;
 		gui_window_get_scroll(gw, &x, &y);
 		if (gw->bw != NULL) {
-			browser_window_set_scale(gw->bw, 1.0, true);
-			browser_window_reformat(gw->bw, false, gw->width, gw->height);
+			nsws_set_scale(gw, 1.0);
 		}
 		gui_window_redraw_window(gw);
 		gui_window_set_scroll(gw, x, y);
@@ -1247,6 +1260,7 @@ gui_window_create(struct browser_window *bw,
 
 	gw->width = 800;
 	gw->height = 600;
+	gw->scale = 1.0;
 	gw->toolbuttonsize = 24;
 	gw->requestscrollx = 0;
 	gw->requestscrolly = 0;
@@ -1455,8 +1469,8 @@ static void gui_window_update_box(struct gui_window *gw, const struct rect *rect
 
 	RECT redrawrect;
 
-	redrawrect.left = (long)rect->x0 - (gw->scrollx / gw->bw->scale);
-	redrawrect.top = (long)rect->y0 - (gw->scrolly / gw->bw->scale);
+	redrawrect.left = (long)rect->x0 - (gw->scrollx / gw->scale);
+	redrawrect.top = (long)rect->y0 - (gw->scrolly / gw->scale);
 	redrawrect.right =(long)rect->x1;
 	redrawrect.bottom = (long)rect->y1;
 
@@ -1483,16 +1497,18 @@ static bool gui_window_get_scroll(struct gui_window *w, int *sx, int *sy)
 void gui_window_set_scroll(struct gui_window *w, int sx, int sy)
 {
 	SCROLLINFO si;
+	nserror err;
+	int height;
+	int width;
 	POINT p;
 
-	if ((w == NULL) ||
-	    (w->bw == NULL) ||
-	    (w->bw->current_content == NULL))
+	if ((w == NULL) || (w->bw == NULL))
 		return;
 
-	/* limit scale range */
-	if (abs(w->bw->scale - 0.0) < 0.00001)
-		w->bw->scale = 1.0;
+	err = browser_window_get_extents(w->bw, true, &width, &height);
+	if (err != NSERROR_OK) {
+		return;
+	}
 
 	w->requestscrollx = sx - w->scrollx;
 	w->requestscrolly = sy - w->scrolly;
@@ -1501,10 +1517,10 @@ void gui_window_set_scroll(struct gui_window *w, int sx, int sy)
 	si.cbSize = sizeof(si);
 	si.fMask = SIF_ALL;
 	si.nMin = 0;
-	si.nMax = (content_get_height(w->bw->current_content) * w->bw->scale) - 1;
+	si.nMax = height - 1;
 	si.nPage = w->height;
 	si.nPos = max(w->scrolly + w->requestscrolly, 0);
-	si.nPos = min(si.nPos, content_get_height(w->bw->current_content) * w->bw->scale - w->height);
+	si.nPos = min(si.nPos, height - w->height);
 	SetScrollInfo(w->drawingarea, SB_VERT, &si, TRUE);
 	LOG(("SetScrollInfo VERT min:%d max:%d page:%d pos:%d", si.nMin, si.nMax, si.nPage, si.nPos));
 
@@ -1512,10 +1528,10 @@ void gui_window_set_scroll(struct gui_window *w, int sx, int sy)
 	si.cbSize = sizeof(si);
 	si.fMask = SIF_ALL;
 	si.nMin = 0;
-	si.nMax = (content_get_width(w->bw->current_content) * w->bw->scale) -1;
+	si.nMax = width -1;
 	si.nPage = w->width;
 	si.nPos = max(w->scrollx + w->requestscrollx, 0);
-	si.nPos = min(si.nPos, content_get_width(w->bw->current_content) * w->bw->scale - w->width);
+	si.nPos = min(si.nPos, width - w->width);
 	SetScrollInfo(w->drawingarea, SB_HORZ, &si, TRUE);
 	LOG(("SetScrollInfo HORZ min:%d max:%d page:%d pos:%d", si.nMin, si.nMax, si.nPage, si.nPos));
 
@@ -1705,9 +1721,9 @@ static void gui_window_place_caret(struct gui_window *w, int x, int y,
 {
 	if (w == NULL)
 		return;
-	CreateCaret(w->drawingarea, (HBITMAP)NULL, 1, height * w->bw->scale);
-	SetCaretPos(x * w->bw->scale - w->scrollx,
-		    y * w->bw->scale - w->scrolly);
+	CreateCaret(w->drawingarea, (HBITMAP)NULL, 1, height * w->scale);
+	SetCaretPos(x * w->scale - w->scrollx,
+		    y * w->scale - w->scrolly);
 	ShowCaret(w->drawingarea);
 }
 
@@ -1808,41 +1824,74 @@ nsws_create_main_class(HINSTANCE hinstance) {
 }
 
 /**
- * Return the filename part of a full path
+ * Generate a windows path from one or more component elemnts.
  *
- * \param path full path and filename
- * \return filename (will be freed with free())
+ * If a string is allocated it must be freed by the caller.
+ *
+ * @param[in,out] str pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the complete path.
+ * @param[in,out] size The size of the space available if \a str not
+ *                     NULL on input and if not NULL set to the total
+ *                     output length on output.
+ * @param[in] nemb The number of elements.
+ * @param[in] ... The elements of the path as string pointers.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
  */
-static char *filename_from_path(char *path)
+static nserror windows_mkpath(char **str, size_t *size, size_t nelm, va_list ap)
 {
-	char *leafname;
-
-	leafname = strrchr(path, '\\');
-	if (!leafname)
-		leafname = path;
-	else
-		leafname += 1;
-
-	return strdup(leafname);
+	return vsnstrjoin(str, size, '\\', nelm, ap);
 }
 
 /**
- * Add a path component/filename to an existing path
+ * Get the basename of a file using windows path handling.
  *
- * \param path buffer containing path + free space
- * \param length length of buffer "path"
- * \param newpart string containing path component to add to path
- * \return true on success
+ * This gets the last element of a path and returns it.
+ *
+ * @param[in] path The path to extract the name from.
+ * @param[in,out] str Pointer to string pointer if this is NULL enough
+ *                    storage will be allocated for the path element.
+ * @param[in,out] size The size of the space available if \a
+ *                     str not NULL on input and set to the total
+ *                     output length on output.
+ * @return NSERROR_OK and the complete path is written to str
+ *         or error code on faliure.
  */
-static bool path_add_part(char *path, int length, const char *newpart)
+static nserror windows_basename(const char *path, char **str, size_t *size)
 {
-	if(path[strlen(path) - 1] != '\\')
-		strncat(path, "\\", length);
+	const char *leafname;
+	char *fname;
 
-	strncat(path, newpart, length);
+	if (path == NULL) {
+		return NSERROR_BAD_PARAMETER;
+	}
 
-	return true;
+	leafname = strrchr(path, '\\');
+	if (!leafname) {
+		leafname = path;
+	} else {
+		leafname += 1;
+	}
+
+	fname = strdup(leafname);
+	if (fname == NULL) {
+		return NSERROR_NOMEM;
+	}
+
+	*str = fname;
+	if (size != NULL) {
+		*size = strlen(fname);
+	}
+	return NSERROR_OK;
 }
+
+/* default to using the posix file handling */
+static struct gui_file_table file_table = {
+	.mkpath = windows_mkpath,
+	.basename = windows_basename,
+};
+
+struct gui_file_table *win32_file_table = &file_table;
 
 static struct gui_window_table window_table = {
 	.create = gui_window_create,
@@ -1876,13 +1925,9 @@ struct gui_clipboard_table *win32_clipboard_table = &clipboard_table;
 
 
 static struct gui_fetch_table fetch_table = {
-	.filename_from_path = filename_from_path,
-	.path_add_part = path_add_part,
 	.filetype = fetch_filetype,
 	.path_to_url = path_to_url,
 	.url_to_path = url_to_path,
-
-	.mimetype = fetch_mimetype,
 };
 struct gui_fetch_table *win32_fetch_table = &fetch_table;
 

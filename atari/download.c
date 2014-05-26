@@ -34,7 +34,6 @@
 #include "desktop/textinput.h"
 #include "desktop/download.h"
 #include "render/html.h"
-#include "utils/url.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
@@ -251,7 +250,6 @@ gui_download_window_create(download_context *ctx, struct gui_window *parent)
 	const char *filename;
 	char *destination;
 	char gdos_path[PATH_MAX];
-	const char * url;
 	struct gui_download_window * gdw;
 	int dlgres = 0;
 	OBJECT * tree = gemtk_obj_get_tree(DOWNLOAD);
@@ -306,7 +304,6 @@ gui_download_window_create(download_context *ctx, struct gui_window *parent)
 	gdw->size_total = download_context_get_total_length(ctx);
 	gdw->destination = destination;
 	gdw->tree = tree;
-	url = download_context_get_url(ctx);
 
 	gdw->fd = fopen(gdw->destination, "wb");
 	if( gdw->fd == NULL ){
@@ -365,13 +362,8 @@ static nserror gui_download_window_data(struct gui_download_window *dw,
 	uint32_t clck = clock();
 	uint32_t tnow = clck / (CLOCKS_PER_SEC>>3);
 	uint32_t sdiff = (clck / (CLOCKS_PER_SEC)) - dw->start;
-	uint32_t p = 0;
-	float speed;
-	float pf = 0;
 
 	LOG((""));
-
-	OBJECT * tree = dw->tree;
 
 	if(dw->abort == true){
 		dw->status = NSATARI_DOWNLOAD_CANCELED;
@@ -387,11 +379,13 @@ static nserror gui_download_window_data(struct gui_download_window *dw,
 
 	/* Update GUI */
 	if ((tnow - dw->lastrdw) > 1) {
+		float speed;
 
 		dw->lastrdw = tnow;
 		speed = dw->size_downloaded / sdiff;
 
 		if( dw->size_total > 0 ){
+			uint32_t p = 0;
 			p = ((double)dw->size_downloaded / (double)dw->size_total * 100);
 			snprintf( (char*)&dw->lbl_percent, MAX_SLEN_LBL_PERCENT,
 				"%lu%s", p, "%"
@@ -427,7 +421,6 @@ static void gui_download_window_error(struct gui_download_window *dw,
 
 static void gui_download_window_done(struct gui_download_window *dw)
 {
-	OBJECT * tree;
 	LOG((""));
 
 // TODO: change abort to close
@@ -438,7 +431,6 @@ static void gui_download_window_done(struct gui_download_window *dw)
 		dw->fd = NULL;
 	}
 
-	tree = dw->tree;
 	if (dw->close_on_finish) {
 		gemtk_wm_send_msg(dw->guiwin, WM_CLOSED, 0, 0, 0, 0);
 	} else {

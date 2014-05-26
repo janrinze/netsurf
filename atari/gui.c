@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
-	This File provides all the mandatory functions prefixed with gui_
-*/
+/**
+ * \file Provides all the mandatory functions prefixed with gui_ for atari
+ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,7 +30,6 @@
 #include <stdbool.h>
 #include <hubbub/hubbub.h>
 
-#include "utils/url.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
@@ -114,34 +113,11 @@ short aes_msg_out[8];
 bool gui_window_get_scroll(struct gui_window *w, int *sx, int *sy);
 static void gui_window_set_url(struct gui_window *w, const char *url);
 
-/**
- * Return the filename part of a full path
- *
- * \param path full path and filename
- * \return filename (will be freed with free())
- */
-static char *filename_from_path(char *path)
-{
-	char *leafname;
-
-	leafname = strrchr(path, '\\');
-	if( !leafname )
-		leafname = strrchr(path, '/');
-	if (!leafname)
-		leafname = path;
-	else
-		leafname += 1;
-
-	return strdup(leafname);
-}
-
-
 static void gui_poll(bool active)
 {
 
 	struct gui_window *tmp;
     short mx, my, dummy;
-    unsigned short nkc = 0;
 
     aes_event_in.emi_tlow = schedule_run();
 
@@ -153,8 +129,6 @@ static void gui_poll(bool active)
         aes_event_in.emi_tlow = 10000;
         printf("long poll!\n");
     }
-
-    struct gui_window * g;
 
     if( !active ) {
         if(input_window && input_window->root->redraw_slots.areas_used > 0) {
@@ -419,7 +393,6 @@ static void gui_window_update_box(struct gui_window *gw, const struct rect *rect
 
 bool gui_window_get_scroll(struct gui_window *w, int *sx, int *sy)
 {
-    int x,y;
     if (w == NULL)
         return false;
 
@@ -430,7 +403,6 @@ bool gui_window_get_scroll(struct gui_window *w, int *sx, int *sy)
 
 static void gui_window_set_scroll(struct gui_window *w, int sx, int sy)
 {
-    int units = 0;
     if ((w == NULL)
             || (w->browser->bw == NULL)
             || (w->browser->bw->current_content == NULL))
@@ -682,7 +654,6 @@ static void gui_window_new_content(struct gui_window *w)
 static void gui_get_clipboard(char **buffer, size_t *length)
 {
     char *clip;
-    size_t clip_len;
 
     *length = 0;
     *buffer = 0;
@@ -695,11 +666,12 @@ static void gui_get_clipboard(char **buffer, size_t *length)
 
         // clipboard is in atari encoding, convert it to utf8:
 
+        size_t clip_len;
         char *utf8 = NULL;
-        nserror ret;
 
         clip_len = strlen(clip);
         if (clip_len > 0) {
+            nserror ret;
             ret = utf8_to_local_encoding(clip, clip_len, &utf8);
             if (ret == NSERROR_OK && utf8 != NULL) {
                 *buffer = utf8;
@@ -766,8 +738,6 @@ static void gui_cert_verify(nsurl *url, const struct ssl_cert_info *certs,
 {
 	struct sslcert_session_data *data;
     LOG((""));
-
-    bool bres;
 
     // TODO: localize string
     int b = form_alert(1, "[2][SSL Verify failed, continue?][Continue|Abort|Details...]");
@@ -1071,14 +1041,11 @@ static struct gui_clipboard_table atari_clipboard_table = {
 };
 
 static struct gui_fetch_table atari_fetch_table = {
-    .filename_from_path = filename_from_path,
-    .path_add_part = path_add_part,
     .filetype = fetch_filetype,
     .path_to_url = path_to_url,
     .url_to_path = url_to_path,
 
     .get_resource_url = gui_get_resource_url,
-    .mimetype = fetch_mimetype,
 };
 
 static struct gui_browser_table atari_browser_table = {
@@ -1105,7 +1072,7 @@ int main(int argc, char** argv)
     struct stat stat_buf;
     nsurl *url;
     nserror ret;
-    struct gui_table atari_gui_table = {
+    struct netsurf_table atari_table = {
         .browser = &atari_browser_table,
 	.window = &atari_window_table,
 	.clipboard = &atari_clipboard_table,
@@ -1115,7 +1082,12 @@ int main(int argc, char** argv)
 	.search = atari_search_table,
     };
 
-    /* @todo logging file descriptor update belongs in a nslog_init callback */
+    ret = netsurf_register(&atari_table);
+    if (ret != NSERROR_OK) {
+        die("NetSurf operation table failed registration");
+    }
+
+    /** @todo logging file descriptor update belongs in a nslog_init callback */
     setbuf(stderr, NULL);
     setbuf(stdout, NULL);
 #ifdef WITH_DBG_LOGFILE
@@ -1147,7 +1119,7 @@ int main(int argc, char** argv)
 
     /* common initialisation */
     LOG(("Initialising core..."));
-    ret = netsurf_init(messages, &atari_gui_table);
+    ret = netsurf_init(messages, NULL);
     if (ret != NSERROR_OK) {
 	die("NetSurf failed to initialise");
     }

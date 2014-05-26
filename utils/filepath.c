@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "utils/utils.h"
 #include "utils/config.h"
 #include "utils/filepath.h"
 
@@ -202,7 +203,13 @@ filepath_generate(char * const *pathv, const char * const *langv)
 	return respath;
 }
 
-/* expand ${} in a string into environment variables */
+/**
+ * expand ${} in a string into environment variables.
+ *
+ * @param path The pathname to expand.
+ * @param pathlen The length of the path element.
+ * @return A string with the expanded path or NULL on empty expansion or error.
+ */
 static char *
 expand_path(const char *path, int pathlen)
 {
@@ -316,4 +323,62 @@ void filepath_free_strvec(char **pathv)
 		free(pathv[p++]);
 	}
 	free(pathv);
+}
+
+/* exported interface documented in filepath.h */
+nserror filepath_mkdir_all(const char *fname)
+{
+	char *dname;
+	char *sep;
+	struct stat sb;
+
+	dname = strdup(fname);
+
+	sep = strrchr(dname, '/');
+	if (sep == NULL) {
+		/* no directory separator path is just filename so its ok */
+		free(dname);
+		return NSERROR_OK;
+	}
+
+	*sep = 0; /* null terminate directory path */
+
+	if (stat(dname, &sb) == 0) {
+		free(dname);
+		if (S_ISDIR(sb.st_mode)) {
+			/* path to file exists and is a directory */
+			return NSERROR_OK;
+		}
+		return NSERROR_NOT_DIRECTORY;
+	}
+	*sep = '/'; /* restore separator */
+
+	sep = dname;
+	while (*sep == '/') {
+		sep++;
+	}
+	while ((sep = strchr(sep, '/')) != NULL) {
+		*sep = 0;
+		if (stat(dname, &sb) != 0) {
+			if (nsmkdir(dname, S_IRWXU) != 0) {
+				/* could not create path element */
+				free(dname);
+				return NSERROR_NOT_FOUND;
+			}
+		} else {
+			if (! S_ISDIR(sb.st_mode)) {
+				/* path element not a directory */
+				free(dname);
+				return NSERROR_NOT_DIRECTORY;
+			}
+		}
+		*sep = '/'; /* restore separator */
+		/* skip directory separators */
+		while (*sep == '/') {
+			sep++;
+		}
+	}
+
+	free(dname);
+	return NSERROR_OK;
 }

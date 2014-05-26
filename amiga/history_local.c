@@ -32,7 +32,6 @@
 #include "amiga/object.h"
 #include "amiga/gui.h"
 #include "utils/log.h"
-#include "utils/url.h"
 #include "utils/utils.h"
 #include <proto/intuition.h>
 #include "amiga/history_local.h"
@@ -74,7 +73,6 @@ static void ami_history_scroller_hook(struct Hook *hook,Object *object,struct In
 void ami_history_open(struct browser_window *bw, struct history *history)
 {
 	int width, height;
-	struct IBox *bbox;
 
 	assert(history);
 
@@ -239,7 +237,6 @@ BOOL ami_history_event(struct history_window *hw)
 	/* return TRUE if window destroyed */
 	ULONG class,result,relevent = 0;
 	uint16 code;
-	struct MenuItem *item;
 	const char *url;
 	struct IBox *bbox;
 	ULONG xs, ys;

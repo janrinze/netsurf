@@ -25,15 +25,15 @@
 #include <string.h>
 
 #include "desktop/gui_factory.h"
-#include "content/content.h"
-#include "content/hlcache.h"
-#include "content/mimesniff.h"
 #include "utils/http.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/ring.h"
-#include "utils/url.h"
 #include "utils/utils.h"
+
+#include "content/content.h"
+#include "content/mimesniff.h"
+#include "content/hlcache.h"
 
 typedef struct hlcache_entry hlcache_entry;
 typedef struct hlcache_retrieval_ctx hlcache_retrieval_ctx;
@@ -339,9 +339,10 @@ static nserror hlcache_migrate_ctx(hlcache_retrieval_ctx *ctx,
 
 	ctx->migrate_target = true;
 
-	if (effective_type != NULL &&
-			hlcache_type_is_acceptable(effective_type,
-			ctx->accepted_types, &type)) {
+	if ((effective_type != NULL) &&
+	    hlcache_type_is_acceptable(effective_type,
+				       ctx->accepted_types,
+				       &type)) {
 		error = hlcache_find_content(ctx, effective_type);
 		if (error != NSERROR_OK && error != NSERROR_NEED_DATA) {
 			if (ctx->handle->cb != NULL) {
@@ -524,9 +525,7 @@ hlcache_initialise(const struct hlcache_parameters *hlcache_parameters)
 		return NSERROR_NOMEM;
 	}
 
-	ret = llcache_initialise(hlcache_parameters->cb,
-				 hlcache_parameters->cb_ctx,
-				 hlcache_parameters->limit);
+	ret = llcache_initialise(&hlcache_parameters->llcache);
 	if (ret != NSERROR_OK) {
 		free(hlcache);
 		hlcache = NULL;

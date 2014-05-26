@@ -25,10 +25,12 @@
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+#include "utils/filepath.h"
 #include "utils/messages.h"
 #include "utils/url.h"
 #include "utils/log.h"
 #include "utils/nsoption.h"
+#include "utils/file.h"
 #include "desktop/browser_history.h"
 #include "desktop/browser_private.h"
 #include "desktop/hotlist.h"
@@ -70,7 +72,6 @@
 #include "gtk/scaffolding.h"
 #include "gtk/tabs.h"
 #include "gtk/schedule.h"
-
 
 /** Macro to define a handler for menu, button and activate events. */
 #define MULTIHANDLER(q)\
@@ -416,29 +417,20 @@ static gboolean nsgtk_window_popup_menu_hidden(GtkWidget *widget,
 gboolean nsgtk_window_url_activate_event(GtkWidget *widget, gpointer data)
 {
 	struct gtk_scaffolding *g = data;
-	struct browser_window *bw = nsgtk_get_browser_window(g->top_level);
-	char *urltxt;
+	nserror ret;
 	nsurl *url;
-	nserror error;
 
-	if (search_is_url(gtk_entry_get_text(GTK_ENTRY(g->url_bar))) == false) {
-		urltxt = search_web_from_term(gtk_entry_get_text(GTK_ENTRY(
-				g->url_bar)));
-	} else {
-		urltxt = strdup(gtk_entry_get_text(GTK_ENTRY(g->url_bar)));
+	ret = search_web_omni(gtk_entry_get_text(GTK_ENTRY(g->url_bar)),
+			      SEARCH_WEB_OMNI_NONE,
+			      &url);
+	if (ret == NSERROR_OK) {
+		ret = browser_window_navigate(nsgtk_get_browser_window(g->top_level),
+					      url, NULL, BW_NAVIGATE_HISTORY,
+					      NULL, NULL, NULL);
+		nsurl_unref(url);
 	}
-
-	if (urltxt != NULL) {
-		error = nsurl_create(urltxt, &url);
-		if (error != NSERROR_OK) {
-			warn_user(messages_get_errorcode(error), 0);
-		} else {
-			browser_window_navigate(bw, url, NULL,
-					BW_NAVIGATE_HISTORY, NULL,
-					NULL, NULL);
-			nsurl_unref(url);
-		}
-		free(urltxt);
+	if (ret != NSERROR_OK) {
+		warn_user(messages_get_errorcode(ret), 0);
 	}
 
 	return TRUE;
@@ -671,7 +663,7 @@ MULTIHANDLER(savepage)
 			NULL);
 	DIR *d;
 	char *path;
-	url_func_result res;
+	nserror res;
 	GtkFileFilter *filter = gtk_file_filter_new();
 	gtk_file_filter_set_name(filter, "Directories");
 	gtk_file_filter_add_custom(filter, GTK_FILE_FILTER_FILENAME,
@@ -681,7 +673,7 @@ MULTIHANDLER(savepage)
 
 	res = url_nice(nsurl_access(browser_window_get_url(
 			nsgtk_get_browser_window(g->top_level))), &path, false);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		path = strdup(messages_get("SaveText"));
 		if (path == NULL) {
 			warn_user("NoMemory", 0);
@@ -735,15 +727,14 @@ MULTIHANDLER(pdf)
 	char filename[PATH_MAX];
 	char dirname[PATH_MAX];
 	char *url_name;
-	url_func_result res;
+	nserror res;
 
 	LOG(("Print preview (generating PDF)  started."));
 
 	res = url_nice(nsurl_access(browser_window_get_url(bw)),
 			&url_name, true);
-	if (res != URL_FUNC_OK) {
-		warn_user(messages_get(res == URL_FUNC_NOMEM ? "NoMemory"
-							     : "URIError"), 0);
+	if (res != NSERROR_OK) {
+		warn_user(messages_get_errorcode(res), 0);
 		return TRUE;
 	}
 
@@ -811,12 +802,12 @@ MULTIHANDLER(plaintext)
 			GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
 			NULL);
 	char *filename;
-	url_func_result res;
+	nserror res;
 
 	res = url_nice(nsurl_access(browser_window_get_url(
 			nsgtk_get_browser_window(g->top_level))),
 			&filename, false);
-	if (res != URL_FUNC_OK) {
+	if (res != NSERROR_OK) {
 		filename = strdup(messages_get("SaveText"));
 		if (filename == NULL) {
 			warn_user("NoMemory", 0);
@@ -863,9 +854,10 @@ MULTIHANDLER(print)
 
 	GtkPrintOperation *print_op;
 	GtkPageSetup *page_setup;
-	GtkPrintSettings *gtk_print_settings;
+	GtkPrintSettings *print_settings;
 	GtkPrintOperationResult res = GTK_PRINT_OPERATION_RESULT_ERROR;
-	struct print_settings *settings;
+	struct print_settings *nssettings;
+	char *settings_fname = NULL;
 
 	print_op = gtk_print_operation_new();
 	if (print_op == NULL) {
@@ -874,14 +866,16 @@ MULTIHANDLER(print)
 	}
 
 	/* use previously saved settings if any */
-	gtk_print_settings = gtk_print_settings_new_from_file(
-			print_options_file_location, NULL);
-	if (gtk_print_settings != NULL) {
-		gtk_print_operation_set_print_settings(print_op,
-				gtk_print_settings);
+	netsurf_mkpath(&settings_fname, NULL, 2, nsgtk_config_home, "Print");
+	if (settings_fname != NULL) {
+		print_settings = gtk_print_settings_new_from_file(settings_fname, NULL);
+		if (print_settings != NULL) {
+			gtk_print_operation_set_print_settings(print_op,
+						print_settings);
 
-		/* We're not interested in the settings any more */
-		g_object_unref(gtk_print_settings);
+			/* We're not interested in the settings any more */
+			g_object_unref(print_settings);
+		}
 	}
 
 	content_to_print = bw->current_content;
@@ -889,33 +883,40 @@ MULTIHANDLER(print)
 	page_setup = gtk_print_run_page_setup_dialog(g->window, NULL, NULL);
 	if (page_setup == NULL) {
 		warn_user(messages_get("NoMemory"), 0);
+		free(settings_fname);
 		g_object_unref(print_op);
 		return TRUE;
 	}
 	gtk_print_operation_set_default_page_setup(print_op, page_setup);
 
-	settings = print_make_settings(PRINT_DEFAULT, NULL, &nsfont);
+	nssettings = print_make_settings(PRINT_DEFAULT, NULL, &nsfont);
 
 	g_signal_connect(print_op, "begin_print",
-			G_CALLBACK(gtk_print_signal_begin_print), settings);
+			G_CALLBACK(gtk_print_signal_begin_print), nssettings);
 	g_signal_connect(print_op, "draw_page",
 			G_CALLBACK(gtk_print_signal_draw_page), NULL);
 	g_signal_connect(print_op, "end_print",
-			G_CALLBACK(gtk_print_signal_end_print), settings);
-	if (content_get_type(bw->current_content) != CONTENT_TEXTPLAIN)
+			G_CALLBACK(gtk_print_signal_end_print), nssettings);
+
+	if (content_get_type(bw->current_content) != CONTENT_TEXTPLAIN) {
 		res = gtk_print_operation_run(print_op,
 				GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG,
     				g->window,
 				NULL);
+	}
 
 	/* if the settings were used save them for future use */
-	if (res == GTK_PRINT_OPERATION_RESULT_APPLY) {
-		/* Don't ref the settings, as we don't want to own them */
-		gtk_print_settings = gtk_print_operation_get_print_settings(
-				print_op);
+	if (settings_fname != NULL) {
+		if (res == GTK_PRINT_OPERATION_RESULT_APPLY) {
+			/* Do not increment the settings reference */
+			print_settings =
+				gtk_print_operation_get_print_settings(print_op);
 
-		gtk_print_settings_to_file(gtk_print_settings,
-				print_options_file_location, NULL);
+			gtk_print_settings_to_file(print_settings,
+						   settings_fname,
+						   NULL);
+		}
+		free(settings_fname);
 	}
 
 	/* Our print_settings object is destroyed by the end print handler */
@@ -1249,6 +1250,7 @@ MULTIHANDLER(downloads)
 MULTIHANDLER(savewindowsize)
 {
 	int x,y,w,h;
+	char *choices = NULL;
 
 	gtk_window_get_position(g->window, &x, &y);
 	gtk_window_get_size(g->window, &w, &h);
@@ -1258,7 +1260,11 @@ MULTIHANDLER(savewindowsize)
 	nsoption_set_int(window_x, x);
 	nsoption_set_int(window_y, y);
 
-	nsoption_write(options_file_location, NULL, NULL);
+	netsurf_mkpath(&choices, NULL, 2, nsgtk_config_home, "Choices");
+	if (choices != NULL) {
+		nsoption_write(choices, NULL, NULL);
+		free(choices);
+	}
 
 	return TRUE;
 }
@@ -1799,7 +1805,6 @@ static bool nsgtk_new_scaffolding_popup(struct gtk_scaffolding *g, GtkAccelGroup
 nsgtk_scaffolding *nsgtk_new_scaffolding(struct gui_window *toplevel)
 {
 	struct gtk_scaffolding *g;
-	char *searchname;
 	int i;
 	GtkAccelGroup *group;
 	GError* error = NULL;
@@ -2063,29 +2068,9 @@ nsgtk_scaffolding *nsgtk_new_scaffolding(struct gui_window *toplevel)
 	nsgtk_toolbar_connect_all(g);
 	nsgtk_attach_menu_handlers(g);
 
-	/* prepare to set the web search ico */
-
-	/* init web search prefs from file */
-	search_web_provider_details(nsoption_int(search_provider));
-
-	/* potentially retrieve ico */
-	if (search_web_ico() == NULL) {
-		search_web_retrieve_ico(false);
-	}
-
-	/* set entry */
-	searchname = search_web_provider_name();
-	if (searchname != NULL) {
-		char searchcontent[strlen(searchname) + SLEN("Search ")	+ 1];
-		sprintf(searchcontent, "Search %s", searchname);
-		nsgtk_scaffolding_set_websearch(g, searchcontent);
-		free(searchname);
-	}
-
 	nsgtk_scaffolding_initial_sensitivity(g);
 
 	g->fullscreen = false;
-
 
 	/* attach to the list */
 	if (scaf_list)
@@ -2098,8 +2083,8 @@ nsgtk_scaffolding *nsgtk_new_scaffolding(struct gui_window *toplevel)
 	nsgtk_theme_init();
 	nsgtk_theme_implement(g);
 
-	/* set web search ico */
-	gui_set_search_ico(search_web_ico());
+	/* set web search provider */
+	search_web_select_provider(nsoption_int(search_provider));
 
 	/* finally, show the window. */
 	gtk_widget_show(GTK_WIDGET(g->window));
@@ -2212,37 +2197,64 @@ nsgtk_scaffolding_set_icon(struct gui_window *gw)
 	gtk_widget_show_all(GTK_WIDGET(sc->buttons[URL_BAR_ITEM]->button));
 }
 
-void gui_set_search_ico(hlcache_handle *ico)
+/**
+ * Gui callback when search provider details are updated.
+ *
+ * \param provider_name The providers name.
+ * \param ico_bitmap The icon bitmap representing the provider.
+ * \return NSERROR_OK on success else error code.
+ */
+static nserror
+gui_search_web_provider_update(const char *provider_name,
+			       struct bitmap *provider_bitmap)
 {
-	struct bitmap *srch_bitmap;
 	nsgtk_scaffolding *current;
-	GdkPixbuf *srch_pixbuf;
+	GdkPixbuf *srch_pixbuf = NULL;
+	char *searchcontent;
 
-	if ((ico == NULL) &&
-	    (ico = search_web_ico()) == NULL) {
-		return;
+	if (provider_bitmap != NULL) {
+		srch_pixbuf = nsgdk_pixbuf_get_from_surface(provider_bitmap->surface, 16, 16);
+
+		if (srch_pixbuf == NULL) {
+			return NSERROR_NOMEM;
+		}
 	}
 
-	srch_bitmap = content_get_bitmap(ico);
-	if (srch_bitmap == NULL) {
-		return;
+	/* setup the search content name */
+	searchcontent = malloc(strlen(provider_name) + SLEN("Search ") + 1);
+	if (searchcontent != NULL) {
+		sprintf(searchcontent, "Search %s", provider_name);
 	}
 
-	srch_pixbuf = nsgdk_pixbuf_get_from_surface(srch_bitmap->surface, 16, 16);
-
-	if (srch_pixbuf == NULL) {
-		return;
-	}
-
-	/* add ico to each window's toolbar */
+	/* set the search provider parameters up in each scaffold */
 	for (current = scaf_list; current != NULL; current = current->next) {
-		nsgtk_entry_set_icon_from_pixbuf(current->webSearchEntry,
-						 GTK_ENTRY_ICON_PRIMARY,
-						 srch_pixbuf);
+	/* add ico to each window's toolbar */
+		if (srch_pixbuf != NULL) {
+			nsgtk_entry_set_icon_from_pixbuf(current->webSearchEntry,
+							 GTK_ENTRY_ICON_PRIMARY,
+							 srch_pixbuf);
+		}
+
+		/* set search entry text */
+		if (searchcontent != NULL) {
+			nsgtk_scaffolding_set_websearch(current, searchcontent);
+		} else {
+			nsgtk_scaffolding_set_websearch(current, provider_name);
+		}
 	}
+
+	free(searchcontent);
 
 	g_object_unref(srch_pixbuf);
+
+	return NSERROR_OK;
 }
+
+static struct gui_search_web_table search_web_table = {
+	.provider_update = gui_search_web_provider_update,
+};
+
+struct gui_search_web_table *nsgtk_search_web_table = &search_web_table;
 
 bool nsgtk_scaffolding_is_busy(nsgtk_scaffolding *g)
 {

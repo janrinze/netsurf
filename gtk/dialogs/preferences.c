@@ -18,12 +18,14 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 
-#include "utils/log.h"
 #include "utils/utils.h"
 #include "utils/messages.h"
-#include "desktop/browser.h"
 #include "utils/nsoption.h"
+#include "utils/file.h"
+#include "utils/log.h"
+#include "desktop/browser.h"
 #include "desktop/searchweb.h"
 
 #include "gtk/compat.h"
@@ -922,8 +924,6 @@ TOGGLEBUTTON_SIGNALS(checkUrlSearch, search_url_bar)
 G_MODULE_EXPORT void
 nsgtk_preferences_comboSearch_changed(GtkComboBox *widget, struct ppref *priv)
 {
-	nsgtk_scaffolding *current = scaf_list;
-	char *name;
 	int provider;
 
 	provider = gtk_combo_box_get_active(widget);
@@ -931,27 +931,8 @@ nsgtk_preferences_comboSearch_changed(GtkComboBox *widget, struct ppref *priv)
 	/* set the option */
 	nsoption_set_int(search_provider, provider);
 
-	/* refresh web search prefs from file */
-	search_web_provider_details(provider);
-
-	/* retrieve ico */
-	search_web_retrieve_ico(false);
-
-	/* callback may handle changing gui */
-	gui_set_search_ico(search_web_ico());
-
-	/* set entry */
-	name = search_web_provider_name();
-	if (name != NULL) {
-		char content[strlen(name) + SLEN("Search ") + 1];
-
-		sprintf(content, "Search %s", name);
-		free(name);
-		while (current) {
-			nsgtk_scaffolding_set_websearch(current, content);
-			current = nsgtk_scaffolding_iterate(current);
-		}
-	}
+	/* set search provider */
+	search_web_select_provider(provider);
 }
 
 G_MODULE_EXPORT void
@@ -1001,8 +982,14 @@ nsgtk_preferences_fileChooserDownloads_realize(GtkWidget *widget,
 G_MODULE_EXPORT void
 nsgtk_preferences_dialogPreferences_response(GtkDialog *dlg, gint resid)
 {
+	char *choices = NULL;
+
 	if (resid == GTK_RESPONSE_CLOSE) {
-		nsoption_write(options_file_location, NULL, NULL);
+		netsurf_mkpath(&choices, NULL, 2, nsgtk_config_home, "Choices");
+		if (choices != NULL) {
+			nsoption_write(choices, NULL, NULL);
+			free(choices);
+		}
 		gtk_widget_hide(GTK_WIDGET(dlg));
 	}
 }
@@ -1011,18 +998,32 @@ G_MODULE_EXPORT gboolean
 nsgtk_preferences_dialogPreferences_deleteevent(GtkDialog *dlg,
 						struct ppref *priv)
 {
-	nsoption_write(options_file_location, NULL, NULL);
+	char *choices = NULL;
+
+	netsurf_mkpath(&choices, NULL, 2, nsgtk_config_home, "Choices");
+	if (choices != NULL) {
+		nsoption_write(choices, NULL, NULL);
+		free(choices);
+	}
+
 	gtk_widget_hide(GTK_WIDGET(dlg));
 
-	/* delt with it by hiding window, no need to destory widget by
-	 * default */
+	/* Delt with it by hiding window, no need to destory widget by
+	 * default.
+	 */
 	return TRUE;
 }
 
 G_MODULE_EXPORT void
 nsgtk_preferences_dialogPreferences_destroy(GtkDialog *dlg, struct ppref *priv)
 {
-	nsoption_write(options_file_location, NULL, NULL);
+	char *choices = NULL;
+
+	netsurf_mkpath(&choices, NULL, 2, nsgtk_config_home, "Choices");
+	if (choices != NULL) {
+		nsoption_write(choices, NULL, NULL);
+		free(choices);
+	}
 }
 
 
