@@ -56,6 +56,7 @@ typedef struct nsgif_content {
 
 	struct gif_animation *gif; /**< GIF animation data */
 	int current_frame;   /**< current frame to display [0...(max-1)] */
+	bool animating;      /**< whether gif is currently animating */
 } nsgif_content;
 
 
@@ -159,7 +160,7 @@ static void nsgif_animate(void *p)
 	}
 
 	/* Continue animating if we should */
-	if (gif->gif->loop_count >= 0) {
+	if ((gif->gif->loop_count >= 0) && (gif->animating == true)) {
 		delay = gif->gif->frames[gif->current_frame].frame_delay;
 		if (delay < nsoption_int(minimum_gif_delay))
 			delay = nsoption_int(minimum_gif_delay);
@@ -295,10 +296,12 @@ static bool nsgif_convert(struct content *c)
 
 	/* Schedule the animation if we have one */
 	gif->current_frame = 0;
-	if (gif->gif->frame_count_partial > 1)
+	if (gif->gif->frame_count_partial > 1) {
 		guit->browser->schedule(gif->gif->frames[0].frame_delay * 10,
 					nsgif_animate,
 					c);
+		gif->animating = true;
+	}
 
 	/* Exit as a success */
 	content_set_ready(c);
@@ -412,15 +415,19 @@ static void nsgif_add_user(struct content *c)
 			guit->browser->schedule(gif->gif->frames[0].frame_delay * 10,
 						nsgif_animate,
 						c);
+			gif->animating = true;
 		}
 	}
 }
 
 static void nsgif_remove_user(struct content *c)
 {
+	nsgif_content *gif = (nsgif_content *) c;
+
 	if(content_count_users(c) == 1) {
 		/* Last user is about to be removed from this content, so stop the animation. */
 		guit->browser->schedule(-1, nsgif_animate, c);
+		gif->animating = false;
 	}
 }
 
