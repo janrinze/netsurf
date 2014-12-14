@@ -143,6 +143,9 @@ static void nsgif_animate(void *p)
 	int delay;
 	int f;
 
+	/* Immediately return if we're not supposed to be running */
+	if (gif->animating == false) return;
+
 	/* Advance by a frame, updating the loop count accordingly */
 	gif->current_frame++;
 	if (gif->current_frame == (int)gif->gif->frame_count_partial) {
@@ -160,7 +163,7 @@ static void nsgif_animate(void *p)
 	}
 
 	/* Continue animating if we should */
-	if ((gif->gif->loop_count >= 0) && (gif->animating == true)) {
+	if (gif->gif->loop_count >= 0) {
 		delay = gif->gif->frames[gif->current_frame].frame_delay;
 		if (delay < nsoption_int(minimum_gif_delay))
 			delay = nsoption_int(minimum_gif_delay);
