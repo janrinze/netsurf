@@ -85,15 +85,6 @@ gboolean nsgtk_widget_is_drawable(GtkWidget *widget)
   #endif
 }
 
-GtkStateType nsgtk_widget_get_state(GtkWidget *widget)
-{
-  #if GTK_CHECK_VERSION(2,18,0)
-	return gtk_widget_get_state(widget);
-  #else
-	return GTK_WIDGET_STATE(widget);
-  #endif
-}
-
 void nsgtk_dialog_set_has_separator(GtkDialog *dialog, gboolean setting)
 {
   #if GTK_CHECK_VERSION(2,21,8)
@@ -161,7 +152,7 @@ void nsgtk_entry_set_icon_from_pixbuf(GtkWidget *entry, GtkEntryIconPosition ico
 void nsgtk_entry_set_icon_from_stock(GtkWidget *entry, GtkEntryIconPosition icon_pos, const gchar *stock_id)
 {
 #if GTK_CHECK_VERSION(2,16,0)
-	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), icon_pos, stock_id);
+	gtk_entry_set_icon_from_icon_name(GTK_ENTRY(entry), icon_pos, stock_id);
 #else
 	GtkImage *image = GTK_IMAGE(gtk_image_new_from_stock(stock_id, 
 					GTK_ICON_SIZE_LARGE_TOOLBAR));
@@ -286,7 +277,11 @@ GtkStyleContext *nsgtk_widget_get_style_context(GtkWidget *widget)
 const PangoFontDescription* nsgtk_style_context_get_font(GtkStyleContext *style, GtkStateFlags state)
 {
 #if GTK_CHECK_VERSION(3,0,0)
-	return gtk_style_context_get_font(style, state);
+	const PangoFontDescription *font = NULL;
+
+	gtk_style_context_get(style, state, "font", &font, NULL);
+
+	return font;
 #else
 	return style->font_desc;
 #endif
@@ -412,3 +407,24 @@ void nsgtk_widget_get_allocation(GtkWidget *widget, GtkAllocation *allocation)
   allocation->height = widget->allocation.height;
 #endif
 }
+
+void nsgtk_window_set_opacity(GtkWindow *window, gdouble opacity)
+{
+#if GTK_CHECK_VERSION(3,8,0)
+  gtk_widget_set_opacity(GTK_WIDGET(window), opacity);
+#else
+  gtk_window_set_opacity(window, opacity);
+#endif
+}
+
+void nsgtk_scrolled_window_add_with_viewport(GtkScrolledWindow *window,
+		GtkWidget *child)
+{
+#if GTK_CHECK_VERSION(3,8,0)
+  gtk_container_add(GTK_CONTAINER(window), child);
+#else
+  gtk_scrolled_window_add_with_viewport(window, child);
+#endif
+}
+
+

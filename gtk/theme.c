@@ -309,31 +309,6 @@ void nsgtk_theme_implement(struct nsgtk_scaffolding *g)
 		button = nsgtk_scaffolding_button(g, i);
 		if (button == NULL)
 			continue;
-		/* gtk_image_menu_item_set_image accepts NULL image */
-		if ((button->main != NULL) &&
-		    (theme[IMAGE_SET_MAIN_MENU] != NULL)) {
-			gtk_image_menu_item_set_image(button->main,
-						      GTK_WIDGET(
-							      theme[IMAGE_SET_MAIN_MENU]->
-							      image[i]));
-			gtk_widget_show_all(GTK_WIDGET(button->main));
-		}
-		if ((button->rclick != NULL)  &&
-		    (theme[IMAGE_SET_RCLICK_MENU] != NULL)) {
-			gtk_image_menu_item_set_image(button->rclick,
-						      GTK_WIDGET(
-							      theme[IMAGE_SET_RCLICK_MENU]->
-							      image[i]));
-			gtk_widget_show_all(GTK_WIDGET(button->rclick));
-		}
-		if ((button->popup != NULL) &&
-		    (theme[IMAGE_SET_POPUP_MENU] != NULL)) {
-			gtk_image_menu_item_set_image(button->popup,
-						      GTK_WIDGET(
-							      theme[IMAGE_SET_POPUP_MENU]->
-							      image[i]));
-			gtk_widget_show_all(GTK_WIDGET(button->popup));
-		}
 		if ((button->location != -1) && (button->button	!= NULL) &&
 		    (theme[IMAGE_SET_BUTTONS] != NULL)) {
 			gtk_tool_button_set_icon_widget(

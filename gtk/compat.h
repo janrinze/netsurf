@@ -33,7 +33,6 @@ gboolean nsgtk_widget_get_visible(GtkWidget *widget);
 gboolean nsgtk_widget_get_realized(GtkWidget *widget);
 gboolean nsgtk_widget_get_mapped(GtkWidget *widget);
 gboolean nsgtk_widget_is_drawable(GtkWidget *widget);
-GtkStateType nsgtk_widget_get_state(GtkWidget *widget);
 void nsgtk_dialog_set_has_separator(GtkDialog *dialog, gboolean setting);
 GtkWidget *nsgtk_combo_box_text_new(void);
 void nsgtk_combo_box_text_append_text(GtkWidget *combo_box, const gchar *text);
@@ -89,6 +88,8 @@ GtkWidget *nsgtk_dialog_get_content_area(GtkDialog *dialog);
 gboolean nsgtk_show_uri(GdkScreen *screen, const gchar *uri, guint32 timestamp, GError **error);
 GdkWindow *nsgtk_layout_get_bin_window(GtkLayout *layout);
 void nsgtk_widget_get_allocation(GtkWidget *widget, GtkAllocation *allocation);
+void nsgtk_window_set_opacity(GtkWindow *window, gdouble opacity);
+void nsgtk_scrolled_window_add_with_viewport(GtkScrolledWindow *window, GtkWidget *child);
 
 GtkAdjustment *nsgtk_layout_get_vadjustment(GtkLayout *layout);
 GtkAdjustment *nsgtk_layout_get_hadjustment(GtkLayout *layout);

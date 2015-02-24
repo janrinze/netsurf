@@ -35,12 +35,12 @@
  */
 
 static bool nsgtk_menu_add_image_item(GtkMenu *menu,
-		GtkImageMenuItem **item, const char *message,
+		GtkMenuItem **item, const char *message,
 		const char *messageAccel, GtkAccelGroup *group)
 {
 	unsigned int key;
 	GdkModifierType mod;
-	*item = GTK_IMAGE_MENU_ITEM(gtk_image_menu_item_new_with_mnemonic(
+	*item = GTK_MENU_ITEM(gtk_menu_item_new_with_mnemonic(
 			messages_get(message)));
 	if (*item == NULL)
 		return false;

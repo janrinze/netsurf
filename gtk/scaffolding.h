@@ -104,9 +104,9 @@ struct nsgtk_button_connect {
 	GtkToolItem			*button;
 	int				location; /* in toolbar */
 	bool				sensitivity;
-	GtkImageMenuItem		*main;
-	GtkImageMenuItem		*rclick;
-	GtkImageMenuItem		*popup;
+	GtkMenuItem			*main;
+	GtkMenuItem			*rclick;
+	GtkMenuItem			*popup;
 	void				*mhandler; /* menu item clicked */
 	void				*bhandler; /* button clicked */
 	void				*dataplus; /* customization -> toolbar */

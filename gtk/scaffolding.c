@@ -590,7 +590,7 @@ MULTIHANDLER(openfile)
 	scaf_current = g;
 	GtkWidget *dlgOpen = gtk_file_chooser_dialog_new("Open File",
 			scaf_current->window, GTK_FILE_CHOOSER_ACTION_OPEN,
-			GTK_STOCK_CANCEL, -6, GTK_STOCK_OPEN, -5, NULL);
+			"_Cancel", -6, "_Open", -5, NULL);
 
 	gint response = gtk_dialog_run(GTK_DIALOG(dlgOpen));
 	if (response == GTK_RESPONSE_OK) {
@@ -624,8 +624,8 @@ MULTIHANDLER(savepage)
 	GtkWidget *fc = gtk_file_chooser_dialog_new(
 			messages_get("gtkcompleteSave"), g->window,
 			GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER,
-			GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+			"_Cancel", GTK_RESPONSE_CANCEL,
+			"_Save", GTK_RESPONSE_ACCEPT,
 			NULL);
 	DIR *d;
 	char *path;
@@ -720,8 +720,8 @@ MULTIHANDLER(pdf)
 
 	save_dialog = gtk_file_chooser_dialog_new("Export to PDF", g->window,
 		GTK_FILE_CHOOSER_ACTION_SAVE,
-		GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-		GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+		"_Cancel", GTK_RESPONSE_CANCEL,
+		"_Save", GTK_RESPONSE_ACCEPT,
 		NULL);
 
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(save_dialog),
@@ -764,8 +764,8 @@ MULTIHANDLER(plaintext)
 	GtkWidget *fc = gtk_file_chooser_dialog_new(
 			messages_get("gtkplainSave"), g->window,
 			GTK_FILE_CHOOSER_ACTION_SAVE,
-			GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+			"_Cancel", GTK_RESPONSE_CANCEL,
+			"_Save", GTK_RESPONSE_ACCEPT,
 			NULL);
 	char *filename;
 	nserror res;
@@ -1456,7 +1456,7 @@ MULTIHANDLER(localhistory)
 			-1, -1);
 	gtk_window_resize(g->history_window->window, width, height);
 	gtk_window_set_transient_for(g->history_window->window, g->window);
-	gtk_window_set_opacity(g->history_window->window, 0.9);
+	nsgtk_window_set_opacity(g->history_window->window, 0.9);
 	gtk_widget_show(GTK_WIDGET(g->history_window->window));
 	gtk_window_move(g->history_window->window, x + g->historybase, y +
 			g->toolbarbase);
@@ -1846,7 +1846,7 @@ static void nsgtk_scaffolding_toolbar_init(struct nsgtk_scaffolding *g)
 			nsgtk_toolbar_##q##_toolbar_button_data
 
 #define ITEM_POP(p, q)					\
-	g->buttons[p##_BUTTON]->popup = GTK_IMAGE_MENU_ITEM(\
+	g->buttons[p##_BUTTON]->popup = GTK_MENU_ITEM(\
 			g->menu_popup->q##_menuitem)
 
 #define SENSITIVITY(q)				\
@@ -2160,7 +2160,7 @@ struct nsgtk_scaffolding *nsgtk_new_scaffolding(struct gui_window *toplevel)
 	nsgtk_widget_override_background_color(GTK_WIDGET(g->history_window->drawing_area),
 			GTK_STATE_NORMAL,
 			0, 0xffff, 0xffff, 0xffff);
-	gtk_scrolled_window_add_with_viewport(g->history_window->scrolled,
+	nsgtk_scrolled_window_add_with_viewport(g->history_window->scrolled,
 			GTK_WIDGET(g->history_window->drawing_area));
 	gtk_widget_show(GTK_WIDGET(g->history_window->drawing_area));
 

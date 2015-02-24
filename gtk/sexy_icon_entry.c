@@ -90,6 +90,16 @@ G_DEFINE_TYPE_EXTENDED(SexyIconEntry, sexy_icon_entry, GTK_TYPE_ENTRY,
 					   G_IMPLEMENT_INTERFACE(GTK_TYPE_EDITABLE,
 											 sexy_icon_entry_editable_init));
 
+
+static GtkStateType nsgtk_widget_get_state(GtkWidget *widget)
+{
+  #if GTK_CHECK_VERSION(2,18,0)
+       return gtk_widget_get_state(widget);
+  #else
+       return GTK_WIDGET_STATE(widget);
+  #endif
+}
+
 void
 sexy_icon_entry_class_init(SexyIconEntryClass *klass)
 {
