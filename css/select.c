@@ -290,7 +290,7 @@ css_select_results *nscss_get_style(nscss_select_ctx *ctx, dom_node *n,
 		error = css_computed_style_compose(ctx->parent_style,
 				styles->styles[CSS_PSEUDO_ELEMENT_NONE],
 				nscss_compute_font_size, NULL,
-				styles->styles[CSS_PSEUDO_ELEMENT_NONE]);
+				&(styles->styles[CSS_PSEUDO_ELEMENT_NONE]));
 		if (error != CSS_OK) {
 			css_select_results_destroy(styles);
 			return NULL;
@@ -317,7 +317,7 @@ css_select_results *nscss_get_style(nscss_select_ctx *ctx, dom_node *n,
 				styles->styles[CSS_PSEUDO_ELEMENT_NONE],
 				styles->styles[pseudo_element],
 				nscss_compute_font_size, NULL,
-				styles->styles[pseudo_element]);
+				&(styles->styles[pseudo_element]));
 		if (error != CSS_OK) {
 			/* TODO: perhaps this shouldn't be quite so
 			 * catastrophic? */
@@ -371,7 +371,7 @@ css_computed_style *nscss_get_blank_style(nscss_select_ctx *ctx,
 		return NULL;
 
 	error = css_computed_style_compose(parent, partial,
-			nscss_compute_font_size, NULL, partial);
+			nscss_compute_font_size, NULL, &partial);
 	if (error != CSS_OK) {
 		css_computed_style_destroy(partial);
 		return NULL;
