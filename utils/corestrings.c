@@ -270,6 +270,7 @@ dom_string *corestring_dom___ns_key_box_node_data;
 dom_string *corestring_dom___ns_key_libcss_node_data;
 dom_string *corestring_dom___ns_key_file_name_node_data;
 dom_string *corestring_dom___ns_key_image_coords_node_data;
+dom_string *corestring_dom___ns_key_html_content_data;
 
 /* nsurl URLs */
 nsurl *corestring_nsurl_about_blank;
@@ -858,6 +859,7 @@ nserror corestrings_init(void)
 	CSS_DOM_STRING_INTERN(__ns_key_libcss_node_data);
 	CSS_DOM_STRING_INTERN(__ns_key_file_name_node_data);
 	CSS_DOM_STRING_INTERN(__ns_key_image_coords_node_data);
+	CSS_DOM_STRING_INTERN(__ns_key_html_content_data);
 #undef CSS_DOM_STRING_INTERN
 
 	exc = dom_string_create_interned((const uint8_t *) "text/javascript",

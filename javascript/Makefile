@@ -59,7 +59,15 @@ S_JAVASCRIPT += content.c jsapi.c fetcher.c $(addprefix jsapi/,$(S_JSAPI))
 $(eval $(foreach V,$(filter JSAPI_BINDING_%,$(.VARIABLES)),$(call convert_jsapi_binding,$($(V)),$(OBJROOT)/$(patsubst JSAPI_BINDING_%,%,$(V)).c,$(OBJROOT)/$(patsubst JSAPI_BINDING_%,%,$(V)).h,$(patsubst JSAPI_BINDING_%,%,$(V))_jsapi)))
 
 else
+ifeq ($(NETSURF_USE_DUKTAPE),YES)
+
+S_DUKKY := event_target.c window.c node.c document.c element.c html_element.c html_unknown_element.c
+
+S_JAVASCRIPT += dukky.c duktape.c content.c fetcher.c $(addprefix duktape/,$(S_DUKKY))
+
+else
 S_JAVASCRIPT += none.c fetcher.c
+endif
 endif
 
 S_JAVASCRIPT := $(addprefix javascript/,$(S_JAVASCRIPT)) $(S_JSAPI_BINDING)

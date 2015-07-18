@@ -1523,6 +1523,7 @@ static nserror browser_window_callback(hlcache_handle *c,
 		if (js_newcompartment(bw->jsctx,
 				      bw,
 				      hlcache_handle_get_content(c)) != NULL) {
+			LOG("Yay, a compartment happened");
 			*(event->data.jscontext) = bw->jsctx;
 		}
 		break;

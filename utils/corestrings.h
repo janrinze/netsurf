@@ -286,7 +286,7 @@ extern struct dom_string *corestring_dom___ns_key_box_node_data;
 extern struct dom_string *corestring_dom___ns_key_libcss_node_data;
 extern struct dom_string *corestring_dom___ns_key_file_name_node_data;
 extern struct dom_string *corestring_dom___ns_key_image_coords_node_data;
-
+extern struct dom_string *corestring_dom___ns_key_html_content_data;
 /* URLs */
 extern struct nsurl *corestring_nsurl_about_blank;
 
