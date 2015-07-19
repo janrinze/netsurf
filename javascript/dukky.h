@@ -10,6 +10,7 @@
 #define PROTO_MAGIC MAGIC(PROTOTYPES)
 #define PRIVATE_MAGIC MAGIC(PRIVATE)
 #define INIT_MAGIC MAGIC(INIT)
+#define NODE_MAGIC MAGIC(NODE_MAP)
 #define _PROTO_NAME(K) _MAGIC("PROTOTYPE_" K)
 #define PROTO_NAME(K) _PROTO_NAME(#K)
 #define _PROP_NAME(K,V) _MAGIC(K "_PROPERTY_" V)
@@ -49,6 +50,10 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 	t##_private_t *priv = dukky_get_private(ctx, idx);	\
 	if (priv == NULL) return 0; /* No can do */
 
+#define DUKKY_SAFE_GET_ANOTHER(n,t,idx)				\
+	t##_private_t *n = dukky_get_private(ctx, idx);	\
+	if (priv == NULL) return 0; /* No can do */
+
 #define DUKKY_GET_METHOD_PRIVATE(t)		\
 	t##_private_t *priv = NULL;			\
 	duk_push_this(ctx);				\
@@ -78,6 +83,16 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 	duk_push_c_function(ctx, DUKKY_FUNC_T(klass,prop##_setter), 1); \
 	duk_def_prop(ctx, -4, DUK_DEFPROP_HAVE_GETTER |			\
 		     DUK_DEFPROP_HAVE_SETTER |				\
+		     DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE | \
+		     DUK_DEFPROP_HAVE_CONFIGURABLE);			\
+	duk_pop(ctx)
+
+#define DUKKY_POPULATE_READONLY_PROPERTY(klass,prop)	\
+	duk_dup(ctx, 0);			\
+	duk_push_string(ctx, #prop);		\
+	duk_push_c_function(ctx, DUKKY_FUNC_T(klass,prop##_getter), 0); \
+	duk_def_prop(ctx, -4, DUK_DEFPROP_HAVE_GETTER |			\
+		     DUK_DEFPROP_HAVE_ENUMERABLE | DUK_DEFPROP_ENUMERABLE | \
 		     DUK_DEFPROP_HAVE_CONFIGURABLE);			\
 	duk_pop(ctx)
 
@@ -114,5 +129,7 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 #include "duktape/prototypes.h"
 
 duk_ret_t dukky_create_object(duk_context *ctx, const char *name, int args);
-
+duk_bool_t dukky_push_node_stacked(duk_context *ctx);
+duk_bool_t dukky_push_node(duk_context *ctx, struct dom_node *node);
+duk_bool_t dukky_instanceof(duk_context *ctx, const char *klass);
 #endif

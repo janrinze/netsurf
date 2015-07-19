@@ -57,22 +57,8 @@ static DUKKY_GETTER(window,document)
 {
 	DUKKY_GET_METHOD_PRIVATE(window);
 	LOG("priv=%p", priv);
-	duk_push_this(ctx);
-	duk_get_prop_string(ctx, -1, PROP_NAME(window, document));
-	if (!duk_is_undefined(ctx, -1)) {
-		return 1;
-	} else {
-		duk_pop(ctx);
-	}
 	dom_document *doc = priv->htmlc->document;
-	duk_push_pointer(ctx, doc);
-	if (dukky_create_object(ctx, PROTO_NAME(document), 1) != DUK_EXEC_SUCCESS) {
-		LOG("ERROR");
-	}
-	duk_push_this(ctx);
-	duk_dup(ctx, -2);
-	duk_put_prop_string(ctx, -2, PROP_NAME(window, document));
-	duk_pop(ctx);
+	dukky_push_node(ctx, (struct dom_node *)doc);
 	return 1;
 }
 
@@ -82,8 +68,13 @@ static DUKKY_SETTER(window,document)
 	return 0;
 }
 
+#define STEAL_THING(X)				\
+	duk_get_global_string(ctx, #X);		\
+	duk_put_prop_string(ctx, 0, #X)
+
 DUKKY_FUNC(window, __proto)
 {
+	STEAL_THING(undefined);
 	/* Populate window's prototypical functionality */
 	DUKKY_POPULATE_FULL_PROPERTY(window, document);
 	/* Set this prototype's prototype (left-parent)*/

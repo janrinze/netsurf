@@ -38,10 +38,28 @@ static DUKKY_FUNC(node, __destructor)
 	return 0;
 }
 
+static DUKKY_FUNC(node, appendChild)
+{
+	DUKKY_GET_METHOD_PRIVATE(node);
+
+	if (!dukky_instanceof(ctx, PROTO_NAME(node))) return 0;
+
+	DUKKY_SAFE_GET_ANOTHER(other,node,0);
+
+	dom_exception err;
+	dom_node *spare;
+
+	err = dom_node_append_child(priv->node, other->node, &spare);
+	if (err != DOM_NO_ERR) return 0;
+	dom_node_unref(spare);
+	
+	return 0;
+}
+
 DUKKY_FUNC(node, __proto)
 {
 	/* Populate node's prototypical functionality */
-
+	DUKKY_ADD_METHOD(node, appendChild, 1);
 	/* Set this prototype's prototype (left-parent)*/
 	DUKKY_GET_PROTOTYPE(event_target);
 	duk_set_prototype(ctx, 0);

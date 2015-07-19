@@ -260,6 +260,7 @@ dom_string *corestring_dom_BUTTON;
 dom_string *corestring_dom_INPUT;
 dom_string *corestring_dom_SELECT;
 dom_string *corestring_dom_TEXTAREA;
+dom_string *corestring_dom_BODY;
 dom_string *corestring_dom_button;
 dom_string *corestring_dom_image;
 dom_string *corestring_dom_radio;
@@ -531,6 +532,7 @@ void corestrings_fini(void)
 	CSS_DOM_STRING_UNREF(INPUT);
 	CSS_DOM_STRING_UNREF(SELECT);
 	CSS_DOM_STRING_UNREF(TEXTAREA);
+	CSS_DOM_STRING_UNREF(BODY);
 	/* DOM input types, not really CSS */
 	CSS_DOM_STRING_UNREF(button);
 	CSS_DOM_STRING_UNREF(image);
@@ -543,6 +545,7 @@ void corestrings_fini(void)
 	CSS_DOM_STRING_UNREF(__ns_key_libcss_node_data);
 	CSS_DOM_STRING_UNREF(__ns_key_file_name_node_data);
 	CSS_DOM_STRING_UNREF(__ns_key_image_coords_node_data);
+	CSS_DOM_STRING_UNREF(__ns_key_html_content_data);
 #undef CSS_DOM_STRING_UNREF
 
 	/* nsurl URLs */
@@ -847,6 +850,7 @@ nserror corestrings_init(void)
 	CSS_DOM_STRING_INTERN(INPUT);
 	CSS_DOM_STRING_INTERN(SELECT);
 	CSS_DOM_STRING_INTERN(TEXTAREA);
+	CSS_DOM_STRING_INTERN(BODY);
 	/* DOM input types, not really CSS */
 	CSS_DOM_STRING_INTERN(button);
 	CSS_DOM_STRING_INTERN(image);

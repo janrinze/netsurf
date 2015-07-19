@@ -31,6 +31,8 @@
 #include "duktape.h"
 #include "dukky.h"
 
+#include <dom/dom.h>
+
 static duk_ret_t dukky_populate_object(duk_context *ctx)
 {
 	/* ... obj args protoname nargs */
@@ -77,6 +79,7 @@ duk_ret_t dukky_create_object(duk_context *ctx, const char *name, int args)
 	duk_push_string(ctx, name);
 	/* ... obj args name */
 	duk_push_int(ctx, args);
+	/* ... obj args name nargs */
 	if ((ret = duk_safe_call(ctx, dukky_populate_object, args + 3, 1))
 	    != DUK_EXEC_SUCCESS)
 		return ret;
@@ -99,6 +102,170 @@ static duk_ret_t dukky_create_prototype(duk_context *ctx,
 	duk_put_global_string(ctx, proto_name);
 	return 0;
 }
+
+duk_bool_t
+dukky_push_node_stacked(duk_context *ctx)
+{
+	int top_at_fail = duk_get_top(ctx) - 2;
+	/* ... nodeptr klass */
+	duk_get_global_string(ctx, NODE_MAGIC);
+	/* ... nodeptr klass nodes */
+	duk_dup(ctx, -3);
+	/* ... nodeptr klass nodes nodeptr */
+	duk_get_prop(ctx, -2);
+	/* ... nodeptr klass nodes node/undefined */
+	if (duk_is_undefined(ctx, -1)) {
+		/* ... nodeptr klass nodes undefined */
+		duk_pop(ctx);
+		/* ... nodeptr klass nodes */
+		duk_push_object(ctx);
+		/* ... nodeptr klass nodes obj */
+		duk_dup(ctx, -4);
+		/* ... nodeptr klass nodes obj nodeptr */
+		duk_dup(ctx, -4);
+		/* ... nodeptr klass nodes obj nodeptr klass */
+		duk_push_int(ctx, 1);
+		/* ... nodeptr klass nodes obj nodeptr klass 1 */
+		if (duk_safe_call(ctx, dukky_populate_object, 4, 1)
+		    != DUK_EXEC_SUCCESS) {
+			duk_set_top(ctx, top_at_fail);
+			LOG("Boo and also hiss");
+			return false;
+		}
+		/* ... nodeptr klass nodes node */
+		duk_dup(ctx, -4);
+		/* ... nodeptr klass nodes node nodeptr */
+		duk_dup(ctx, -2);
+		/* ... nodeptr klass nodes node nodeptr node */
+		duk_put_prop(ctx, -4);
+		/* ... nodeptr klass nodes node */
+	}
+	/* ... nodeptr klass nodes node */
+	duk_insert(ctx, -4);
+	/* ... node nodeptr klass nodes */
+	duk_pop_3(ctx);
+	/* ... node */
+	return true;
+}
+
+static void
+dukky_push_node_klass(duk_context *ctx, struct dom_node *node)
+{
+	dom_node_type nodetype;
+	dom_exception err;
+	
+	err = dom_node_get_node_type(node, &nodetype);
+	if (err != DOM_NO_ERR) {
+		/* Oh bum, just node then */
+		duk_push_string(ctx, PROTO_NAME(node));
+		return;
+	}
+	
+	switch(nodetype) {
+        case DOM_ELEMENT_NODE: {
+		dom_string *namespace;
+		err = dom_node_get_namespace(node, &namespace);
+		if (err != DOM_NO_ERR) {
+			/* Feck it, element */
+			duk_push_string(ctx, PROTO_NAME(element));
+			break;
+		}
+		if (namespace == NULL) {
+			/* No namespace, -> element */
+			duk_push_string(ctx, PROTO_NAME(element));
+			break;
+		}
+		
+		/* TODO: Work out how to decide between Element and HTML */
+		duk_push_string(ctx, PROTO_NAME(html_unknown_element));
+		
+		dom_string_unref(namespace);
+		break;
+	}
+        case DOM_TEXT_NODE:
+		duk_push_string(ctx, PROTO_NAME(text));
+		break;
+        case DOM_COMMENT_NODE:
+		duk_push_string(ctx, PROTO_NAME(comment));
+		break;
+        case DOM_DOCUMENT_NODE:
+		duk_push_string(ctx, PROTO_NAME(document));
+		break;
+        case DOM_ATTRIBUTE_NODE:
+        case DOM_PROCESSING_INSTRUCTION_NODE:
+	case DOM_DOCUMENT_TYPE_NODE:
+        case DOM_DOCUMENT_FRAGMENT_NODE:
+        case DOM_NOTATION_NODE:
+	case DOM_ENTITY_REFERENCE_NODE:
+        case DOM_ENTITY_NODE:
+        case DOM_CDATA_SECTION_NODE:
+	default:
+		/* Oh bum, just node then */
+		duk_push_string(ctx, PROTO_NAME(node));
+	}
+}
+
+duk_bool_t
+dukky_push_node(duk_context *ctx, struct dom_node *node)
+{
+	LOG("Pushing node %p", node);
+	/* First check if we can find the node */
+	/* ... */
+	duk_get_global_string(ctx, NODE_MAGIC);
+	/* ... nodes */
+	duk_push_pointer(ctx, node);
+	/* ... nodes nodeptr */
+	duk_get_prop(ctx, -2);
+	/* ... nodes node/undefined */
+	if (!duk_is_undefined(ctx, -1)) {
+		/* ... nodes node */
+		duk_insert(ctx, -2);
+		/* ... node nodes */
+		duk_pop(ctx);
+		/* ... node */
+		LOG("Found it memoised");
+		return true;
+	}
+	/* ... nodes undefined */
+	duk_pop_2(ctx);
+	/* ... */
+	/* We couldn't, so now we determine the node type and then
+	 * we ask for it to be created
+	 */
+	duk_push_pointer(ctx, node);
+	/* ... nodeptr */
+	dukky_push_node_klass(ctx, node);
+	/* ... nodeptr klass */
+	return dukky_push_node_stacked(ctx);
+}
+
+duk_bool_t
+dukky_instanceof(duk_context *ctx, const char *klass)
+{
+	/* ... ??? */
+	if (!duk_check_type(ctx, -1, DUK_TYPE_OBJECT)) return false;
+	/* ... obj */
+	duk_get_global_string(ctx, PROTO_MAGIC);
+	/* ... obj protos */
+	duk_get_prop_string(ctx, -1, klass);
+	/* ... obj protos goalproto */
+	duk_get_prototype(ctx, -3);
+	/* ... obj protos goalproto proto? */
+	while (!duk_is_undefined(ctx, -1)) {
+		if (duk_strict_equals(ctx, -1, -2)) {
+			duk_pop_3(ctx);
+			return true;
+		}
+		duk_get_prototype(ctx, -1);
+		/* ... obj protos goalproto proto proto? */
+		duk_replace(ctx, -2);
+		/* ... obj protos goalproto proto? */
+	}
+	duk_pop_3(ctx);
+	/* ... obj */
+	return false;
+}
+
 
 /**************************************** js.h ******************************/
 struct jscontext {
@@ -140,6 +307,9 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	DUKKY_NEW_PROTOTYPE(event_target);
 	DUKKY_NEW_PROTOTYPE(window);
 	DUKKY_NEW_PROTOTYPE(node);
+	DUKKY_NEW_PROTOTYPE(character_data);
+	DUKKY_NEW_PROTOTYPE(text);
+	DUKKY_NEW_PROTOTYPE(comment);
 	DUKKY_NEW_PROTOTYPE(document);
 	DUKKY_NEW_PROTOTYPE(element);
 	DUKKY_NEW_PROTOTYPE(html_element);
@@ -172,6 +342,10 @@ jsobject *js_newcompartment(jscontext *ctx, void *win_priv, void *doc_priv)
 	duk_push_global_object(CTX);
 	duk_put_prop_string(CTX, -2, PROTO_MAGIC);
 	duk_set_global_object(CTX);
+	
+	/* Now we need to prepare our node mapping table */
+	duk_push_object(CTX);
+	duk_put_global_string(CTX, NODE_MAGIC);
 	
 	return (jsobject *)ctx;
 }

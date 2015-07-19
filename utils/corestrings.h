@@ -272,6 +272,7 @@ extern struct dom_string *corestring_dom_BUTTON;
 extern struct dom_string *corestring_dom_INPUT;
 extern struct dom_string *corestring_dom_SELECT;
 extern struct dom_string *corestring_dom_TEXTAREA;
+extern struct dom_string *corestring_dom_BODY;
 /* DOM input node types */
 extern struct dom_string *corestring_dom_button;
 /* extern struct dom_string *corestring_dom_submit; */
