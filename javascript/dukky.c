@@ -92,6 +92,7 @@ static duk_ret_t dukky_create_prototype(duk_context *ctx,
 	duk_push_object(ctx);
 	if ((ret = duk_safe_call(ctx, genproto, 1, 1)) != DUK_EXEC_SUCCESS) {
 		duk_pop(ctx);
+		LOG("Failed to register prototype for %s", proto_name + 2);
 		return ret;
 	}
 	/* top of stack is the ready prototype, inject it */
@@ -132,6 +133,8 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	if (ret->ctx == NULL) { free(ret); return NULL; }
 	/* Create the prototype stuffs */
 	duk_push_global_object(ctx);
+	duk_push_boolean(ctx, true);
+	duk_put_prop_string(ctx, -2, "protos");
 	duk_put_global_string(ctx, PROTO_MAGIC);
 	/* Create prototypes here? */
 	DUKKY_NEW_PROTOTYPE(event_target);
