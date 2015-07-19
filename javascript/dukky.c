@@ -22,11 +22,13 @@
  */
 
 #include "content/content.h"
+
 #include "utils/nsoption.h"
+#include "utils/log.h"
+#include "utils/corestrings.h"
 
 #include "javascript/js.h"
 #include "javascript/content.h"
-#include "utils/log.h"
 
 #include "duktape.h"
 #include "dukky.h"
@@ -46,9 +48,9 @@ static duk_ret_t dukky_populate_object(duk_context *ctx)
 	duk_get_prop(ctx, -2);
 	/* ... obj args prototab {proto/undefined} */
 	if (duk_is_undefined(ctx, -1)) {
-		LOG("RuhRoh, couldn't find a prototype, getting htmlelement");
+		LOG("RuhRoh, couldn't find a prototype, HTMLUnknownElement it is");
 		duk_pop(ctx);
-		duk_push_string(ctx, PROTO_NAME(html_unknown_element));
+		duk_push_string(ctx, PROTO_NAME(HTMLUNKNOWNELEMENT));
 		duk_get_prop(ctx, -2);
 	}
 	/* ... obj args prototab proto */
@@ -185,39 +187,57 @@ dukky_push_node_klass(duk_context *ctx, struct dom_node *node)
 	err = dom_node_get_node_type(node, &nodetype);
 	if (err != DOM_NO_ERR) {
 		/* Oh bum, just node then */
-		duk_push_string(ctx, PROTO_NAME(node));
+		duk_push_string(ctx, PROTO_NAME(NODE));
 		return;
 	}
 	
 	switch(nodetype) {
         case DOM_ELEMENT_NODE: {
-		dom_string *namespace;
+		dom_string *namespace, *tag;
 		err = dom_node_get_namespace(node, &namespace);
 		if (err != DOM_NO_ERR) {
 			/* Feck it, element */
-			duk_push_string(ctx, PROTO_NAME(element));
+			LOG("dom_node_get_namespace() failed");
+			duk_push_string(ctx, PROTO_NAME(ELEMENT));
 			break;
 		}
 		if (namespace == NULL) {
 			/* No namespace, -> element */
-			duk_push_string(ctx, PROTO_NAME(element));
+			LOG("no namespace");
+			duk_push_string(ctx, PROTO_NAME(ELEMENT));
 			break;
 		}
 		
-		/* TODO: Work out how to decide between Element and HTML */
-		duk_push_string(ctx, PROTO_NAME(html_unknown_element));
-		
+		if (dom_string_isequal(namespace, corestring_dom_html_namespace) == false) {
+			/* definitely not an HTML element of some kind */
+			duk_push_string(ctx, PROTO_NAME(ELEMENT));
+			dom_string_unref(namespace);
+			break;
+		}
 		dom_string_unref(namespace);
+		
+		err = dom_node_get_node_name(node, &tag);
+		if (err != DOM_NO_ERR) {
+			duk_push_string(ctx, PROTO_NAME(HTMLUNKNOWNELEMENT));
+			break;
+		}
+		
+		duk_push_string(ctx, PROTO_NAME(HTML));
+		duk_push_lstring(ctx, dom_string_data(tag), dom_string_length(tag));
+		dom_string_unref(tag);
+		duk_push_string(ctx, "ELEMENT");
+		duk_concat(ctx, 3);
+
 		break;
 	}
         case DOM_TEXT_NODE:
-		duk_push_string(ctx, PROTO_NAME(text));
+		duk_push_string(ctx, PROTO_NAME(TEXT));
 		break;
         case DOM_COMMENT_NODE:
-		duk_push_string(ctx, PROTO_NAME(comment));
+		duk_push_string(ctx, PROTO_NAME(COMMENT));
 		break;
         case DOM_DOCUMENT_NODE:
-		duk_push_string(ctx, PROTO_NAME(document));
+		duk_push_string(ctx, PROTO_NAME(DOCUMENT));
 		break;
         case DOM_ATTRIBUTE_NODE:
         case DOM_PROCESSING_INSTRUCTION_NODE:
@@ -229,7 +249,7 @@ dukky_push_node_klass(duk_context *ctx, struct dom_node *node)
         case DOM_CDATA_SECTION_NODE:
 	default:
 		/* Oh bum, just node then */
-		duk_push_string(ctx, PROTO_NAME(node));
+		duk_push_string(ctx, PROTO_NAME(NODE));
 	}
 }
 
@@ -315,8 +335,8 @@ void js_finalise(void)
 	/* NADA for now */
 }
 
-#define DUKKY_NEW_PROTOTYPE(klass, klass_name)					\
-	dukky_create_prototype(ctx, dukky_##klass##___proto, PROTO_NAME(klass), klass_name)
+#define DUKKY_NEW_PROTOTYPE(klass, uklass, klass_name)			\
+	dukky_create_prototype(ctx, dukky_##klass##___proto, PROTO_NAME(uklass), klass_name)
 
 jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 {
@@ -332,20 +352,21 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	duk_put_prop_string(ctx, -2, "protos");
 	duk_put_global_string(ctx, PROTO_MAGIC);
 	/* Create prototypes here? */
-	DUKKY_NEW_PROTOTYPE(event_target, "EventTarget");
-	DUKKY_NEW_PROTOTYPE(node, "Node");
-	DUKKY_NEW_PROTOTYPE(character_data, "CharacterData");
-	DUKKY_NEW_PROTOTYPE(text, "Text");
-	DUKKY_NEW_PROTOTYPE(comment, "Comment");
-	DUKKY_NEW_PROTOTYPE(document, "Document");
-	DUKKY_NEW_PROTOTYPE(element, "Element");
-	DUKKY_NEW_PROTOTYPE(html_element, "HTMLElement");
-	DUKKY_NEW_PROTOTYPE(html_unknown_element, "HTMLUnknownElement");
-	DUKKY_NEW_PROTOTYPE(html_collection, "HTMLCollection");
-	DUKKY_NEW_PROTOTYPE(node_list, "NodeList");
+	DUKKY_NEW_PROTOTYPE(event_target, EVENTTARGET, "EventTarget");
+	DUKKY_NEW_PROTOTYPE(node, NODE, "Node");
+	DUKKY_NEW_PROTOTYPE(character_data, CHARACTERDATA, "CharacterData");
+	DUKKY_NEW_PROTOTYPE(text, TEXT, "Text");
+	DUKKY_NEW_PROTOTYPE(comment, COMMENT, "Comment");
+	DUKKY_NEW_PROTOTYPE(document, DOCUMENT, "Document");
+	DUKKY_NEW_PROTOTYPE(element, ELEMENT, "Element");
+	DUKKY_NEW_PROTOTYPE(html_element, HTMLELEMENT, "HTMLElement");
+	DUKKY_NEW_PROTOTYPE(html_unknown_element, HTMLUNKNOWNELEMENT, "HTMLUnknownElement");
+	DUKKY_NEW_PROTOTYPE(html_br_element, HTMLBRELEMENT, "HTMLBRElement");
+	DUKKY_NEW_PROTOTYPE(html_collection, HTMLCOLLECTION, "HTMLCollection");
+	DUKKY_NEW_PROTOTYPE(node_list, NODELIST, "NodeList");
 	
 	/* Finally window's prototype */
-	DUKKY_NEW_PROTOTYPE(window, "Window");
+	DUKKY_NEW_PROTOTYPE(window, WINDOW, "Window");
 	return ret;
 }
 
@@ -370,7 +391,7 @@ jsobject *js_newcompartment(jscontext *ctx, void *win_priv, void *doc_priv)
 	/* win_priv is a browser_window, doc_priv is an html content struct */
 	duk_push_pointer(CTX, win_priv);
 	duk_push_pointer(CTX, doc_priv);
-	dukky_create_object(CTX, PROTO_NAME(window), 2);
+	dukky_create_object(CTX, PROTO_NAME(WINDOW), 2);
 	duk_push_global_object(CTX);
 	duk_put_prop_string(CTX, -2, PROTO_MAGIC);
 	duk_set_global_object(CTX);

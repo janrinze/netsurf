@@ -78,10 +78,10 @@ DUKKY_FUNC(window, __proto)
 	/* Populate window's prototypical functionality */
 	DUKKY_POPULATE_FULL_PROPERTY(window, document);
 	/* Exposed prototypes */
-	DUKKY_GET_PROTOTYPE(node);
+	DUKKY_GET_PROTOTYPE(NODE);
 	duk_put_prop_string(ctx, 0, "Node");
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(event_target);
+	DUKKY_GET_PROTOTYPE(EVENTTARGET);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, window);

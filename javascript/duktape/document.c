@@ -223,7 +223,7 @@ static DUKKY_FUNC(document, getElementsByTagName)
 	if (nodes == NULL) return 0; /* coerced to undefined */
 	
 	duk_push_pointer(ctx, nodes);
-	dukky_create_object(ctx, PROTO_NAME(node_list), 1);
+	dukky_create_object(ctx, PROTO_NAME(NODELIST), 1);
 	dom_nodelist_unref(nodes);
 	return 1;
 }
@@ -239,7 +239,7 @@ DUKKY_FUNC(document, __proto)
 	DUKKY_POPULATE_READONLY_PROPERTY(document, body);
 	DUKKY_POPULATE_READONLY_PROPERTY(document, head);
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(node);
+	DUKKY_GET_PROTOTYPE(NODE);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, document);

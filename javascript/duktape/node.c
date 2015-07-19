@@ -42,7 +42,7 @@ static DUKKY_FUNC(node, appendChild)
 {
 	DUKKY_GET_METHOD_PRIVATE(node);
 
-	if (!dukky_instanceof(ctx, PROTO_NAME(node))) return 0;
+	if (!dukky_instanceof(ctx, PROTO_NAME(NODE))) return 0;
 
 	DUKKY_SAFE_GET_ANOTHER(other,node,0);
 
@@ -82,7 +82,7 @@ DUKKY_FUNC(node, __proto)
 	DUKKY_ADD_METHOD(node, appendChild, 1);
 	DUKKY_POPULATE_READONLY_PROPERTY(node, textContent);
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(event_target);
+	DUKKY_GET_PROTOTYPE(EVENTTARGET);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, node);

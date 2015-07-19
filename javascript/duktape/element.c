@@ -211,7 +211,7 @@ DUKKY_FUNC(element, __proto)
 	DUKKY_POPULATE_READONLY_PROPERTY(element, previousElementSibling);
 	DUKKY_POPULATE_READONLY_PROPERTY(element, childElementCount);
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(node);
+	DUKKY_GET_PROTOTYPE(NODE);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, element);

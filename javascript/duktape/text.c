@@ -41,7 +41,7 @@ DUKKY_FUNC(text, __proto)
 	/* Populate text's prototypical functionality */
 
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(character_data);
+	DUKKY_GET_PROTOTYPE(CHARACTERDATA);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, text);

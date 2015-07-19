@@ -11,6 +11,7 @@ DUKKY_DECLARE_INTERFACE(document, struct dom_document *);
 DUKKY_DECLARE_INTERFACE(element, struct dom_element *);
 DUKKY_DECLARE_INTERFACE(html_element, struct dom_html_element *);
 DUKKY_DECLARE_INTERFACE(html_unknown_element, struct dom_html_element *);
+DUKKY_DECLARE_INTERFACE(html_br_element, struct dom_html_br_element *);
 DUKKY_DECLARE_INTERFACE(html_collection, struct dom_html_collection *);
 DUKKY_DECLARE_INTERFACE(node_list, struct dom_nodelist *);
 

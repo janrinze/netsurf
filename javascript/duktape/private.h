@@ -12,6 +12,7 @@ struct dom_node_text;
 struct dom_node_list;
 struct dom_node_comment;
 struct dom_html_collection;
+struct dom_html_br_element;
 
 typedef struct {
 } event_target_private_t;
@@ -50,6 +51,10 @@ typedef struct {
 typedef struct {
 	html_element_private_t parent;
 } html_unknown_element_private_t;
+
+typedef struct {
+	html_element_private_t parent;
+} html_br_element_private_t;
 
 typedef struct {
 	node_private_t parent;

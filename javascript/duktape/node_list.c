@@ -40,7 +40,7 @@ static DUKKY_GETTER(node_list, length)
 {
 	DUKKY_GET_METHOD_PRIVATE(node_list);
 	dom_exception err;
-	unsigned long len;
+	uint32_t len;
 	
 	err = dom_nodelist_get_length(priv->nodes, &len);
 	
@@ -56,8 +56,6 @@ static DUKKY_FUNC(node_list, item)
 	unsigned long i = duk_to_uint(ctx, 0);
 	dom_exception err;
 	dom_node *node;
-	
-	LOG("Looking up %u in %p", i, priv->nodes);
 	
 	err = dom_nodelist_item(priv->nodes, i, &node);
 	

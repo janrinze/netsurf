@@ -41,7 +41,7 @@ DUKKY_FUNC(html_element, __proto)
 	/* Populate html_element's prototypical functionality */
 
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(element);
+	DUKKY_GET_PROTOTYPE(ELEMENT);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, html_element);

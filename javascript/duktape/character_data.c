@@ -41,7 +41,7 @@ DUKKY_FUNC(character_data, __proto)
 	/* Populate character_data's prototypical functionality */
 
 	/* Set this prototype's prototype (left-parent)*/
-	DUKKY_GET_PROTOTYPE(node);
+	DUKKY_GET_PROTOTYPE(NODE);
 	duk_set_prototype(ctx, 0);
 	/* And the initialiser/finalizer */
 	DUKKY_SET_DESTRUCTOR(0, character_data);
