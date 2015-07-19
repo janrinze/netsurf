@@ -84,6 +84,36 @@ static DUKKY_FUNC(document, createTextNode)
 	return 1;
 }
 
+static DUKKY_FUNC(document, createElement)
+{
+	DUKKY_GET_METHOD_PRIVATE(document);
+	dom_node *newnode;
+	dom_exception err;
+	duk_size_t text_len;
+	const char *text = duk_safe_to_lstring(ctx, 0, &text_len);
+	dom_string *text_str;
+	
+	err = dom_string_create((const uint8_t*)text, text_len, &text_str);
+	if (err != DOM_NO_ERR) return 0; /* coerced to undefined */
+	
+	err = dom_document_create_element_ns(priv->parent.node,
+					     corestring_dom_html_namespace,
+					     text_str,
+					     &newnode);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(text_str);
+		return 0; /* coerced to undefined */
+	}
+	
+	dom_string_unref(text_str);
+	
+	dukky_push_node(ctx, newnode);
+	
+	dom_node_unref(newnode);
+
+	return 1;
+}
+
 static DUKKY_GETTER(document, body)
 {
 	DUKKY_GET_METHOD_PRIVATE(document);
@@ -118,6 +148,7 @@ DUKKY_FUNC(document, __proto)
 	/* Populate document's prototypical functionality */
 	DUKKY_ADD_METHOD(document, write, 1);
 	DUKKY_ADD_METHOD(document, createTextNode, 1);
+	DUKKY_ADD_METHOD(document, createElement, 1);
 	DUKKY_POPULATE_READONLY_PROPERTY(document, body);
 	/* Set this prototype's prototype (left-parent)*/
 	DUKKY_GET_PROTOTYPE(node);

@@ -261,6 +261,7 @@ dom_string *corestring_dom_INPUT;
 dom_string *corestring_dom_SELECT;
 dom_string *corestring_dom_TEXTAREA;
 dom_string *corestring_dom_BODY;
+dom_string *corestring_dom_html_namespace;
 dom_string *corestring_dom_button;
 dom_string *corestring_dom_image;
 dom_string *corestring_dom_radio;
@@ -533,6 +534,8 @@ void corestrings_fini(void)
 	CSS_DOM_STRING_UNREF(SELECT);
 	CSS_DOM_STRING_UNREF(TEXTAREA);
 	CSS_DOM_STRING_UNREF(BODY);
+	/* DOM namespaces, not really CSS */
+	CSS_DOM_STRING_UNREF(html_namespace);
 	/* DOM input types, not really CSS */
 	CSS_DOM_STRING_UNREF(button);
 	CSS_DOM_STRING_UNREF(image);
@@ -882,11 +885,19 @@ nserror corestrings_init(void)
 		goto error;
 	}
 
+	exc = dom_string_create_interned((const uint8_t *) "http://www.w3.org/1999/xhtml",
+					 SLEN("http://www.w3.org/1999/xhtml"),
+					 &corestring_dom_html_namespace);
+	if ((exc != DOM_NO_ERR) || (corestring_dom_html_namespace == NULL)) {
+		error = NSERROR_NOMEM;
+		goto error;
+	}
+	
 	error = nsurl_create("about:blank", &corestring_nsurl_about_blank);
 	if (error != NSERROR_OK) {
 		goto error;
 	}
-
+	
 	return NSERROR_OK;
 
 error:
