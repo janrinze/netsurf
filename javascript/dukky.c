@@ -333,7 +333,6 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	duk_put_global_string(ctx, PROTO_MAGIC);
 	/* Create prototypes here? */
 	DUKKY_NEW_PROTOTYPE(event_target, "EventTarget");
-	DUKKY_NEW_PROTOTYPE(window, "Window");
 	DUKKY_NEW_PROTOTYPE(node, "Node");
 	DUKKY_NEW_PROTOTYPE(character_data, "CharacterData");
 	DUKKY_NEW_PROTOTYPE(text, "Text");
@@ -344,6 +343,9 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	DUKKY_NEW_PROTOTYPE(html_unknown_element, "HTMLUnknownElement");
 	DUKKY_NEW_PROTOTYPE(html_collection, "HTMLCollection");
 	DUKKY_NEW_PROTOTYPE(node_list, "NodeList");
+	
+	/* Finally window's prototype */
+	DUKKY_NEW_PROTOTYPE(window, "Window");
 	return ret;
 }
 

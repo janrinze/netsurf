@@ -77,6 +77,9 @@ DUKKY_FUNC(window, __proto)
 	STEAL_THING(undefined);
 	/* Populate window's prototypical functionality */
 	DUKKY_POPULATE_FULL_PROPERTY(window, document);
+	/* Exposed prototypes */
+	DUKKY_GET_PROTOTYPE(node);
+	duk_put_prop_string(ctx, 0, "Node");
 	/* Set this prototype's prototype (left-parent)*/
 	DUKKY_GET_PROTOTYPE(event_target);
 	duk_set_prototype(ctx, 0);
