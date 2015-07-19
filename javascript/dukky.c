@@ -87,9 +87,31 @@ duk_ret_t dukky_create_object(duk_context *ctx, const char *name, int args)
 	return DUK_EXEC_SUCCESS;
 }
 
+static duk_ret_t
+dukky_to_string(duk_context *ctx)
+{
+	/* */
+	duk_push_this(ctx);
+	/* this */
+	duk_get_prototype(ctx, -1);
+	/* this proto */
+	duk_get_prop_string(ctx, -1, MAGIC(klass_name));
+	/* this proto classname */
+	duk_push_string(ctx, "[object ");
+	/* this proto classname str */
+	duk_insert(ctx, -2);
+	/* this proto str classname */
+	duk_push_string(ctx, "]");
+	/* this proto str classname str */
+	duk_concat(ctx, 3);
+	/* this proto str */
+	return 1;
+}
+
 static duk_ret_t dukky_create_prototype(duk_context *ctx,
 					duk_safe_call_function genproto,
-					const char *proto_name)
+					const char *proto_name,
+					const char *klass_name)
 {
 	duk_int_t ret;
 	duk_push_object(ctx);
@@ -99,6 +121,12 @@ static duk_ret_t dukky_create_prototype(duk_context *ctx,
 		return ret;
 	}
 	/* top of stack is the ready prototype, inject it */
+	duk_push_string(ctx, klass_name);
+	duk_put_prop_string(ctx, -2, MAGIC(klass_name));
+	duk_push_c_function(ctx, dukky_to_string, 0);
+	duk_put_prop_string(ctx, -2, "toString");
+	duk_push_string(ctx, "toString");
+	duk_def_prop(ctx, -2, DUK_DEFPROP_HAVE_ENUMERABLE);
 	duk_put_global_string(ctx, proto_name);
 	return 0;
 }
@@ -287,8 +315,8 @@ void js_finalise(void)
 	/* NADA for now */
 }
 
-#define DUKKY_NEW_PROTOTYPE(klass)		\
-	dukky_create_prototype(ctx, dukky_##klass##___proto, PROTO_NAME(klass))
+#define DUKKY_NEW_PROTOTYPE(klass, klass_name)					\
+	dukky_create_prototype(ctx, dukky_##klass##___proto, PROTO_NAME(klass), klass_name)
 
 jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 {
@@ -304,16 +332,16 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	duk_put_prop_string(ctx, -2, "protos");
 	duk_put_global_string(ctx, PROTO_MAGIC);
 	/* Create prototypes here? */
-	DUKKY_NEW_PROTOTYPE(event_target);
-	DUKKY_NEW_PROTOTYPE(window);
-	DUKKY_NEW_PROTOTYPE(node);
-	DUKKY_NEW_PROTOTYPE(character_data);
-	DUKKY_NEW_PROTOTYPE(text);
-	DUKKY_NEW_PROTOTYPE(comment);
-	DUKKY_NEW_PROTOTYPE(document);
-	DUKKY_NEW_PROTOTYPE(element);
-	DUKKY_NEW_PROTOTYPE(html_element);
-	DUKKY_NEW_PROTOTYPE(html_unknown_element);
+	DUKKY_NEW_PROTOTYPE(event_target, "EventTarget");
+	DUKKY_NEW_PROTOTYPE(window, "Window");
+	DUKKY_NEW_PROTOTYPE(node, "Node");
+	DUKKY_NEW_PROTOTYPE(character_data, "CharacterData");
+	DUKKY_NEW_PROTOTYPE(text, "Text");
+	DUKKY_NEW_PROTOTYPE(comment, "Comment");
+	DUKKY_NEW_PROTOTYPE(document, "Document");
+	DUKKY_NEW_PROTOTYPE(element, "Element");
+	DUKKY_NEW_PROTOTYPE(html_element, "HTMLElement");
+	DUKKY_NEW_PROTOTYPE(html_unknown_element, "HTMLUnknownElement");
 	return ret;
 }
 
