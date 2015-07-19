@@ -730,6 +730,21 @@ html_document_user_data_handler(dom_node_operation operation,
 	}
 	
 	switch (operation) {
+	case DOM_NODE_CLONED:
+		LOG("Cloned");
+		break;
+	case DOM_NODE_RENAMED:
+		LOG("Renamed");
+		break;
+	case DOM_NODE_IMPORTED:
+		LOG("imported");
+		break;
+	case DOM_NODE_ADOPTED:
+		LOG("Adopted");
+		break;
+	case DOM_NODE_DELETED:
+		/* This is the only path I expect */
+		break;
 	default:
 		LOG("User data operation not handled.");
 		assert(0);
