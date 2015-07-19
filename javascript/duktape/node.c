@@ -56,10 +56,31 @@ static DUKKY_FUNC(node, appendChild)
 	return 0;
 }
 
+static DUKKY_GETTER(node, textContent)
+{
+	DUKKY_GET_METHOD_PRIVATE(node);
+	dom_exception exc;
+	dom_string *content;
+
+	exc = dom_node_get_text_content(priv->node, &content);
+	if (exc != DOM_NO_ERR) {
+		return 0;
+	}
+
+	if (content != NULL) {
+		duk_push_lstring(ctx, dom_string_data(content), dom_string_length(content));
+		dom_string_unref(content);
+		return 1;
+	}
+	
+	return 0;
+}
+
 DUKKY_FUNC(node, __proto)
 {
 	/* Populate node's prototypical functionality */
 	DUKKY_ADD_METHOD(node, appendChild, 1);
+	DUKKY_POPULATE_READONLY_PROPERTY(node, textContent);
 	/* Set this prototype's prototype (left-parent)*/
 	DUKKY_GET_PROTOTYPE(event_target);
 	duk_set_prototype(ctx, 0);

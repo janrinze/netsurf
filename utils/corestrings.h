@@ -273,6 +273,7 @@ extern struct dom_string *corestring_dom_INPUT;
 extern struct dom_string *corestring_dom_SELECT;
 extern struct dom_string *corestring_dom_TEXTAREA;
 extern struct dom_string *corestring_dom_BODY;
+extern struct dom_string *corestring_dom_HEAD;
 /* DOM namespaces */
 extern struct dom_string *corestring_dom_html_namespace;
 /* DOM input node types */

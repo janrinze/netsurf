@@ -9,7 +9,9 @@ struct dom_document;
 struct dom_html_element;
 struct dom_node_character_data;
 struct dom_node_text;
+struct dom_node_list;
 struct dom_node_comment;
+struct dom_html_collection;
 
 typedef struct {
 } event_target_private_t;
@@ -52,5 +54,13 @@ typedef struct {
 typedef struct {
 	node_private_t parent;
 } document_private_t;
+
+typedef struct {
+	struct dom_html_collection *coll;
+} html_collection_private_t;
+
+typedef struct {
+	struct dom_nodelist *nodes;
+} node_list_private_t;
 
 #endif

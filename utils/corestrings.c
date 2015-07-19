@@ -261,6 +261,7 @@ dom_string *corestring_dom_INPUT;
 dom_string *corestring_dom_SELECT;
 dom_string *corestring_dom_TEXTAREA;
 dom_string *corestring_dom_BODY;
+dom_string *corestring_dom_HEAD;
 dom_string *corestring_dom_html_namespace;
 dom_string *corestring_dom_button;
 dom_string *corestring_dom_image;
@@ -534,6 +535,7 @@ void corestrings_fini(void)
 	CSS_DOM_STRING_UNREF(SELECT);
 	CSS_DOM_STRING_UNREF(TEXTAREA);
 	CSS_DOM_STRING_UNREF(BODY);
+	CSS_DOM_STRING_UNREF(HEAD);
 	/* DOM namespaces, not really CSS */
 	CSS_DOM_STRING_UNREF(html_namespace);
 	/* DOM input types, not really CSS */
@@ -854,6 +856,7 @@ nserror corestrings_init(void)
 	CSS_DOM_STRING_INTERN(SELECT);
 	CSS_DOM_STRING_INTERN(TEXTAREA);
 	CSS_DOM_STRING_INTERN(BODY);
+	CSS_DOM_STRING_INTERN(HEAD);
 	/* DOM input types, not really CSS */
 	CSS_DOM_STRING_INTERN(button);
 	CSS_DOM_STRING_INTERN(image);

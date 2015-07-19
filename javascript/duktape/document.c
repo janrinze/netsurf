@@ -44,7 +44,8 @@ static DUKKY_FUNC(document, write)
 	DUKKY_GET_METHOD_PRIVATE(document);
 	struct html_content *htmlc;
 	duk_size_t text_len;
-	const char *text = duk_get_lstring(ctx, 0, &text_len);
+	const char *text = duk_safe_to_lstring(ctx, 0, &text_len);
+	LOG("Writing %*s", (int)text_len, text);
 	dom_exception err;
 	err = dom_node_get_user_data(priv->parent.node,
 				     corestring_dom___ns_key_html_content_data,
@@ -114,6 +115,35 @@ static DUKKY_FUNC(document, createElement)
 	return 1;
 }
 
+static DUKKY_GETTER(document, head)
+{
+	DUKKY_GET_METHOD_PRIVATE(document);
+	struct dom_nodelist *nodes;
+	struct dom_node *retnode;
+	dom_exception err;
+	err = dom_document_get_elements_by_tag_name(priv->parent.node,
+						    corestring_dom_HEAD,
+						    &nodes);
+	if (err != DOM_NO_ERR) return 0; /* coerced to undefined */
+	
+	err = dom_nodelist_item(nodes, 0, &retnode);
+	
+	if (err != DOM_NO_ERR) {
+		dom_nodelist_unref(nodes);
+		return 0; /* coerced to undefined */
+	}
+	
+	dom_nodelist_unref(nodes);
+	
+	if (retnode == NULL) return 0; /* coerced to undefined */
+	
+	dukky_push_node(ctx, retnode);
+	
+	dom_node_unref(retnode);
+	
+	return 1;
+}
+
 static DUKKY_GETTER(document, body)
 {
 	DUKKY_GET_METHOD_PRIVATE(document);
@@ -143,13 +173,71 @@ static DUKKY_GETTER(document, body)
 	return 1;
 }
 
+static DUKKY_FUNC(document, getElementById)
+{
+	DUKKY_GET_METHOD_PRIVATE(document);
+	dom_string *elementId_dom;
+	dom_element *element;
+	dom_exception exc;
+	duk_size_t text_len;
+	const char *text = duk_safe_to_lstring(ctx, 0, &text_len);
+
+	exc = dom_string_create((uint8_t*)text, text_len, &elementId_dom);
+	if (exc != DOM_NO_ERR) {
+		return 0;
+	}
+
+	exc = dom_document_get_element_by_id(((node_private_t *)priv)->node,
+					     elementId_dom, &element);
+	dom_string_unref(elementId_dom);
+	if (exc != DOM_NO_ERR) {
+		return 0;
+	}
+
+	if (element != NULL) {
+		dukky_push_node(ctx, (dom_node *)element);
+		return 1;
+	}
+	
+	return 0;
+}
+
+static DUKKY_FUNC(document, getElementsByTagName)
+{
+	DUKKY_GET_METHOD_PRIVATE(document);
+	dom_nodelist *nodes;
+	dom_exception err;
+	duk_size_t text_len;
+	const char *text = duk_safe_to_lstring(ctx, 0, &text_len);
+	dom_string *tag;
+	
+	err = dom_string_create((uint8_t*)text, text_len, &tag);
+	
+	if (err != DOM_NO_ERR) return 0; /* coerced to undefined */
+	
+	err = dom_document_get_elements_by_tag_name(((node_private_t *)priv)->node,
+						    tag, &nodes);
+	dom_string_unref(tag);
+	if (err != DOM_NO_ERR) return 0; /* coerced to undefined */
+	
+	if (nodes == NULL) return 0; /* coerced to undefined */
+	
+	duk_push_pointer(ctx, nodes);
+	dukky_create_object(ctx, PROTO_NAME(node_list), 1);
+	dom_nodelist_unref(nodes);
+	return 1;
+}
+
 DUKKY_FUNC(document, __proto)
 {
 	/* Populate document's prototypical functionality */
 	DUKKY_ADD_METHOD(document, write, 1);
 	DUKKY_ADD_METHOD(document, createTextNode, 1);
 	DUKKY_ADD_METHOD(document, createElement, 1);
+	DUKKY_ADD_METHOD(document, getElementById, 1);
+	DUKKY_ADD_METHOD(document, getElementsByTagName, 1);
 	DUKKY_POPULATE_READONLY_PROPERTY(document, body);
+	DUKKY_POPULATE_READONLY_PROPERTY(document, head);
 	/* Set this prototype's prototype (left-parent)*/
 	DUKKY_GET_PROTOTYPE(node);
 	duk_set_prototype(ctx, 0);

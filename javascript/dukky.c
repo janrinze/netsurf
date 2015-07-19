@@ -342,6 +342,8 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	DUKKY_NEW_PROTOTYPE(element, "Element");
 	DUKKY_NEW_PROTOTYPE(html_element, "HTMLElement");
 	DUKKY_NEW_PROTOTYPE(html_unknown_element, "HTMLUnknownElement");
+	DUKKY_NEW_PROTOTYPE(html_collection, "HTMLCollection");
+	DUKKY_NEW_PROTOTYPE(node_list, "NodeList");
 	return ret;
 }
 

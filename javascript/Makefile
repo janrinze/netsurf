@@ -63,7 +63,7 @@ ifeq ($(NETSURF_USE_DUKTAPE),YES)
 
 S_DUKKY := event_target.c window.c node.c document.c \
 	   element.c html_element.c html_unknown_element.c \
-	   character_data.c text.c comment.c
+	   character_data.c text.c comment.c html_collection.c node_list.c
 
 S_JAVASCRIPT += dukky.c duktape.c content.c fetcher.c $(addprefix duktape/,$(S_DUKKY))
 
