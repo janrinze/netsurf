@@ -34,9 +34,9 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 	duk_put_prop_string(ctx, 0, PRIVATE_MAGIC)
 
 #define DUKKY_SET_DESTRUCTOR(idx,n)		\
-	duk_dup(ctx, idx);			\
+	duk_dup(ctx, idx);						\
 	duk_push_c_function(ctx, DUKKY_FUNC_T(n,__destructor), 1);	\
-	duk_set_finalizer(ctx, -2);			\
+	duk_set_finalizer(ctx, -2);		\
 	duk_pop(ctx);
 
 #define DUKKY_SET_CONSTRUCTOR(idx,n,a)			\
@@ -57,11 +57,10 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 	duk_pop_2(ctx);					\
 	if (priv == NULL) return 0; /* No can do */
 
-#define DUKKY_GET_PROTOTYPE(klass)		\
+#define DUKKY_GET_PROTOTYPE(klass)			\
 	duk_get_global_string(ctx, PROTO_MAGIC);	\
 	duk_get_prop_string(ctx, -1, PROTO_NAME(klass));	\
-	duk_replace(ctx, -2);					\
-	duk_pop(ctx);
+	duk_replace(ctx, -2)
 
 #define DUKKY_DECLARE_PROTOTYPE(klass)		\
 	DUKKY_FUNC(klass,__proto)
