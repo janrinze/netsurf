@@ -3,18 +3,6 @@
 #ifndef DUKKY_H
 #define DUKKY_H
 
-#include "duktape.h"
-
-#define _MAGIC(S) ("\xFF\xFF" "NETSURF_DUKTAPE_" S)
-#define MAGIC(S) _MAGIC(#S)
-#define PROTO_MAGIC MAGIC(PROTOTYPES)
-#define PRIVATE_MAGIC MAGIC(PRIVATE)
-#define INIT_MAGIC MAGIC(INIT)
-#define NODE_MAGIC MAGIC(NODE_MAP)
-#define _PROTO_NAME(K) _MAGIC("PROTOTYPE_" K)
-#define PROTO_NAME(K) _PROTO_NAME(#K)
-#define _PROP_NAME(K,V) _MAGIC(K "_PROPERTY_" V)
-#define PROP_NAME(K,V) _PROP_NAME(#K,#V)
 
 #define DUKKY_FUNC_T(t,e) dukky_##t##_##e
 #define DUKKY_FUNC(t,e) duk_ret_t DUKKY_FUNC_T(t,e) (duk_context *ctx)
@@ -125,11 +113,10 @@ static inline void *dukky_get_private(duk_context *ctx, int idx)
 	DUKKY_FUNC_INIT(klass, ##init);	\
 	DUKKY_FUNC_FINI(klass)
 
-#include "duktape/private.h"
-#include "duktape/prototypes.h"
 
 duk_ret_t dukky_create_object(duk_context *ctx, const char *name, int args);
 duk_bool_t dukky_push_node_stacked(duk_context *ctx);
 duk_bool_t dukky_push_node(duk_context *ctx, struct dom_node *node);
-duk_bool_t dukky_instanceof(duk_context *ctx, const char *klass);
+
+
 #endif

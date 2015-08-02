@@ -527,17 +527,17 @@ CXXFLAGS += -DNETSURF_HOMEPAGE=\"$(NETSURF_HOMEPAGE)\"
 
 $(OBJROOT)/created:
 	$(VQ)echo "   MKDIR: $(OBJROOT)"
-	$(Q)$(MKDIR) $(OBJROOT)
+	$(Q)$(MKDIR) -p $(OBJROOT)
 	$(Q)$(TOUCH) $(OBJROOT)/created
 
 $(DEPROOT)/created: $(OBJROOT)/created
 	$(VQ)echo "   MKDIR: $(DEPROOT)"
-	$(Q)$(MKDIR) $(DEPROOT)
+	$(Q)$(MKDIR) -p $(DEPROOT)
 	$(Q)$(TOUCH) $(DEPROOT)/created
 
 $(TOOLROOT)/created: $(OBJROOT)/created
 	$(VQ)echo "   MKDIR: $(TOOLROOT)"
-	$(Q)$(MKDIR) $(TOOLROOT)
+	$(Q)$(MKDIR) -p $(TOOLROOT)
 	$(Q)$(TOUCH) $(TOOLROOT)/created
 
 CLEANS :=

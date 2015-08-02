@@ -30,7 +30,9 @@
 #include "javascript/js.h"
 #include "javascript/content.h"
 
-#include "duktape.h"
+#include "duktape/binding.h"
+
+#include "duktape/duktape.h"
 #include "dukky.h"
 
 #include <dom/dom.h>
@@ -89,49 +91,7 @@ duk_ret_t dukky_create_object(duk_context *ctx, const char *name, int args)
 	return DUK_EXEC_SUCCESS;
 }
 
-static duk_ret_t
-dukky_to_string(duk_context *ctx)
-{
-	/* */
-	duk_push_this(ctx);
-	/* this */
-	duk_get_prototype(ctx, -1);
-	/* this proto */
-	duk_get_prop_string(ctx, -1, MAGIC(klass_name));
-	/* this proto classname */
-	duk_push_string(ctx, "[object ");
-	/* this proto classname str */
-	duk_insert(ctx, -2);
-	/* this proto str classname */
-	duk_push_string(ctx, "]");
-	/* this proto str classname str */
-	duk_concat(ctx, 3);
-	/* this proto str */
-	return 1;
-}
 
-static duk_ret_t dukky_create_prototype(duk_context *ctx,
-					duk_safe_call_function genproto,
-					const char *proto_name,
-					const char *klass_name)
-{
-	duk_int_t ret;
-	duk_push_object(ctx);
-	if ((ret = duk_safe_call(ctx, genproto, 1, 1)) != DUK_EXEC_SUCCESS) {
-		duk_pop(ctx);
-		LOG("Failed to register prototype for %s", proto_name + 2);
-		return ret;
-	}
-	/* top of stack is the ready prototype, inject it */
-	duk_push_string(ctx, klass_name);
-	duk_put_prop_string(ctx, -2, MAGIC(klass_name));
-	duk_push_c_function(ctx, dukky_to_string, 0);
-	duk_put_prop_string(ctx, -2, "toString");
-	duk_push_string(ctx, "toString");
-	duk_def_prop(ctx, -2, DUK_DEFPROP_HAVE_ENUMERABLE);
-	duk_put_global_string(ctx, proto_name);
-	return 0;
-}
 
 duk_bool_t
 dukky_push_node_stacked(duk_context *ctx)
@@ -287,32 +247,6 @@ dukky_push_node(duk_context *ctx, struct dom_node *node)
 	return dukky_push_node_stacked(ctx);
 }
 
-duk_bool_t
-dukky_instanceof(duk_context *ctx, const char *klass)
-{
-	/* ... ??? */
-	if (!duk_check_type(ctx, -1, DUK_TYPE_OBJECT)) return false;
-	/* ... obj */
-	duk_get_global_string(ctx, PROTO_MAGIC);
-	/* ... obj protos */
-	duk_get_prop_string(ctx, -1, klass);
-	/* ... obj protos goalproto */
-	duk_get_prototype(ctx, -3);
-	/* ... obj protos goalproto proto? */
-	while (!duk_is_undefined(ctx, -1)) {
-		if (duk_strict_equals(ctx, -1, -2)) {
-			duk_pop_3(ctx);
-			return true;
-		}
-		duk_get_prototype(ctx, -1);
-		/* ... obj protos goalproto proto proto? */
-		duk_replace(ctx, -2);
-		/* ... obj protos goalproto proto? */
-	}
-	duk_pop_3(ctx);
-	/* ... obj */
-	return false;
-}
 
 
 /**************************************** js.h ******************************/
@@ -352,21 +286,8 @@ jscontext *js_newcontext(int timeout, jscallback *cb, void *cbctx)
 	duk_put_prop_string(ctx, -2, "protos");
 	duk_put_global_string(ctx, PROTO_MAGIC);
 	/* Create prototypes here? */
-	DUKKY_NEW_PROTOTYPE(event_target, EVENTTARGET, "EventTarget");
-	DUKKY_NEW_PROTOTYPE(node, NODE, "Node");
-	DUKKY_NEW_PROTOTYPE(character_data, CHARACTERDATA, "CharacterData");
-	DUKKY_NEW_PROTOTYPE(text, TEXT, "Text");
-	DUKKY_NEW_PROTOTYPE(comment, COMMENT, "Comment");
-	DUKKY_NEW_PROTOTYPE(document, DOCUMENT, "Document");
-	DUKKY_NEW_PROTOTYPE(element, ELEMENT, "Element");
-	DUKKY_NEW_PROTOTYPE(html_element, HTMLELEMENT, "HTMLElement");
-	DUKKY_NEW_PROTOTYPE(html_unknown_element, HTMLUNKNOWNELEMENT, "HTMLUnknownElement");
-	DUKKY_NEW_PROTOTYPE(html_br_element, HTMLBRELEMENT, "HTMLBRElement");
-	DUKKY_NEW_PROTOTYPE(html_collection, HTMLCOLLECTION, "HTMLCollection");
-	DUKKY_NEW_PROTOTYPE(node_list, NODELIST, "NodeList");
-	
-	/* Finally window's prototype */
-	DUKKY_NEW_PROTOTYPE(window, WINDOW, "Window");
+	dukky_create_prototypes(ctx);
+
 	return ret;
 }
 

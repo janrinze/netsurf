@@ -61,12 +61,18 @@ $(eval $(foreach V,$(filter JSAPI_BINDING_%,$(.VARIABLES)),$(call convert_jsapi_
 else
 ifeq ($(NETSURF_USE_DUKTAPE),YES)
 
-S_DUKKY := event_target.c window.c node.c document.c \
-	   element.c html_element.c html_unknown_element.c \
-	   character_data.c text.c comment.c html_collection.c node_list.c \
-	   html_br_element.c
+JUNK:=$(shell mkdir -p $(OBJROOT)/duktape)
+JUNK:=$(shell nsgenbind -v -g -D -I javascript/WebIDL javascript/duktape/netsurf.bnd $(OBJROOT)/duktape)
+include $(OBJROOT)/duktape/Makefile
 
-S_JAVASCRIPT += dukky.c duktape.c content.c fetcher.c $(addprefix duktape/,$(S_DUKKY))
+S_JSAPI_BINDING:=$(addprefix $(OBJROOT)/duktape/,$(NSGENBIND_SOURCES))
+
+#S_DUKKY := event_target.c window.c node.c document.c \
+#	   element.c html_element.c html_unknown_element.c \
+#	   character_data.c text.c comment.c html_collection.c node_list.c \
+#	   html_br_element.c
+
+S_JAVASCRIPT += dukky.c content.c fetcher.c duktape/duktape.c
 
 else
 S_JAVASCRIPT += none.c fetcher.c
