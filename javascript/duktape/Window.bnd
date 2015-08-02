@@ -1,0 +1,57 @@
+/* Window binding for browser using duktape and libdom
+ *
+ * Copyright 2015 Vincent Sanders <vince@netsurf-browser.org>
+ *
+ * This file is part of NetSurf, http://www.netsurf-browser.org/
+ *
+ * Released under the terms of the MIT License,
+ *         http://www.opensource.org/licenses/mit-license
+ */
+
+class Window {
+	private "struct browser_window *" win;
+	private "struct html_content *" htmlc;
+	prologue %{
+#include "utils/nsurl.h"
+#include "desktop/browser.h"
+#include "render/html.h"
+#include "render/html_internal.h"
+%};
+}
+
+init Window("struct browser_window *" win, "struct html_content *" htmlc)
+%{
+	/* element window */
+	priv->win = win;
+	priv->htmlc = htmlc;
+	LOG("win=%p htmlc=%p", priv->win, priv->htmlc);
+
+	LOG("URL is %s", nsurl_access(browser_window_get_url(priv->win)));
+
+	/* populate window.window */
+	duk_dup(ctx, 0);
+	duk_put_prop_string(ctx, 0, "window");
+%}
+
+
+
+getter Window::document()
+%{
+	LOG("priv=%p", priv);
+	dom_document *doc = priv->htmlc->document;
+	dukky_push_node(ctx, (struct dom_node *)doc);
+	return 1;
+%}
+
+setter Window::document()
+%{
+	LOG("BWUAhAHAHAHAHA FUCK OFF");
+%}
+
+/* prototype needs:
+#define STEAL_THING(X)				\
+	duk_get_global_string(ctx, #X);		\
+	duk_put_prop_string(ctx, 0, #X)
+
+STEAL_THING(undefined);
+ */
