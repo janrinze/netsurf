@@ -51,6 +51,7 @@ struct dom_html_br_element;
 }
 
 #include "Window.bnd"
+#include "Document.bnd"
 #include "Node.bnd"
 
 /* specialisations of html_element */
@@ -145,5 +146,4 @@ init Element("struct dom_element *" element::node);
 init CharacterData("struct dom_node_character_data *" character_data::node);
 init DocumentFragment("struct dom_document *" document::node);
 init DocumentType("struct dom_document *" document::node);
-init Document("struct dom_document *" document::node);
 
