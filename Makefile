@@ -783,7 +783,6 @@ $(eval $(foreach SOURCE,$(filter %.m,$(SOURCES)), \
 
 ifeq ($(filter $(MAKECMDGOALS),clean test coverage),)
 -include $(sort $(addprefix $(DEPROOT)/,$(DEPFILES)))
--include $(D_JSAPI_BINDING)
 endif
 
 # And rules to build the objects themselves...

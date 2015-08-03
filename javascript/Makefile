@@ -58,12 +58,22 @@ S_JAVASCRIPT += content.c jsapi.c fetcher.c $(addprefix jsapi/,$(S_JSAPI))
 
 $(eval $(foreach V,$(filter JSAPI_BINDING_%,$(.VARIABLES)),$(call convert_jsapi_binding,$($(V)),$(OBJROOT)/$(patsubst JSAPI_BINDING_%,%,$(V)).c,$(OBJROOT)/$(patsubst JSAPI_BINDING_%,%,$(V)).h,$(patsubst JSAPI_BINDING_%,%,$(V))_jsapi)))
 
+ifeq ($(filter $(MAKECMDGOALS),clean test coverage),)
+-include $(D_JSAPI_BINDING)
+endif
+
 else
 ifeq ($(NETSURF_USE_DUKTAPE),YES)
 
-JUNK:=$(shell mkdir -p $(OBJROOT)/duktape)
-JUNK:=$(shell nsgenbind -v -g -D -I javascript/WebIDL javascript/duktape/netsurf.bnd $(OBJROOT)/duktape)
+$(OBJROOT)/duktape/Makefile: javascript/duktape/netsurf.bnd
+	$(Q)mkdir -p $(OBJROOT)/duktape
+	$(VQ)echo " GENBIND: $<"
+	$(Q)nsgenbind -v -g -D -I javascript/WebIDL $< $(OBJROOT)/duktape
+
+
+ifeq ($(filter $(MAKECMDGOALS),clean test coverage),)
 include $(OBJROOT)/duktape/Makefile
+endif
 
 S_JSAPI_BINDING:=$(addprefix $(OBJROOT)/duktape/,$(NSGENBIND_SOURCES))
 
