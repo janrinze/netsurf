@@ -27,10 +27,6 @@ init Window("struct browser_window *" win, "struct html_content *" htmlc)
 	LOG("win=%p htmlc=%p", priv->win, priv->htmlc);
 
 	LOG("URL is %s", nsurl_access(browser_window_get_url(priv->win)));
-
-	/* populate window.window */
-	duk_dup(ctx, 0);
-	duk_put_prop_string(ctx, 0, "window");
 %}
 
 
@@ -46,6 +42,12 @@ getter Window::document()
 setter Window::document()
 %{
 	LOG("BWUAhAHAHAHAHA FUCK OFF");
+%}
+
+getter Window::document()
+%{
+	duk_dup(ctx, 0);
+	return 1;
 %}
 
 /* prototype needs:
