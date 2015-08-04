@@ -53,6 +53,7 @@ struct dom_html_br_element;
 #include "Window.bnd"
 #include "Document.bnd"
 #include "Node.bnd"
+#include "Element.bnd"
 
 /* specialisations of html_element */
 init HTMLUnknownElement("struct dom_html_element *" html_unknown_element::html_element);
@@ -142,7 +143,6 @@ init ProcessingInstruction("struct dom_node_text *" text::character_data);
 
 init XMLDocument("struct dom_document *" document);
 
-init Element("struct dom_element *" element::node);
 init CharacterData("struct dom_node_character_data *" character_data::node);
 init DocumentFragment("struct dom_document *" document::node);
 init DocumentType("struct dom_document *" document::node);
