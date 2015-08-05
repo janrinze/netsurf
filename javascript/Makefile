@@ -65,17 +65,22 @@ endif
 else
 ifeq ($(NETSURF_USE_DUKTAPE),YES)
 
-$(OBJROOT)/duktape/Makefile: javascript/duktape/netsurf.bnd
+javascript/dukky.c: $(OBJROOT)/duktape/binding.h
+
+BINDINGS := $(wildcard javascript/duktape/*.bnd)
+
+$(OBJROOT)/duktape/binding.h $(OBJROOT)/duktape/Makefile: javascript/duktape/netsurf.bnd $(BINDINGS)
 	$(Q)mkdir -p $(OBJROOT)/duktape
 	$(VQ)echo " GENBIND: $<"
 	$(Q)nsgenbind -v -g -D -I javascript/WebIDL $< $(OBJROOT)/duktape
 
-
 ifeq ($(filter $(MAKECMDGOALS),clean test coverage),)
-include $(OBJROOT)/duktape/Makefile
+-include $(OBJROOT)/duktape/Makefile
 endif
 
 S_JSAPI_BINDING:=$(addprefix $(OBJROOT)/duktape/,$(NSGENBIND_SOURCES))
+
+$(S_JSAPI_BINDING): $(BINDINGS)
 
 #S_DUKKY := event_target.c window.c node.c document.c \
 #	   element.c html_element.c html_unknown_element.c \
