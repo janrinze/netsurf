@@ -31,6 +31,7 @@ method Document::write()
 	if (err == DOM_NO_ERR && htmlc->parser != NULL) {
 		dom_hubbub_parser_insert_chunk(htmlc->parser, (uint8_t *)text, text_len);
 	}
+	return 0;
 %}
 
 method Document::createTextNode()

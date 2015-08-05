@@ -82,11 +82,6 @@ S_JSAPI_BINDING:=$(addprefix $(OBJROOT)/duktape/,$(NSGENBIND_SOURCES))
 
 $(S_JSAPI_BINDING): $(BINDINGS)
 
-#S_DUKKY := event_target.c window.c node.c document.c \
-#	   element.c html_element.c html_unknown_element.c \
-#	   character_data.c text.c comment.c html_collection.c node_list.c \
-#	   html_br_element.c
-
 S_JAVASCRIPT += dukky.c content.c fetcher.c duktape/duktape.c
 
 else

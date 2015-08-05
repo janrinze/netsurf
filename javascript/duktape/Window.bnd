@@ -29,7 +29,12 @@ init Window("struct browser_window *" win, "struct html_content *" htmlc)
 	LOG("URL is %s", nsurl_access(browser_window_get_url(priv->win)));
 %}
 
-
+prototype Window()
+%{
+	/* steal undefined */
+	duk_get_global_string(ctx, "undefined");
+	duk_put_prop_string(ctx, 0, "undefined");
+%}
 
 getter Window::document()
 %{
@@ -39,21 +44,9 @@ getter Window::document()
 	return 1;
 %}
 
-setter Window::document()
-%{
-	LOG("BWUAhAHAHAHAHA FUCK OFF");
-%}
 
 getter Window::document()
 %{
 	duk_dup(ctx, 0);
 	return 1;
 %}
-
-/* prototype needs:
-#define STEAL_THING(X)				\
-	duk_get_global_string(ctx, #X);		\
-	duk_put_prop_string(ctx, 0, #X)
-
-STEAL_THING(undefined);
- */

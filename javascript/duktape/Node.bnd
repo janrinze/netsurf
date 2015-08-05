@@ -35,6 +35,8 @@ method Node::appendChild()
 	err = dom_node_append_child(priv->node, other->node, &spare);
 	if (err != DOM_NO_ERR) return 0;
 	dom_node_unref(spare);
+
+	return 0;
 %}
 
 getter Node::textContent()
@@ -52,4 +54,5 @@ getter Node::textContent()
 		dom_string_unref(content);
 		return 1;
 	}
+	return 0;
 %}

@@ -53,7 +53,9 @@ struct dom_html_br_element;
 #include "Window.bnd"
 #include "Document.bnd"
 #include "Node.bnd"
+#include "NodeList.bnd"
 #include "Element.bnd"
+#include "HTMLCollection.bnd"
 
 /* specialisations of html_element */
 init HTMLUnknownElement("struct dom_html_element *" html_unknown_element::html_element);
@@ -146,4 +148,13 @@ init XMLDocument("struct dom_document *" document);
 init CharacterData("struct dom_node_character_data *" character_data::node);
 init DocumentFragment("struct dom_document *" document::node);
 init DocumentType("struct dom_document *" document::node);
+
+init PropertyNodeList("struct dom_nodelist *" nodes);
+init RadioNodeList("struct dom_nodelist *" nodes);
+
+init HTMLAllCollection("struct dom_html_collection *" coll);
+init HTMLFormControlsCollection("struct dom_html_collection *" coll);
+init HTMLOptionsCollection("struct dom_html_collection *" coll);
+init HTMLPropertiesCollection("struct dom_html_collection *" coll);
+
 
