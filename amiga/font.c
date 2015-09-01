@@ -635,18 +635,45 @@ static inline int32 ami_font_plot_glyph(struct OutlineFont *ofont, struct RastPo
 
 			if(rp) {
 #ifdef __amigaos4__
-				BltBitMapTags(BLITA_SrcX, glyph->glm_BlackLeft,
-					BLITA_SrcY, glyph->glm_BlackTop,
-					BLITA_DestX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
-					BLITA_DestY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
-					BLITA_Width, glyph->glm_BlackWidth,
-					BLITA_Height, glyph->glm_BlackHeight,
-					BLITA_Source, glyphbm,
-					BLITA_SrcType, template_type,
-					BLITA_Dest, rp,
-					BLITA_DestType, BLITT_RASTPORT,
-					BLITA_SrcBytesPerRow, glyph->glm_BMModulo,
+				if((GfxBase->LibNode.lib_Version >= 54) &&
+					(template_type == BLITT_ALPHATEMPLATE) &&
+					(nsoption_bool(exp_comp_fonts) == true)) {
+
+					WritePixelArray(glyphbm, glyph->glm_BlackLeft, glyph->glm_BlackTop,
+						glyph->glm_BMModulo, PIXF_ALPHA8, rp,
+						x - glyph->glm_X0 + glyph->glm_BlackLeft,
+						y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						glyph->glm_BlackWidth, glyph->glm_BlackHeight);
+
+					CompositeTags(COMPOSITE_Src_Over_Dest, COMPSRC_SOLIDCOLOR, rp->BitMap,
+						COMPTAG_Color0, 0xff000000, /* assume black for now */
+						COMPTAG_SrcAlphaMask, rp->BitMap,
+						COMPTAG_SrcX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
+						COMPTAG_SrcY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_SrcWidth, glyph->glm_BlackWidth,
+						COMPTAG_SrcHeight, glyph->glm_BlackHeight,
+						COMPTAG_OffsetX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
+						COMPTAG_OffsetY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_DestX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
+						COMPTAG_DestY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_DestWidth, glyph->glm_BlackWidth,
+						COMPTAG_DestHeight, glyph->glm_BlackHeight,
+						COMPTAG_Flags, COMPFLAG_IgnoreDestAlpha,
 					TAG_DONE);
+				} else {
+					BltBitMapTags(BLITA_SrcX, glyph->glm_BlackLeft,
+						BLITA_SrcY, glyph->glm_BlackTop,
+						BLITA_DestX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
+						BLITA_DestY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						BLITA_Width, glyph->glm_BlackWidth,
+						BLITA_Height, glyph->glm_BlackHeight,
+						BLITA_Source, glyphbm,
+						BLITA_SrcType, template_type,
+						BLITA_Dest, rp,
+						BLITA_DestType, BLITT_RASTPORT,
+						BLITA_SrcBytesPerRow, glyph->glm_BMModulo,
+					TAG_DONE);
+				}
 #else
 				/* On OS3 the glyph needs to be in chip RAM */
 				void *chip_glyph = AllocVec(glyph->glm_BMModulo * glyph->glm_BMRows, MEMF_CHIP);

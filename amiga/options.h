@@ -63,7 +63,8 @@ NSOPTION_STRING(font_surrogate, NULL)
 NSOPTION_STRING(font_unicode_file, NULL)
 NSOPTION_BOOL(font_unicode_only, false)
 NSOPTION_BOOL(font_antialiasing, true)
-NSOPTION_BOOL(use_diskfont, false)
+NSOPTION_BOOL(use_diskfont, false) /* experimental */
+NSOPTION_BOOL(exp_comp_fonts, false) /* experimental */
 NSOPTION_BOOL(drag_save_icons, true)
 NSOPTION_INTEGER(hotlist_window_xpos, 0)
 NSOPTION_INTEGER(hotlist_window_ypos, 0)
