@@ -69,16 +69,27 @@
 
 #define NSA_FONT_EMWIDTH(s) (s / FONT_SIZE_SCALE) * (ami_xdpi / 72.0)
 
-struct ami_font_node
-{
+#define NSA_FONT_COMPOSITE	(GfxBase->LibNode.lib_Version >= 54) &&	\
+							(nsoption_bool(exp_comp_fonts) == true)
+
+struct ami_font_node {
 #ifdef __amigaos4__
 	struct SkipNode skip_node;
+	struct SkipList *glyph_cache;
 #endif
 	struct OutlineFont *font;
 	char *bold;
 	char *italic;
 	char *bolditalic;
 	struct TimeVal lastused;
+};
+
+struct ami_font_glyph_node
+{
+#ifdef __amigaos4__
+	struct SkipNode skip_node;
+#endif
+	struct BitMap *bm;
 };
 
 const uint16 sc_table[] = {
@@ -149,7 +160,9 @@ const uint16 sc_table[] = {
 		0, 0};
 
 #ifdef __amigaos4__
-struct SkipList *ami_font_list = NULL;
+static struct SkipList *ami_font_list = NULL;
+static struct Hook ami_font_cache_hook;
+static struct Hook ami_font_glyph_cache_hook;
 #else
 struct MinList *ami_font_list = NULL;
 #endif
@@ -157,13 +170,12 @@ struct List ami_diskfontlib_list;
 lwc_string *glypharray[0xffff + 1];
 ULONG ami_devicedpi;
 ULONG ami_xdpi;
-static struct Hook ami_font_cache_hook;
 
-static inline int32 ami_font_plot_glyph(struct OutlineFont *ofont, struct RastPort *rp,
+static inline int32 ami_font_plot_glyph(struct ami_font_node *ofont, struct RastPort *rp,
 		uint16 *char1, uint16 *char2, uint32 x, uint32 y, uint32 emwidth, bool aa);
 static inline int32 ami_font_width_glyph(struct OutlineFont *ofont, 
 		const uint16 *char1, const uint16 *char2, uint32 emwidth);
-static struct OutlineFont *ami_open_outline_font(const plot_font_style_t *fstyle,
+static struct ami_font_node *ami_open_outline_font(const plot_font_style_t *fstyle,
 		const uint16 *codepoint);
 static inline ULONG ami_font_unicode_width(const char *string, ULONG length,
 		const plot_font_style_t *fstyle, ULONG x, ULONG y, bool aa);
@@ -215,7 +227,7 @@ static inline bool amiga_nsfont_position_in_string(const plot_font_style_t *fsty
 {
 	uint16 *utf16 = NULL, *outf16 = NULL;
 	uint16 *utf16next = NULL;
-	struct OutlineFont *ofont, *ufont = NULL;
+	struct ami_font_node *ofont, *ufont = NULL;
 	int tx = 0;
 	uint32 utf8_pos = 0;
 	int utf16charlen;
@@ -233,14 +245,14 @@ static inline bool amiga_nsfont_position_in_string(const plot_font_style_t *fsty
 		utf16charlen = amiga_nsfont_utf16_char_length(utf16);
 		utf16next = &utf16[utf16charlen];
 
-		tempx = ami_font_width_glyph(ofont, utf16, utf16next, emwidth);
+		tempx = ami_font_width_glyph(ofont->font, utf16, utf16next, emwidth);
 
 		if (tempx == 0) {
 			if (ufont == NULL)
 				ufont = ami_open_outline_font(fstyle, utf16);
 
 			if (ufont)
-				tempx = ami_font_width_glyph(ufont, utf16,
+				tempx = ami_font_width_glyph(ufont->font, utf16,
 						utf16next, emwidth);
 		}
 
@@ -299,7 +311,7 @@ static inline bool amiga_nsfont_split(const plot_font_style_t *fstyle,
 	uint16 *utf16_str = NULL;
 	const uint16 *utf16 = NULL;
 	const uint16 *utf16next = NULL;
-	struct OutlineFont *ofont, *ufont = NULL;
+	struct ami_font_node *ofont, *ufont = NULL;
 	int tx = 0;
 	uint32 utf8_pos = 0;
 	int32 tempx = 0;
@@ -325,14 +337,14 @@ static inline bool amiga_nsfont_split(const plot_font_style_t *fstyle,
 		else
 			utf16next = utf16 + 2;
 
-		tempx = ami_font_width_glyph(ofont, utf16, utf16next, emwidth);
+		tempx = ami_font_width_glyph(ofont->font, utf16, utf16next, emwidth);
 
 		if (tempx == 0) {
 			if (ufont == NULL)
 				ufont = ami_open_outline_font(fstyle, utf16);
 
 			if (ufont)
-				tempx = ami_font_width_glyph(ufont, utf16,
+				tempx = ami_font_width_glyph(ufont->font, utf16,
 						utf16next, emwidth);
 		}
 
@@ -433,6 +445,10 @@ static struct ami_font_node *ami_font_open(const char *font, bool critical)
 		node->objstruct = nodedata;
 		node->dtz_Node.ln_Name = strdup(font);
 	}
+#else
+	if(NSA_FONT_COMPOSITE) {
+		nodedata->glyph_cache = CreateSkipList(&ami_font_glyph_cache_hook, 10);
+	}
 #endif
 
 	return nodedata;
@@ -445,7 +461,7 @@ static struct ami_font_node *ami_font_open(const char *font, bool critical)
  * \param codepoint open a default font instead of the one specified by fstyle
  * \return outline font or NULL on error
  */
-static struct OutlineFont *ami_open_outline_font(const plot_font_style_t *fstyle,
+static struct ami_font_node *ami_open_outline_font(const plot_font_style_t *fstyle,
 		const uint16 *codepoint)
 {
 	struct ami_font_node *node;
@@ -560,6 +576,7 @@ static struct OutlineFont *ami_open_outline_font(const plot_font_style_t *fstyle
 		ofont = node->font;
 	} else {
 		ofont = designed_node->font;
+		node = designed_node;
 	}
 
 #ifndef __amigaos4__
@@ -574,12 +591,45 @@ static struct OutlineFont *ami_open_outline_font(const plot_font_style_t *fstyle
 			OT_ShearSin,    shearsin,
 			OT_ShearCos,    shearcos,
 			TAG_END) == OTERR_Success)
-		return ofont;
+		return node;
 
 	return NULL;
 }
 
-static inline int32 ami_font_plot_glyph(struct OutlineFont *ofont, struct RastPort *rp,
+#ifdef __amigaos4__
+static struct BitMap *ami_font_glyph_cache_retrieve(struct ami_font_node *font_node,
+			uint32 char1, struct GlyphMap *glyph)
+{
+	UBYTE *glyphbm = glyph->glm_BitMap;
+	struct RastPort rp;
+	struct ami_font_glyph_node *afgn;
+
+	// check cache
+	if((afgn = (struct ami_font_glyph_node *)FindSkipNode(font_node->glyph_cache, (APTR)char1))) {
+		return afgn->bm;
+	}
+
+	afgn = (struct ami_font_glyph_node *)InsertSkipNode(font_node->glyph_cache,
+				(APTR)char1, sizeof(struct ami_font_glyph_node));
+
+	afgn->bm = AllocBitMapTags(glyph->glm_BMModulo, glyph->glm_BMRows, 8,
+					BMATags_PixelFormat, PIXF_ALPHA8,
+					//BMATags_Friend, scrn->RastPort.BitMap,
+					//BMATags_Clear, TRUE,
+					TAG_DONE);
+
+	InitRastPort(&rp);
+	rp.BitMap = afgn->bm;
+
+	WritePixelArray(glyphbm, 0, 0,
+		glyph->glm_BMModulo, PIXF_ALPHA8, &rp,
+		0, 0, glyph->glm_BMModulo, glyph->glm_BMRows);
+
+	return afgn->bm;
+}
+#endif
+
+static inline int32 ami_font_plot_glyph(struct ami_font_node *font_node, struct RastPort *rp,
 		uint16 *char1, uint16 *char2, uint32 x, uint32 y, uint32 emwidth, bool aa)
 {
 	struct GlyphMap *glyph;
@@ -589,6 +639,7 @@ static inline int32 ami_font_plot_glyph(struct OutlineFont *ofont, struct RastPo
 	ULONG glyphmaptag;
 	ULONG template_type;
 	uint32 long_char_1 = 0, long_char_2 = 0;
+	struct OutlineFont *ofont = font_node->font;
 #ifndef __amigaos4__
 	struct BulletBase *BulletBase = ofont->BulletBase;
 #endif
@@ -635,25 +686,18 @@ static inline int32 ami_font_plot_glyph(struct OutlineFont *ofont, struct RastPo
 
 			if(rp) {
 #ifdef __amigaos4__
-				if((GfxBase->LibNode.lib_Version >= 54) &&
-					(template_type == BLITT_ALPHATEMPLATE) &&
-					(nsoption_bool(exp_comp_fonts) == true)) {
-
-					WritePixelArray(glyphbm, glyph->glm_BlackLeft, glyph->glm_BlackTop,
-						glyph->glm_BMModulo, PIXF_ALPHA8, rp,
-						x - glyph->glm_X0 + glyph->glm_BlackLeft,
-						y - glyph->glm_Y0 + glyph->glm_BlackTop,
-						glyph->glm_BlackWidth, glyph->glm_BlackHeight);
+				if(NSA_FONT_COMPOSITE && (template_type == BLITT_ALPHATEMPLATE)) {
+					struct BitMap *cached_bm = ami_font_glyph_cache_retrieve(font_node, long_char_1, glyph);
 
 					CompositeTags(COMPOSITE_Src_Over_Dest, COMPSRC_SOLIDCOLOR, rp->BitMap,
 						COMPTAG_Color0, 0xff000000, /* assume black for now */
-						COMPTAG_SrcAlphaMask, rp->BitMap,
-						COMPTAG_SrcX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
-						COMPTAG_SrcY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_SrcAlphaMask, cached_bm,
+						COMPTAG_SrcX, glyph->glm_X0 + glyph->glm_BlackLeft,
+						COMPTAG_SrcY, glyph->glm_Y0 + glyph->glm_BlackTop,
 						COMPTAG_SrcWidth, glyph->glm_BlackWidth,
 						COMPTAG_SrcHeight, glyph->glm_BlackHeight,
 						COMPTAG_OffsetX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
-						COMPTAG_OffsetY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_OffsetY, x - glyph->glm_Y0 + glyph->glm_BlackTop,
 						COMPTAG_DestX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
 						COMPTAG_DestY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
 						COMPTAG_DestWidth, glyph->glm_BlackWidth,
@@ -807,7 +851,7 @@ ULONG ami_font_unicode_text(struct RastPort *rp, const char *string, ULONG lengt
 	uint16 *utf16charsc = 0, *utf16nextsc = 0;
 	uint16 *utf16next = 0;
 	int utf16charlen;
-	struct OutlineFont *ofont, *ufont = NULL;
+	struct ami_font_node *ofont, *ufont = NULL;
 	uint32 x=0;
 	int32 tempx = 0;
 	ULONG emwidth = (ULONG)NSA_FONT_EMWIDTH(fstyle->size);
@@ -873,7 +917,7 @@ static inline ULONG ami_font_unicode_width(const char *string, ULONG length,
 	uint16 *utf16charsc = 0, *utf16nextsc = 0;
 	uint16 *utf16next = 0;
 	int utf16charlen;
-	struct OutlineFont *ofont, *ufont = NULL;
+	struct ami_font_node *ofont, *ufont = NULL;
 	uint32 x=0;
 	int32 tempx = 0;
 	ULONG emwidth = (ULONG)NSA_FONT_EMWIDTH(fstyle->size);
@@ -895,12 +939,12 @@ static inline ULONG ami_font_unicode_width(const char *string, ULONG length,
 			utf16charsc = (uint16 *)ami_font_translate_smallcaps(utf16);
 			utf16nextsc = (uint16 *)ami_font_translate_smallcaps(utf16next);
 
-			tempx = ami_font_width_glyph(ofont, utf16charsc, utf16nextsc, emwidth);
+			tempx = ami_font_width_glyph(ofont->font, utf16charsc, utf16nextsc, emwidth);
 		}
 		else tempx = 0;
 
 		if(tempx == 0) {
-			tempx = ami_font_width_glyph(ofont, utf16, utf16next, emwidth);
+			tempx = ami_font_width_glyph(ofont->font, utf16, utf16next, emwidth);
 		}
 
 		if(tempx == 0)
@@ -912,7 +956,7 @@ static inline ULONG ami_font_unicode_width(const char *string, ULONG length,
 
 			if(ufont)
 			{
-				tempx = ami_font_width_glyph(ufont, utf16, utf16next, emwidth);
+				tempx = ami_font_width_glyph(ufont->font, utf16, utf16next, emwidth);
 			}
 		}
 
@@ -944,6 +988,11 @@ void ami_font_savescanner(void)
 static LONG ami_font_cache_sort(struct Hook *hook, APTR key1, APTR key2)
 {
 	return stricmp(key1, key2);
+}
+
+static LONG ami_font_glyph_cache_sort(struct Hook *hook, APTR key1, APTR key2)
+{
+	return (int)key2 - (int)key1;
 }
 #endif
 
@@ -1009,6 +1058,8 @@ void ami_init_fonts(void)
 
 	/* Initialise font caching etc lists */
 #ifdef __amigaos4__
+	ami_font_glyph_cache_hook.h_Entry = (HOOKFUNC)ami_font_glyph_cache_sort;
+	ami_font_glyph_cache_hook.h_Data = 0;
 	ami_font_cache_hook.h_Entry = (HOOKFUNC)ami_font_cache_sort;
 	ami_font_cache_hook.h_Data = 0;
 	ami_font_list = CreateSkipList(&ami_font_cache_hook, 8);
