@@ -598,7 +598,7 @@ static struct ami_font_node *ami_open_outline_font(const plot_font_style_t *fsty
 
 #ifdef __amigaos4__
 static struct BitMap *ami_font_glyph_cache_retrieve(struct ami_font_node *font_node,
-			uint32 char1, struct GlyphMap *glyph)
+			uint32 char1, struct GlyphMap *glyph, struct BitMap *friend)
 {
 	UBYTE *glyphbm = glyph->glm_BitMap;
 	struct RastPort rp;
@@ -612,9 +612,9 @@ static struct BitMap *ami_font_glyph_cache_retrieve(struct ami_font_node *font_n
 	afgn = (struct ami_font_glyph_node *)InsertSkipNode(font_node->glyph_cache,
 				(APTR)char1, sizeof(struct ami_font_glyph_node));
 
-	afgn->bm = AllocBitMapTags(glyph->glm_BMModulo, glyph->glm_BMRows, 8,
-					BMATags_PixelFormat, PIXF_ALPHA8,
-					//BMATags_Friend, scrn->RastPort.BitMap,
+	afgn->bm = AllocBitMapTags(glyph->glm_BMModulo, glyph->glm_BMRows, 32,
+					//BMATags_PixelFormat, PIXF_ALPHA8,
+					BMATags_Friend, friend,
 					//BMATags_Clear, TRUE,
 					TAG_DONE);
 
@@ -687,23 +687,24 @@ static inline int32 ami_font_plot_glyph(struct ami_font_node *font_node, struct 
 			if(rp) {
 #ifdef __amigaos4__
 				if(NSA_FONT_COMPOSITE && (template_type == BLITT_ALPHATEMPLATE)) {
-					struct BitMap *cached_bm = ami_font_glyph_cache_retrieve(font_node, long_char_1, glyph);
+					struct BitMap *cached_bm = ami_font_glyph_cache_retrieve(font_node, long_char_1, glyph, rp->BitMap);
 
 					CompositeTags(COMPOSITE_Src_Over_Dest, COMPSRC_SOLIDCOLOR, rp->BitMap,
 						COMPTAG_Color0, 0xff000000, /* assume black for now */
 						COMPTAG_SrcAlphaMask, cached_bm,
-						COMPTAG_SrcX, glyph->glm_X0 + glyph->glm_BlackLeft,
-						COMPTAG_SrcY, glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_SrcX, glyph->glm_BlackLeft, //glyph->glm_X0 + ,
+						COMPTAG_SrcY, glyph->glm_BlackTop, //glyph->glm_Y0 + 
 						COMPTAG_SrcWidth, glyph->glm_BlackWidth,
 						COMPTAG_SrcHeight, glyph->glm_BlackHeight,
 						COMPTAG_OffsetX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
-						COMPTAG_OffsetY, x - glyph->glm_Y0 + glyph->glm_BlackTop,
+						COMPTAG_OffsetY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
 						COMPTAG_DestX, x - glyph->glm_X0 + glyph->glm_BlackLeft,
 						COMPTAG_DestY, y - glyph->glm_Y0 + glyph->glm_BlackTop,
 						COMPTAG_DestWidth, glyph->glm_BlackWidth,
 						COMPTAG_DestHeight, glyph->glm_BlackHeight,
 						COMPTAG_Flags, COMPFLAG_IgnoreDestAlpha,
 					TAG_DONE);
+
 				} else {
 					BltBitMapTags(BLITA_SrcX, glyph->glm_BlackLeft,
 						BLITA_SrcY, glyph->glm_BlackTop,
@@ -1074,7 +1075,7 @@ void ami_init_fonts(void)
 }
 
 #ifdef __amigaos4__
-static void ami_font_del_skiplist(struct SkipList *skiplist)
+static void ami_font_del_skiplist(struct SkipList *skiplist, bool glyph_cache)
 {
 	struct SkipNode *node;
 	struct SkipNode *nnode;
@@ -1084,7 +1085,12 @@ static void ami_font_del_skiplist(struct SkipList *skiplist)
 
 	do {
 		nnode = GetNextSkipNode(skiplist, node);
-		ami_font_close((struct ami_font_node *)node);
+		if(glyph_cache == false) {
+			ami_font_close((struct ami_font_node *)node);
+		} else {
+			struct ami_font_glyph_node *afgn = (struct ami_font_glyph_node *)node;
+			FreeBitMap(afgn->bm);
+		}
 		
 	} while((node = nnode));
 
@@ -1097,7 +1103,7 @@ void ami_close_fonts(void)
 	LOG("Cleaning up font cache");
 	ami_schedule(-1, (void *)ami_font_cleanup, ami_font_list);
 #ifdef __amigaos4__
-	ami_font_del_skiplist(ami_font_list);
+	ami_font_del_skiplist(ami_font_list, false);
 #else
 	FreeObjList(ami_font_list);
 #endif
@@ -1110,6 +1116,7 @@ void ami_font_close(struct ami_font_node *node)
 	/* Called from FreeObjList if node type is AMINS_FONT */
 
 	CloseOutlineFont(node->font, &ami_diskfontlib_list);
+	ami_font_del_skiplist(node->glyph_cache, true);
 }
 
 void ami_font_setdevicedpi(int id)
