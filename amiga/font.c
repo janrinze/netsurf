@@ -75,7 +75,7 @@
 struct ami_font_node
 {
 #ifdef __amigaos4__
-	struct SkipNode skip_node;
+	struct SplayNode splay_node;
 #endif
 	struct OutlineFont *font;
 	char *bold;
@@ -151,11 +151,8 @@ const uint16 sc_table[] = {
 #endif
 		0, 0};
 
-#ifdef __amigaos4__
-struct SkipList *ami_font_list = NULL;
-#else
-struct MinList *ami_font_list = NULL;
-#endif
+struct SplayTree *ami_font_list = NULL;
+//TODO struct MinList *ami_font_lru = NULL
 struct List ami_diskfontlib_list;
 lwc_string *glypharray[0xffff + 1];
 ULONG ami_devicedpi;
@@ -376,13 +373,8 @@ static struct ami_font_node *ami_font_open(const char *font, bool critical)
 	struct ami_font_node *nodedata = NULL;
 	uint32 hash = 0;
 
-#ifdef __amigaos4__
 	hash = XXH32(font, strlen(font), 0);
-	nodedata = (struct ami_font_node *)FindSkipNode(ami_font_list, (APTR)hash);		
-#else
-	struct nsObject *node = (struct nsObject *)FindIName((struct List *)ami_font_list, font);
-	if(node) nodedata = node->objstruct;
-#endif
+	nodedata = (struct ami_font_node *)FindSplayNode(ami_font_list, (APTR)hash);		
 
 	if(nodedata) {
 		GetSysTime(&nodedata->lastused);
@@ -391,11 +383,8 @@ static struct ami_font_node *ami_font_open(const char *font, bool critical)
 
 	LOG("Font cache miss: %s (%lx)", font, hash);
 
-#ifdef __amigaos4__
-	nodedata = (struct ami_font_node *)InsertSkipNode(ami_font_list, (APTR)hash, sizeof(struct ami_font_node));
-#else
-	nodedata = AllocVecTagList(sizeof(struct ami_font_node), NULL);
-#endif
+	nodedata = (struct ami_font_node *)InsertSplayNode(ami_font_list, (APTR)hash, sizeof(struct ami_font_node));
+	/* TODO: add hash to LRU list */
 
 	if(nodedata == NULL) {
 		warn_user("NoMemory", "");
@@ -431,14 +420,6 @@ static struct ami_font_node *ami_font_open(const char *font, bool critical)
 		LOG("Warning: No designed bold-italic font defined for %s", font);
 
 	GetSysTime(&nodedata->lastused);
-
-#ifndef __amigaos4__
-	node = AddObject(ami_font_list, AMINS_FONT);
-	if(node) {
-		node->objstruct = nodedata;
-		node->dtz_Node.ln_Name = strdup(font);
-	}
-#endif
 
 	return nodedata;
 }
@@ -927,6 +908,8 @@ static LONG ami_font_cache_sort(struct Hook *hook, APTR key1, APTR key2)
 }
 #endif
 
+#if 0
+// TODO: Rewrite to page through the LRU list as splay trees don't let us do this */
 #ifdef __amigaos4__
 static void ami_font_cleanup(struct SkipList *skiplist)
 {
@@ -981,6 +964,7 @@ static void ami_font_cleanup(struct MinList *ami_font_list)
 	ami_schedule(300000, (void *)ami_font_cleanup, ami_font_list);
 }
 #endif
+#endif //0
 
 void ami_init_fonts(void)
 {
@@ -988,18 +972,17 @@ void ami_init_fonts(void)
 	ami_font_initscanner(false, true);
 
 	/* Initialise font caching etc lists */
-#ifdef __amigaos4__
 	ami_font_cache_hook.h_Entry = (HOOKFUNC)ami_font_cache_sort;
 	ami_font_cache_hook.h_Data = 0;
-	ami_font_list = CreateSkipList(&ami_font_cache_hook, 8);
-#else
-	ami_font_list = NewObjList();
-#endif
+	ami_font_list = CreateSplayTree(&ami_font_cache_hook);
 
 	NewList(&ami_diskfontlib_list);
 
 	/* run first cleanup in ten minutes */
+#if 0
+// TODO: Needs rewriting */
 	ami_schedule(600000, (void *)ami_font_cleanup, ami_font_list);
+#endif
 }
 
 #ifdef __amigaos4__
@@ -1024,11 +1007,10 @@ static void ami_font_del_skiplist(struct SkipList *skiplist)
 void ami_close_fonts(void)
 {
 	LOG("Cleaning up font cache");
+#if 0
+//TODO: rewrite this
 	ami_schedule(-1, (void *)ami_font_cleanup, ami_font_list);
-#ifdef __amigaos4__
-	ami_font_del_skiplist(ami_font_list);
-#else
-	FreeObjList(ami_font_list);
+ 	ami_font_del_splaytree(ami_font_list);
 #endif
 	ami_font_list = NULL;
 	ami_font_finiscanner();
