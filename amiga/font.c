@@ -899,14 +899,12 @@ void ami_font_savescanner(void)
 	ami_font_scan_save(nsoption_charp(font_unicode_file), glypharray);
 }
 
-#ifdef __amigaos4__
 static LONG ami_font_cache_sort(struct Hook *hook, APTR key1, APTR key2)
 {
 	if(key1 == key2) return 0;
 	if(key1 < key2) return -1;
 	return 1;
 }
-#endif
 
 #if 0
 // TODO: Rewrite to page through the LRU list as splay trees don't let us do this */
