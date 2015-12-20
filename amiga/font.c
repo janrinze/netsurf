@@ -22,6 +22,7 @@
 
 #ifndef __amigaos4__
 #include <proto/bullet.h>
+#include "amiga/splaytree.h"
 #endif
 #include <proto/diskfont.h>
 #include <proto/exec.h>
