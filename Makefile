@@ -498,7 +498,7 @@ CXXWARNFLAGS :=
 CWARNFLAGS := -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs
 
 # Pull in the configuration
-include Makefile.defaults
+include core/Makefile.defaults
 
 # libraries enabled by feature switch without pkgconfig file 
 $(eval $(call feature_switch,JPEG,JPEG (libjpeg),-DWITH_JPEG,-ljpeg,-UWITH_JPEG,))
@@ -516,8 +516,8 @@ $(eval $(call pkg_config_find_and_add,libutf8proc,utf8proc))
 LDFLAGS += -lz
 
 # add top level and build directory to include search path
-CFLAGS += -I. -I$(OBJROOT)
-CXXFLAGS += -I. -I$(OBJROOT)
+CFLAGS += -I. -Icore -Ifrontends -I$(OBJROOT)
+CXXFLAGS += -I. -Icore -Ifrontends -I$(OBJROOT)
 
 # export the user agent format
 CFLAGS += -DNETSURF_UA_FORMAT_STRING=\"$(NETSURF_UA_FORMAT_STRING)\"
@@ -550,45 +550,23 @@ CLEANS :=
 POSTEXES :=
 
 # ----------------------------------------------------------------------------
-# Target specific setup
+# Target and core setup
 # ----------------------------------------------------------------------------
 
-include $(TARGET)/Makefile.target
+# Frontend specific sources (and setup)
+include frontends/Makefile
 
-# ----------------------------------------------------------------------------
-# General source file setup
-# ----------------------------------------------------------------------------
-
-# Content sources
-include content/Makefile
-
-# Content fetchers sources
-include content/fetchers/Makefile
-
-# CSS sources
-include css/Makefile
-
-# render sources
-include render/Makefile
+# Core specific sources
+include core/Makefile
+S_COMMON += $(S_CORE)
 
 # utility sources
 include utils/Makefile
+S_COMMON += $(S_UTILS)
 
 # http utility sources
 include utils/http/Makefile
-
-# Desktop sources
-include desktop/Makefile
-
-# Javascript source
-include javascript/Makefile
-
-# Image content handler sources
-include image/Makefile
-
-# S_COMMON are sources common to all builds
-S_COMMON := $(S_CONTENT) $(S_FETCHERS) $(S_CSS)	$(S_RENDER) $(S_UTILS) \
-	$(S_HTTP) $(S_DESKTOP) $(S_JAVASCRIPT)
+S_COMMON += $(S_HTTP)
 
 
 # ----------------------------------------------------------------------------
@@ -600,7 +578,7 @@ S_COMMON := $(S_CONTENT) $(S_FETCHERS) $(S_CSS)	$(S_RENDER) $(S_UTILS) \
 define split_messages
 .INTERMEDIATE:$$(MESSAGES_TARGET)/$(1)/Messages.tmp
 
-$$(MESSAGES_TARGET)/$(1)/Messages.tmp: resources/FatMessages
+$$(MESSAGES_TARGET)/$(1)/Messages.tmp: core/resources/FatMessages
 	$$(VQ)echo "MSGSPLIT: Language: $(1) Filter: $$(MESSAGES_FILTER)"
 	$$(Q)mkdir -p $$(MESSAGES_TARGET)/$(1)
 	$$(Q)$$(SPLIT_MESSAGES) -l $(1) -p $$(MESSAGES_FILTER) -f messages -o $$@ $$<
@@ -647,10 +625,10 @@ else
 	$(Q)$(RM) $(EXETARGET:,ff8=,e1f)
 endif
 ifeq ($(TARGET),windows)
-	$(Q)$(TOUCH) windows/res/preferences
+	$(Q)$(TOUCH) frontends/windows/res/preferences
 endif
 ifeq ($(TARGET),gtk)
-	$(Q)$(TOUCH) gtk/res/toolbarIndices
+	$(Q)$(TOUCH) frontends/gtk/res/toolbarIndices
 endif
 ifeq ($(NETSURF_STRIP_BINARY),YES)
 	$(VQ)echo "   STRIP: $(EXETARGET)"
