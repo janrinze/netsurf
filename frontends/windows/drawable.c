@@ -23,9 +23,9 @@
 #include <windows.h>
 #include <windowsx.h>
 
-#include "desktop/browser.h"
-#include "desktop/textinput.h"
-#include "desktop/plotters.h"
+#include "core/browser/browser.h"
+#include "core/browser/textinput.h"
+#include "core/browser/plotters.h"
 #include "utils/errors.h"
 #include "utils/log.h"
 #include "utils/utils.h"

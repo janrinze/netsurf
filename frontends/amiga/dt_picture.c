@@ -33,7 +33,7 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "content/content_protected.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "image/bitmap.h"
 #include "image/image_cache.h"
 

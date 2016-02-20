@@ -23,9 +23,9 @@
 #import "cocoa/LocalHistoryController.h"
 #import "cocoa/BrowserWindowController.h"
 
-#import "desktop/browser.h"
-#import "desktop/plotters.h"
-#import "desktop/textinput.h"
+#import "core/browser/browser.h"
+#import "core/browser/plotters.h"
+#import "core/browser/textinput.h"
 #import "utils/nsoption.h"
 #import "utils/messages.h"
 #import "content/hlcache.h"

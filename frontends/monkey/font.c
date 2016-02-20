@@ -18,7 +18,7 @@
 
 #include "utils/nsoption.h"
 #include "utils/utf8.h"
-#include "desktop/font.h"
+#include "core/browser/font.h"
 
 static bool nsfont_width(const plot_font_style_t *fstyle,
                          const char *string, size_t length,

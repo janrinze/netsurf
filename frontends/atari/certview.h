@@ -27,7 +27,7 @@
 #include "assert.h"
 #include "utils/nsoption.h"
 #include "utils/log.h"
-#include "desktop/sslcert_viewer.h"
+#include "core/browser/sslcert_viewer.h"
 
 struct core_window;
 

@@ -20,8 +20,8 @@
 #include <unistd.h>
 #include <gtk/gtk.h>
 
-#include "desktop/browser.h"
-#include "desktop/searchweb.h"
+#include "core/browser/browser.h"
+#include "core/browser/searchweb.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"

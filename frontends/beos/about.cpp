@@ -21,12 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 extern "C" {
-#include "desktop/version.h"
+#include "core/browser/version.h"
 #include "utils/log.h"
 #include "testament.h"
 #include "utils/useragent.h"
 #include "curl/curlver.h"
-#include "desktop/gui_clipboard.h"
+#include "core/api/clipboard.h"
 }
 #include "beos/about.h"
 #include "beos/scaffolding.h"

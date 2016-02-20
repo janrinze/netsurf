@@ -44,7 +44,7 @@
 #include "utils/log.h"
 #include "utils/utils.h"
 #include "utils/messages.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "content/content.h"
 #include "image/bitmap.h"
 

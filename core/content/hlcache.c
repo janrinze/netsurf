@@ -29,8 +29,8 @@
 #include "utils/messages.h"
 #include "utils/ring.h"
 #include "utils/utils.h"
-#include "desktop/gui_misc.h"
-#include "desktop/gui_internal.h"
+#include "core/api/misc.h"
+#include "core/browser/api_internal.h"
 
 #include "content/content.h"
 #include "content/mimesniff.h"

@@ -28,9 +28,9 @@
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "content/urldb.h"
-#include "desktop/plotters.h"
-#include "desktop/mouse.h"
-#include "desktop/treeview.h"
+#include "core/browser/plotters.h"
+#include "core/browser/mouse.h"
+#include "core/widgets/treeview.h"
 
 #include "atari/gui.h"
 #include "atari/plot/plot.h"

@@ -42,14 +42,14 @@
 #include "content/hlcache.h"
 #include "content/urldb.h"
 #include "content/backing_store.h"
-#include "desktop/browser.h"
-#include "desktop/save_complete.h"
-#include "desktop/save_pdf.h"
-#include "desktop/searchweb.h"
-#include "desktop/textinput.h"
-#include "desktop/tree.h"
-#include "desktop/gui_misc.h"
-#include "desktop/netsurf.h"
+#include "core/browser/browser.h"
+#include "core/browser/save_complete.h"
+#include "core/browser/save_pdf.h"
+#include "core/browser/searchweb.h"
+#include "core/browser/textinput.h"
+#include "core/widgets/tree.h"
+#include "core/api/misc.h"
+#include "core/api/netsurf.h"
 
 #include "gtk/compat.h"
 #include "gtk/completion.h"
@@ -116,7 +116,7 @@ nsgtk_init_resource_path(const char *config_home)
 
 	if (config_home != NULL) {
 		resource_path_len = snprintf(NULL, 0,
-					     "%s:${NETSURFRES}:%s:./gtk/res",
+					     "%s:${NETSURFRES}:%s",
 					     config_home,
 					     GTK_RESPATH);
 		resource_path = malloc(resource_path_len + 1);
@@ -129,7 +129,7 @@ nsgtk_init_resource_path(const char *config_home)
 			 GTK_RESPATH);
 	} else {
 		resource_path_len = snprintf(NULL, 0,
-					     "${NETSURFRES}:%s:./gtk/res",
+					     "${NETSURFRES}:%s",
 					     GTK_RESPATH);
 		resource_path = malloc(resource_path_len + 1);
 		if (resource_path == NULL) {
@@ -137,7 +137,7 @@ nsgtk_init_resource_path(const char *config_home)
 		}
 		snprintf(resource_path,
 			 resource_path_len + 1,
-			 "${NETSURFRES}:%s:./gtk/res",
+			 "${NETSURFRES}:%s",
 			 GTK_RESPATH);
 	}
 

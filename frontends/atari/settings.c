@@ -31,7 +31,7 @@
 
 #include "utils/nsoption.h"
 #include "utils/log.h"
-#include "desktop/plot_style.h"
+#include "core/browser/plot_style.h"
 
 #include "atari/res/netsurf.rsh"
 #include "atari/settings.h"

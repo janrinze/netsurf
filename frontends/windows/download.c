@@ -30,8 +30,8 @@
 #include "utils/nsurl.h"
 #include "utils/utils.h"
 #include "content/fetch.h"
-#include "desktop/gui_download.h"
-#include "desktop/download.h"
+#include "core/api/download.h"
+#include "core/browser/download.h"
 
 #include "windows/download.h"
 #include "windows/window.h"

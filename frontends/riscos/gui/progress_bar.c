@@ -30,7 +30,7 @@
 #include "oslib/wimp.h"
 #include "oslib/wimpspriteop.h"
 
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "utils/log.h"
 #include "utils/utils.h"
 

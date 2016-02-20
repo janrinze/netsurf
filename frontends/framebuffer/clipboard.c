@@ -26,8 +26,8 @@
 #include <stdlib.h>
 
 #include "utils/log.h"
-#include "desktop/browser.h"
-#include "desktop/gui_clipboard.h"
+#include "core/browser/browser.h"
+#include "core/api/clipboard.h"
 
 #include "framebuffer/gui.h"
 #include "framebuffer/clipboard.h"

@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "desktop/gui_internal.h"
+#include "core/browser/api_internal.h"
 
 #include "utils/utils.h"
 #include "utils/corestrings.h"

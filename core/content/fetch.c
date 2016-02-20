@@ -48,8 +48,8 @@
 #include "utils/nsurl.h"
 #include "utils/utils.h"
 #include "utils/ring.h"
-#include "desktop/gui_misc.h"
-#include "desktop/gui_internal.h"
+#include "core/api/misc.h"
+#include "core/browser/api_internal.h"
 
 #include "content/fetch.h"
 #include "content/fetchers.h"

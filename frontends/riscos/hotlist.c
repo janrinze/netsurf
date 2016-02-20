@@ -38,9 +38,9 @@
 #include "content/content.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"
-#include "desktop/hotlist.h"
-#include "desktop/tree.h"
-#include "desktop/gui_window.h"
+#include "core/widgets/hotlist.h"
+#include "core/widgets/tree.h"
+#include "core/api/window.h"
 
 #include "riscos/gui.h"
 #include "riscos/dialog.h"

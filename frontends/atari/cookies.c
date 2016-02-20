@@ -30,9 +30,9 @@
 #include "content/content.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/tree.h"
-#include "desktop/core_window.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/widgets/tree.h"
+#include "core/browser/core_window.h"
 
 #include "atari/gui.h"
 #include "atari/misc.h"

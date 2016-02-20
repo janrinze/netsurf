@@ -33,7 +33,7 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
-#include "desktop/font.h"
+#include "core/browser/font.h"
 
 #include "riscos/gui.h"
 #include "riscos/font.h"

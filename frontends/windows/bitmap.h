@@ -20,7 +20,7 @@
 #ifndef _NETSURF_WINDOWS_BITMAP_H_
 #define _NETSURF_WINDOWS_BITMAP_H_
 
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 struct gui_bitmap_table *win32_bitmap_table;
 

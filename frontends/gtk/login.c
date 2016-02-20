@@ -28,7 +28,7 @@
 #include "content/urldb.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #include "gtk/resources.h"
 #include "gtk/login.h"

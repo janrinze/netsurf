@@ -122,10 +122,10 @@ char *url_to_path(const char *url)
  * Things that are absolutely not reasonable, and should disappear            *
  ******************************************************************************/
 
-#include "desktop/cookie_manager.h"
-#include "desktop/tree.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/widgets/tree.h"
 
-/* desktop/cookie_manager.h -- used by urldb 
+/* core/widgets/cookie_manager.h -- used by urldb 
  *
  * URLdb should have a cookies update event + handler registration
  */
@@ -134,7 +134,7 @@ bool cookie_manager_add(const struct cookie_data *data)
 	return true;
 }
 
-/* desktop/cookie_manager.h -- used by urldb 
+/* core/widgets/cookie_manager.h -- used by urldb 
  *
  * URLdb should have a cookies removal handler registration
  */

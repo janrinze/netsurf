@@ -31,7 +31,7 @@
 #include "utils/log.h"
 #include "utils/utils.h"
 #include "image/bitmap.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "content/content.h"
 
 #include "framebuffer/gui.h"

@@ -39,9 +39,9 @@ extern "C" {
 #include "utils/log.h"
 #include "content/content.h"
 #include "content/urldb.h"
-#include "desktop/plotters.h"
-#include "desktop/browser.h"
-#include "desktop/font.h"
+#include "core/browser/plotters.h"
+#include "core/browser/browser.h"
+#include "core/browser/font.h"
 #include "image/bitmap.h"
 }
 

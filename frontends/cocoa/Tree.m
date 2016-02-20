@@ -21,8 +21,8 @@
 #import "cocoa/font.h"
 #import "cocoa/plotter.h"
 
-#import "desktop/plotters.h"
-#import "desktop/tree.h"
+#import "core/browser/plotters.h"
+#import "core/widgets/tree.h"
 
 @implementation Tree
 

@@ -24,8 +24,8 @@
 
 #include "utils/log.h"
 #include "utils/nsoption.h"
-#include "desktop/browser.h"
-#include "desktop/font.h"
+#include "core/browser/browser.h"
+#include "core/browser/font.h"
 
 #include "amiga/font.h"
 #include "amiga/font_bullet.h"

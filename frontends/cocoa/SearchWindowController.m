@@ -20,9 +20,9 @@
 #import "cocoa/SearchWindowController.h"
 #import "cocoa/BrowserViewController.h"
 
-#import "desktop/gui_search.h"
-#import "desktop/browser.h"
-#import "desktop/search.h"
+#import "core/api/search.h"
+#import "core/browser/browser.h"
+#import "core/browser/search.h"
 
 static void cocoa_search_set_back( bool active, void *p );
 static void cocoa_search_set_forward( bool active, void *p );

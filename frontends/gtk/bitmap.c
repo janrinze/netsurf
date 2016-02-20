@@ -20,7 +20,7 @@
  * \file
  * Generic bitmap handling (GDK / GTK+ implementation).
  *
- * This implements the interface given by desktop/bitmap.h using GdkPixbufs.
+ * This implements the interface given by core/browser/bitmap.h using GdkPixbufs.
  */
 
 #include <assert.h>
@@ -32,7 +32,7 @@
 #include "utils/log.h"
 #include "content/content.h"
 #include "image/bitmap.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 #include "gtk/scaffolding.h"
 #include "gtk/plotters.h"

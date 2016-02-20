@@ -38,8 +38,8 @@
 #include "utils/utils.h"
 #include "utils/log.h"
 #include "css/utils.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/plotters.h"
 #include "amiga/bitmap.h"

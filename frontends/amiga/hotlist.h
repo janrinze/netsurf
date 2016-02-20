@@ -19,7 +19,7 @@
 #ifndef AMIGA_HOTLIST_H
 #define AMIGA_HOTLIST_H
 
-#include "desktop/tree.h"
+#include "core/widgets/tree.h"
 #include "amiga/tree.h"
 
 struct nsurl;

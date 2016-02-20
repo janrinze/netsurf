@@ -21,10 +21,10 @@
 
 #include "utils/log.h"
 #include "utils/utils.h"
-#include "desktop/global_history.h"
-#include "desktop/plotters.h"
-#include "desktop/tree.h"
-#include "desktop/textinput.h"
+#include "core/widgets/global_history.h"
+#include "core/browser/plotters.h"
+#include "core/widgets/tree.h"
+#include "core/browser/textinput.h"
 
 #include "gtk/plotters.h"
 #include "gtk/scaffolding.h"

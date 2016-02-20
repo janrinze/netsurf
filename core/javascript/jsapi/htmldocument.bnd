@@ -26,7 +26,7 @@ preamble %{
 #include "content/urldb.h"
 #include "javascript/js.h"
 #include "javascript/jsapi.h"
-#include "render/html_internal.h"
+#include "core/html/html_internal.h"
 
 #include "htmldocument.h"
 #include "htmlelement.h"

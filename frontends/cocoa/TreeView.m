@@ -19,8 +19,8 @@
 #import "cocoa/TreeView.h"
 #import "cocoa/Tree.h"
 
-#import "desktop/plotters.h"
-#import "desktop/textinput.h"
+#import "core/browser/plotters.h"
+#import "core/browser/textinput.h"
 
 @interface TreeView () <TreeDelegate>
 @end

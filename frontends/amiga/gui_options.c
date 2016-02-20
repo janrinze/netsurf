@@ -59,9 +59,9 @@
 
 #include "utils/messages.h"
 #include "utils/nsoption.h"
-#include "desktop/browser.h"
-#include "desktop/searchweb.h"
-#include "desktop/gui_window.h"
+#include "core/browser/browser.h"
+#include "core/browser/searchweb.h"
+#include "core/api/window.h"
 
 #include "amiga/file.h"
 #include "amiga/font.h"

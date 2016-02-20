@@ -20,7 +20,7 @@
  * \file
  * Option reading and saving (interface).
  *
- * Global options are defined in desktop/options.h
+ * Global options are defined in core/browser/options.h
  * Distinct target options are defined in <TARGET>/options.h
  *
  * The implementation API is slightly compromised because it still has
@@ -56,7 +56,7 @@
 #define NSOPTION_UINT(NAME, DEFAULT)
 #define NSOPTION_COLOUR(NAME, DEFAULT)
 
-#include "desktop/options.h"
+#include "core/browser/options.h"
 #if defined(riscos)
 #include "riscos/options.h"
 #elif defined(nsgtk)
@@ -127,7 +127,7 @@ struct nsoption_s {
 #define NSOPTION_COLOUR(NAME, DEFAULT) NSOPTION_##NAME,
 
 enum nsoption_e {
-#include "desktop/options.h"
+#include "core/browser/options.h"
 #if defined(riscos)
 #include "riscos/options.h"
 #elif defined(nsgtk)

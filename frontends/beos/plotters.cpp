@@ -31,8 +31,8 @@
 #include <View.h>
 #include <Shape.h>
 extern "C" {
-#include "desktop/plotters.h"
-#include "desktop/font.h"
+#include "core/browser/plotters.h"
+#include "core/browser/font.h"
 #include "utils/log.h"
 #include "utils/utils.h"
 #include "utils/nsoption.h"

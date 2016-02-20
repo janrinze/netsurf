@@ -20,9 +20,9 @@
 
 #import "utils/log.h"
 #import "utils/utils.h"
-#import "desktop/browser.h"
-#import "desktop/plotters.h"
-#import "desktop/plot_style.h"
+#import "core/browser/browser.h"
+#import "core/browser/plotters.h"
+#import "core/browser/plot_style.h"
 
 #import "cocoa/font.h"
 #import "cocoa/plotter.h"

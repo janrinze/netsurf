@@ -22,8 +22,8 @@
 #import "cocoa/font.h"
 
 #import "utils/nsoption.h"
-#import "desktop/font.h"
-#import "desktop/plotters.h"
+#import "core/browser/font.h"
+#import "core/browser/plotters.h"
 
 
 static NSLayoutManager *cocoa_prepare_layout_manager( const char *string, size_t length, 

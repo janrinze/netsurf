@@ -36,9 +36,9 @@
 #include "utils/http.h"
 #include "content/content_factory.h"
 #include "content/content_type.h"
-#include "desktop/search.h"
-#include "desktop/mouse.h"
-#include "desktop/plot_style.h"
+#include "core/browser/search.h"
+#include "core/browser/mouse.h"
+#include "core/browser/plot_style.h"
 
 struct browser_window;
 struct browser_window_features;

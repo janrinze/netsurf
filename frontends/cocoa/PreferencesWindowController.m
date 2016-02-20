@@ -22,7 +22,7 @@
 #import "cocoa/gui.h"
 #import "cocoa/BrowserViewController.h"
 
-#import "desktop/browser.h"
+#import "core/browser/browser.h"
 #import "content/content.h"
 #import "utils/nsoption.h"
 #import "content/hlcache.h"

@@ -49,8 +49,8 @@
 #include "utils/ring.h"
 #include "utils/useragent.h"
 #include "utils/file.h"
-#include "desktop/gui_fetch.h"
-#include "desktop/gui_internal.h"
+#include "core/api/fetch.h"
+#include "core/browser/api_internal.h"
 
 #include "content/fetch.h"
 #include "content/fetchers.h"

@@ -22,7 +22,7 @@
 #include "utils/utf8.h"
 #include "utils/nsurl.h"
 #include "utils/messages.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 #include "content/content.h"
 
 #include "gtk/viewdata.h"

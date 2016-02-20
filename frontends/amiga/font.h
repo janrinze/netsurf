@@ -19,7 +19,7 @@
 #ifndef AMIGA_FONT_H
 #define AMIGA_FONT_H
 
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include <graphics/rastport.h>
 #include <graphics/text.h>
 

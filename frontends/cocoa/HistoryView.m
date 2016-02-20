@@ -23,8 +23,8 @@
 #import "cocoa/LocalHistoryController.h"
 #import "cocoa/BrowserView.h"
 
-#import "desktop/browser_history.h"
-#import "desktop/plotters.h"
+#import "core/browser/browser_history.h"
+#import "core/browser/plotters.h"
 
 @implementation HistoryView
 

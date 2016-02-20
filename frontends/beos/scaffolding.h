@@ -25,7 +25,7 @@
 #include <NetPositive.h>
 
 extern "C" {
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 struct hlcache_handle;
 struct nsurl;

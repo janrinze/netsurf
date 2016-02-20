@@ -25,7 +25,7 @@ preamble %{
 #include "utils/config.h"
 #include "utils/log.h"
 #include "utils/corestrings.h"
-#include "render/html_internal.h"
+#include "core/html/html_internal.h"
 #include "javascript/jsapi.h"
 
 #include "console.h"

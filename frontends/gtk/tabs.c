@@ -22,9 +22,9 @@
 #include "utils/nsoption.h"
 #include "utils/utils.h"
 #include "utils/messages.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 #include "content/content.h"
-#include "desktop/search.h"
+#include "core/browser/search.h"
 
 #include "gtk/compat.h"
 #include "gtk/window.h"

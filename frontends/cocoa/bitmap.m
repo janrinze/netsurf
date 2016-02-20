@@ -23,8 +23,8 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "desktop/browser.h"
-#import "desktop/plotters.h"
+#import "core/browser/browser.h"
+#import "core/browser/plotters.h"
 #import "image/bitmap.h"
 #import "content/urldb.h"
 #import "content/content.h"

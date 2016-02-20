@@ -26,8 +26,8 @@
 #include "amiga/filetype.h"
 #include "amiga/datatypes.h"
 #include "content/content_protected.h"
-#include "desktop/plotters.h"
-#include "render/box.h"
+#include "core/browser/plotters.h"
+#include "core/html/box.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 

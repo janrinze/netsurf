@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "oslib/wimp.h"
-#include "desktop/browser_history.h"
-#include "desktop/plotters.h"
+#include "core/browser/browser_history.h"
+#include "core/browser/plotters.h"
 #include "riscos/dialog.h"
 #include "utils/nsoption.h"
 #include "riscos/gui.h"

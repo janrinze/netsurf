@@ -20,8 +20,8 @@
 #include <proto/exec.h>
 
 #include "utils/errors.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/history.h"
 #include "amiga/tree.h"

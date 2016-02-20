@@ -20,12 +20,12 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "desktop/font.h"
+#include "core/browser/font.h"
 #include "utils/utf8.h"
 #include "utils/log.h"
 #include "utils/nsoption.h"
-#include "desktop/mouse.h"
-#include "desktop/plotters.h"
+#include "core/browser/mouse.h"
+#include "core/browser/plotters.h"
 
 #include "atari/gui.h"
 #include "atari/plot/fontplot.h"

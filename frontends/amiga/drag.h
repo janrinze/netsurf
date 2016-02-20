@@ -19,8 +19,8 @@
 #ifndef AMIGA_DRAG_H
 #define AMIGA_DRAG_H
 #include <exec/types.h>
-#include "desktop/browser.h"
-#include "desktop/gui_window.h"
+#include "core/browser/browser.h"
+#include "core/api/window.h"
 
 #define AMI_DRAG_THRESHOLD 10
 

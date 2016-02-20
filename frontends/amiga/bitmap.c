@@ -36,8 +36,8 @@
 
 #include "utils/nsoption.h"
 #include "utils/messages.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 #include "image/bitmap.h"
 
 #include "amiga/gui.h"

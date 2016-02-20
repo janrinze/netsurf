@@ -30,8 +30,8 @@
 #include "utils/corestrings.h"
 #include "utils/url.h"
 #include "utils/file.h"
-#include "desktop/browser.h"
-#include "desktop/gui_clipboard.h"
+#include "core/browser/browser.h"
+#include "core/api/clipboard.h"
 
 #include "windows/schedule.h"
 #include "windows/window.h"

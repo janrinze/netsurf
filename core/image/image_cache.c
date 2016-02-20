@@ -24,8 +24,8 @@
 
 #include "utils/log.h"
 #include "content/content_protected.h"
-#include "desktop/gui_misc.h"
-#include "desktop/gui_internal.h"
+#include "core/api/misc.h"
+#include "core/browser/api_internal.h"
 
 #include "image/bitmap.h"
 #include "image/image_cache.h"

@@ -44,12 +44,12 @@
 #include "utils/nsoption.h"
 #include "utils/messages.h"
 
-#include "desktop/hotlist.h"
-#include "desktop/browser.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
-#include "desktop/textinput.h"
-#include "desktop/version.h"
+#include "core/widgets/hotlist.h"
+#include "core/browser/browser.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
+#include "core/browser/textinput.h"
+#include "core/browser/version.h"
 
 #include "amiga/arexx.h"
 #include "amiga/bitmap.h"

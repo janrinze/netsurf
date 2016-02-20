@@ -30,7 +30,7 @@
 
 #include "utils/utils.h"
 #include "utils/log.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 #include "image/bitmap.h"
 
 #include "framebuffer/gui.h"

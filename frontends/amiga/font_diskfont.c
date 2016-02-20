@@ -28,7 +28,7 @@
 #include "utils/log.h"
 #include "utils/utf8.h"
 #include "utils/nsoption.h"
-#include "desktop/font.h"
+#include "core/browser/font.h"
 
 #include "amiga/font.h"
 #include "amiga/font_diskfont.h"

@@ -28,11 +28,11 @@
 
 #include "utils/nsoption.h"
 #include "utils/utf8.h"
-#include "desktop/browser.h"
-#include "desktop/plotters.h"
-#include "desktop/textinput.h"
-#include "desktop/gui_window.h"
-#include "desktop/gui_clipboard.h"
+#include "core/browser/browser.h"
+#include "core/browser/plotters.h"
+#include "core/browser/textinput.h"
+#include "core/api/window.h"
+#include "core/api/clipboard.h"
 
 #include "amiga/bitmap.h"
 #include "amiga/clipboard.h"

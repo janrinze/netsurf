@@ -41,7 +41,7 @@
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "utils/file.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "image/bitmap.h"
 #include "content/content_protected.h"
 
@@ -51,7 +51,7 @@
 #include "amiga/misc.h"
 
 #define THUMBNAIL_WIDTH 100 /* Icon sizes for thumbnails, usually the same as */
-#define THUMBNAIL_HEIGHT 86 /* WIDTH/HEIGHT in desktop/thumbnail.c */
+#define THUMBNAIL_HEIGHT 86 /* WIDTH/HEIGHT in core/browser/thumbnail.c */
 
 ULONG *amiga_icon_convertcolouricon32(UBYTE *icondata, ULONG width, ULONG height,
 		ULONG trans, ULONG pals1, struct ColorRegister *pal1, int alpha);

@@ -33,7 +33,7 @@
 
 #include "utils/log.h"
 #include "utils/utils.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "utils/nsoption.h"
 
 #include "gtk/font_pango.h"

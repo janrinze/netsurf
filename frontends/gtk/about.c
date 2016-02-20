@@ -28,8 +28,8 @@
 #include "utils/messages.h"
 #include "utils/nsoption.h"
 #include "utils/nsurl.h"
-#include "desktop/browser.h"
-#include "desktop/version.h"
+#include "core/browser/browser.h"
+#include "core/browser/version.h"
 
 #include "gtk/compat.h"
 #include "gtk/about.h"

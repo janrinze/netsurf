@@ -104,8 +104,8 @@
 #include "utils/utils.h"
 #include "utils/bloom.h"
 #include "image/bitmap.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/gui_internal.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/browser/api_internal.h"
 
 #include "content/content.h"
 #include "content/urldb.h"

@@ -27,8 +27,8 @@
 #include "utils/useragent.h"
 #include "utils/nsurl.h"
 #include "utils/messages.h"
-#include "desktop/version.h"
-#include "desktop/browser.h"
+#include "core/browser/version.h"
+#include "core/browser/browser.h"
 
 #include "curl/curlver.h"
 

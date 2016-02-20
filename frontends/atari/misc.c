@@ -27,9 +27,9 @@
 
 #include "content/content.h"
 #include "content/hlcache.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/mouse.h"
-#include "desktop/tree.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/browser/mouse.h"
+#include "core/widgets/tree.h"
 #include "utils/nsoption.h"
 #include "utils/messages.h"
 #include "utils/utils.h"

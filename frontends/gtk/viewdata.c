@@ -41,7 +41,7 @@
 #include "utils/file.h"
 #include "utils/filepath.h"
 
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 #include "content/hlcache.h"
 #include "content/content.h"
 

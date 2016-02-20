@@ -21,7 +21,7 @@
 #include <strings.h>
 
 #include "content/urldb.h"
-#include "desktop/system_colour.h"
+#include "core/browser/system_colour.h"
 #include "utils/nsoption.h"
 #include "utils/corestrings.h"
 #include "utils/log.h"

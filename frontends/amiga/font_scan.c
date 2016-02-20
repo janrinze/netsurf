@@ -48,8 +48,8 @@
 #include "utils/nsoption.h"
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/font_scan.h"
 #include "amiga/gui.h"

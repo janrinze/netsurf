@@ -29,9 +29,9 @@
 #include <gadgets/clicktab.h>
 #include <reaction/reaction_macros.h>
 
-#include "desktop/browser.h"
-#include "desktop/gui_window.h"
-#include "desktop/version.h"
+#include "core/browser/browser.h"
+#include "core/api/window.h"
+#include "core/browser/version.h"
 
 #include "utils/log.h"
 #include "utils/nsoption.h"

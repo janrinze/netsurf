@@ -35,9 +35,9 @@
 #include "utils/messages.h"
 #include "utils/log.h"
 #include "utils/utils.h"
-#include "desktop/global_history.h"
-#include "desktop/tree.h"
-#include "desktop/gui_window.h"
+#include "core/widgets/global_history.h"
+#include "core/widgets/tree.h"
+#include "core/api/window.h"
 
 #include "riscos/dialog.h"
 #include "riscos/global_history.h"

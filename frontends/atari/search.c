@@ -27,9 +27,9 @@
 
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "desktop/browser.h"
-#include "desktop/search.h"
-#include "desktop/gui_search.h"
+#include "core/browser/browser.h"
+#include "core/browser/search.h"
+#include "core/api/search.h"
 
 #include "atari/gui.h"
 #include "atari/rootwin.h"

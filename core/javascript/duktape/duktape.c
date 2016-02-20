@@ -29700,7 +29700,7 @@ DUK_INTERNAL duk_bool_t duk_bi_date_format_parts_strftime(duk_context *ctx, duk_
  *
  *  Platform specific links:
  *
- *    - http://msdn.microsoft.com/en-us/library/windows/desktop/ms725473(v=vs.85).aspx
+ *    - http://msdn.microsoft.com/en-us/library/windows/core/browser/ms725473(v=vs.85).aspx
  */
 
 /* include removed: duk_internal.h */
@@ -29735,7 +29735,7 @@ DUK_LOCAL void duk__set_systime_jan1970(SYSTEMTIME *st) {
 #ifdef DUK_USE_DATE_NOW_WINDOWS
 DUK_INTERNAL duk_double_t duk_bi_date_get_now_windows(duk_context *ctx) {
 	/* Suggested step-by-step method from documentation of RtlTimeToSecondsSince1970:
-	 * http://msdn.microsoft.com/en-us/library/windows/desktop/ms724928(v=vs.85).aspx
+	 * http://msdn.microsoft.com/en-us/library/windows/core/browser/ms724928(v=vs.85).aspx
 	 */
 	SYSTEMTIME st1, st2;
 	ULARGE_INTEGER tmp1, tmp2;
@@ -29772,7 +29772,7 @@ DUK_INTERNAL_DECL duk_int_t duk_bi_date_get_local_tzoffset_windows(duk_double_t 
 	 */
 
 	/* Use the approach described in "Remarks" of FileTimeToLocalFileTime:
-	 * http://msdn.microsoft.com/en-us/library/windows/desktop/ms724277(v=vs.85).aspx
+	 * http://msdn.microsoft.com/en-us/library/windows/core/browser/ms724277(v=vs.85).aspx
 	 */
 
 	duk__set_systime_jan1970(&st1);

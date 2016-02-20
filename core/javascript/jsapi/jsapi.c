@@ -20,7 +20,7 @@
 #include <signal.h>
 
 #include "javascript/jsapi.h"
-#include "render/html_internal.h"
+#include "core/html/html_internal.h"
 #include "content/content.h"
 #include "javascript/content.h"
 #include "javascript/js.h"

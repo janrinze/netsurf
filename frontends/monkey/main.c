@@ -33,8 +33,8 @@
 #include "content/fetchers.h"
 #include "content/fetchers/resource.h"
 #include "content/hlcache.h"
-#include "desktop/gui_misc.h"
-#include "desktop/netsurf.h"
+#include "core/api/misc.h"
+#include "core/api/netsurf.h"
 
 #include "monkey/dispatch.h"
 #include "monkey/browser.h"

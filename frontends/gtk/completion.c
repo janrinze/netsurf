@@ -28,8 +28,8 @@
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "utils/nsoption.h"
-#include "desktop/searchweb.h"
-#include "desktop/browser.h"
+#include "core/browser/searchweb.h"
+#include "core/browser/browser.h"
 
 #include "gtk/window.h"
 #include "gtk/completion.h"

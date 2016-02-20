@@ -21,9 +21,9 @@
 
 #include "utils/log.h"
 #include "utils/nsoption.h"
-#include "desktop/hotlist.h"
-#include "desktop/plotters.h"
-#include "desktop/tree.h"
+#include "core/widgets/hotlist.h"
+#include "core/browser/plotters.h"
+#include "core/widgets/tree.h"
 
 #include "gtk/plotters.h"
 #include "gtk/scaffolding.h"

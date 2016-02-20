@@ -23,10 +23,10 @@
 #include <gtk/gtk.h>
 
 #include "utils/log.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/plotters.h"
-#include "desktop/tree.h"
-#include "desktop/textinput.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/browser/plotters.h"
+#include "core/widgets/tree.h"
+#include "core/browser/textinput.h"
 
 #include "gtk/cookies.h"
 #include "gtk/plotters.h"

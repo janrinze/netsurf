@@ -24,9 +24,9 @@ BEOS_RC := rc
 BEOS_XRES := xres
 BEOS_SETVER := setversion
 BEOS_MIMESET := mimeset
-VERSION_FULL := $(shell sed -n '/"/{s/.*"\(.*\)".*/\1/;p;}' desktop/version.c)
-VERSION_MAJ := $(shell sed -n '/_major/{s/.* = \([0-9]*\).*/\1/;p;}' desktop/version.c)
-VERSION_MIN := $(shell sed -n '/_minor/{s/.* = \([0-9]*\).*/\1/;p;}' desktop/version.c)
+VERSION_FULL := $(shell sed -n '/"/{s/.*"\(.*\)".*/\1/;p;}' core/browser/version.c)
+VERSION_MAJ := $(shell sed -n '/_major/{s/.* = \([0-9]*\).*/\1/;p;}' core/browser/version.c)
+VERSION_MIN := $(shell sed -n '/_minor/{s/.* = \([0-9]*\).*/\1/;p;}' core/browser/version.c)
 
 ifeq ($(HOST),beos)
   CFLAGS += -I/boot/home/config/include		\

@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 bool nsfont_paint(const plot_font_style_t *fstyle,
 		const char *string, size_t length,

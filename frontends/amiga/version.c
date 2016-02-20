@@ -21,7 +21,7 @@
 /* NB: AmigaOS revision numbers start at 1 (not 0) and are monotonically
  * incremental (v1.20 is higher than v1.3 and not the same as v1.2).
  * Consequently, this version pair may not match the user-facing one in
- * desktop/version.c.  Release revisions are prepended with 6000 to ensure
+ * core/browser/version.c.  Release revisions are prepended with 6000 to ensure
  * they are higher than CI builds, and make this (slightly) less confusing.
  */
 #define NETSURF_VERSION_MAJOR "3"

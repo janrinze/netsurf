@@ -38,7 +38,7 @@
 #include "utils/utils.h"
 #include "utils/config.h"
 #include "content/fetch.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #include "riscos/gui.h"
 #include "riscos/uri.h"

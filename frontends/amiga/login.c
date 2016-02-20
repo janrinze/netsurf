@@ -40,8 +40,8 @@
 #include "utils/messages.h"
 #include "utils/errors.h"
 #include "content/urldb.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/gui.h"
 #include "amiga/libs.h"

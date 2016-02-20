@@ -21,8 +21,8 @@
 #include <sys/types.h>
 
 extern "C" {
-#include "desktop/download.h"
-#include "desktop/gui_download.h"
+#include "core/browser/download.h"
+#include "core/api/download.h"
 #include "utils/utils.h"
 }
 #include "beos/download.h"

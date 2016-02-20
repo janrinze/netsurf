@@ -20,9 +20,9 @@
 #include <proto/exec.h>
 
 #include "utils/nsurl.h"
-#include "desktop/hotlist.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/widgets/hotlist.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/hotlist.h"
 #include "amiga/tree.h"

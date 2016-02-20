@@ -35,9 +35,9 @@
 #include "content/hlcache.h"
 #include "content/fetch.h"
 #include "content/urldb.h"
-#include "desktop/browser.h"
-#include "desktop/sslcert_viewer.h"
-#include "desktop/tree.h"
+#include "core/browser/browser.h"
+#include "core/browser/sslcert_viewer.h"
+#include "core/widgets/tree.h"
 
 #include "riscos/dialog.h"
 #include "riscos/sslcert.h"

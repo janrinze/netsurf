@@ -29,8 +29,8 @@
 #include "utils/utils.h"
 #include "content/urldb.h"
 #include "content/hlcache.h"
-#include "desktop/sslcert_viewer.h"
-#include "desktop/core_window.h"
+#include "core/browser/sslcert_viewer.h"
+#include "core/browser/core_window.h"
 
 #include "atari/gui.h"
 #include "atari/misc.h"

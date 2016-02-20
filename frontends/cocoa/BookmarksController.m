@@ -23,9 +23,9 @@
 #import "cocoa/BrowserViewController.h"
 #import "cocoa/gui.h"
 
-#import "desktop/browser.h"
-#import "desktop/hotlist.h"
-#import "desktop/tree.h"
+#import "core/browser/browser.h"
+#import "core/widgets/hotlist.h"
+#import "core/widgets/tree.h"
 #import "utils/messages.h"
 #import "utils/utils.h"
 #import "content/hlcache.h"

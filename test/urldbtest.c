@@ -33,7 +33,7 @@
 #include "image/bitmap.h"
 #include "content/content.h"
 #include "content/urldb.h"
-#include "desktop/cookie_manager.h"
+#include "core/widgets/cookie_manager.h"
 #include "utils/nsoption.h"
 #ifdef riscos
 /** \todo lose this */

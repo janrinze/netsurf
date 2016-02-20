@@ -31,8 +31,8 @@
 #include "utils/utils.h"
 #include "content/content.h"
 #include "content/hlcache.h"
-#include "desktop/browser.h"
-#include "desktop/theme.h"
+#include "core/browser/browser.h"
+#include "core/browser/theme.h"
 
 #include "riscos/dialog.h"
 #include "riscos/gui.h"

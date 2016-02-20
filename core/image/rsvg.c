@@ -41,8 +41,8 @@
 #include "utils/utils.h"
 #include "utils/messages.h"
 #include "content/content_protected.h"
-#include "desktop/plotters.h"
-#include "desktop/gui_internal.h"
+#include "core/browser/plotters.h"
+#include "core/browser/api_internal.h"
 
 #include "image/bitmap.h"
 #include "image/rsvg.h"

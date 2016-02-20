@@ -22,7 +22,7 @@ preamble %{
 
 #include "utils/config.h"
 #include "utils/log.h"
-#include "render/html_internal.h"
+#include "core/html/html_internal.h"
 #include "javascript/jsapi.h"
 
 #include "text.h"

@@ -29,7 +29,7 @@
 
 #include "utils/utils.h"
 #include "utils/messages.h"
-#include "desktop/version.h"
+#include "core/browser/version.h"
 #include "utils/log.h"
 
 #include "windows/window.h"

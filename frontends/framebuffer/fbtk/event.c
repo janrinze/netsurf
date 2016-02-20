@@ -31,9 +31,9 @@
 
 #include "utils/utils.h"
 #include "utils/log.h"
-#include "desktop/browser.h"
-#include "desktop/plotters.h"
-#include "desktop/textinput.h"
+#include "core/browser/browser.h"
+#include "core/browser/plotters.h"
+#include "core/browser/textinput.h"
 
 #include "framebuffer/gui.h"
 #include "framebuffer/fbtk.h"

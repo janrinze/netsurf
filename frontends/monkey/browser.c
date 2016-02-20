@@ -23,9 +23,9 @@
 #include "utils/ring.h"
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
-#include "desktop/browser.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
+#include "core/browser/browser.h"
 #include "content/hlcache.h"
 
 #include "monkey/browser.h"

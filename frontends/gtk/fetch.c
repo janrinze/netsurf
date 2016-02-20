@@ -32,7 +32,7 @@
 #include "utils/filepath.h"
 #include "utils/file.h"
 #include "utils/nsurl.h"
-#include "desktop/gui_fetch.h"
+#include "core/api/fetch.h"
 
 #include "gtk/gui.h"
 #include "gtk/resources.h"

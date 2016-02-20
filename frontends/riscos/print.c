@@ -37,8 +37,8 @@
 #include "utils/nsoption.h"
 #include "content/content.h"
 #include "content/hlcache.h"
-#include "desktop/browser.h"
-#include "desktop/plotters.h"
+#include "core/browser/browser.h"
+#include "core/browser/plotters.h"
 
 #include "riscos/gui.h"
 #include "riscos/dialog.h"

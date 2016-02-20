@@ -44,11 +44,11 @@
 #include "amiga/theme.h"
 #include "amiga/utf8.h"
 
-#include "desktop/browser.h"
-#include "desktop/browser_history.h"
-#include "desktop/mouse.h"
-#include "desktop/searchweb.h"
-#include "desktop/textinput.h"
+#include "core/browser/browser.h"
+#include "core/browser/browser_history.h"
+#include "core/browser/mouse.h"
+#include "core/browser/searchweb.h"
+#include "core/browser/textinput.h"
 
 #include "utils/log.h"
 #include "utils/messages.h"

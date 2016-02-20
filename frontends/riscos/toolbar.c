@@ -42,7 +42,7 @@
 #include "utils/utils.h"
 #include "utils/nsoption.h"
 #include "content/content.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 #include "riscos/cookies.h"
 #include "riscos/dialog.h"

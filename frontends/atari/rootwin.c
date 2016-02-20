@@ -37,10 +37,10 @@
 #include <mt_gem.h>
 
 #include "utils/log.h"
-#include "desktop/browser.h"
-#include "desktop/mouse.h"
-#include "desktop/plotters.h"
-#include "desktop/textinput.h"
+#include "core/browser/browser.h"
+#include "core/browser/mouse.h"
+#include "core/browser/plotters.h"
+#include "core/browser/textinput.h"
 #include "content/content.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"

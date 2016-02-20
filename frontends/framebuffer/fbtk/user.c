@@ -22,7 +22,7 @@
 #include <stdbool.h>
 #include <libnsfb.h>
 
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "framebuffer/gui.h"
 #include "framebuffer/fbtk.h"
 

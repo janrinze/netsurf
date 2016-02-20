@@ -28,7 +28,7 @@
 #include <oslib/help.h>
 #include <oslib/wimp.h>
 
-#include "desktop/tree.h"
+#include "core/widgets/tree.h"
 #include "riscos/toolbar.h"
 
 typedef struct ro_treeview ro_treeview;

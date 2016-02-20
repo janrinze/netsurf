@@ -23,7 +23,7 @@
 #include "content/content_protected.h"
 #include "content/fetch.h"
 #include "content/hlcache.h"
-#include "desktop/system_colour.h"
+#include "core/browser/system_colour.h"
 #include "utils/corestrings.h"
 #include "utils/utils.h"
 #include "utils/http.h"

@@ -30,11 +30,11 @@ extern "C" {
 #include "utils/log.h"
 #include "content/content.h"
 #include "content/urldb.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 #include "utils/messages.h"
 #include "utils/url.h"
 #include "utils/utils.h"
-#include "desktop/gui_clipboard.h"
+#include "core/api/clipboard.h"
 }
 #include "beos/gui.h"
 #include "beos/scaffolding.h"

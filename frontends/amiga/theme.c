@@ -39,9 +39,9 @@
 #include "utils/messages.h"
 #include "utils/nsoption.h"
 #include "utils/utils.h"
-#include "desktop/searchweb.h"
-#include "desktop/mouse.h"
-#include "desktop/gui_window.h"
+#include "core/browser/searchweb.h"
+#include "core/browser/mouse.h"
+#include "core/api/window.h"
 
 #include "amiga/gui.h"
 #include "amiga/drag.h"

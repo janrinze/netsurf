@@ -21,8 +21,8 @@
 
 #include "utils/log.h"
 #include "utils/nsurl.h"
-#include "desktop/tree.h"
-#include "desktop/sslcert_viewer.h"
+#include "core/widgets/tree.h"
+#include "core/browser/sslcert_viewer.h"
 
 #include "gtk/treeview.h"
 #include "gtk/scaffolding.h"

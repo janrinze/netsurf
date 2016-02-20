@@ -30,7 +30,7 @@
 #include "utils/utils.h"
 #include "content/content_protected.h"
 #include "css/css.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 #include "image/svg.h"
 

@@ -30,7 +30,7 @@
 #include "utils/utils.h"
 #include "utils/log.h"
 #include "utils/nsoption.h"
-#include "desktop/font.h"
+#include "core/browser/font.h"
 
 #include "gtk/font_pango.h"
 #include "gtk/plotters.h"

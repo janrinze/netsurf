@@ -62,12 +62,12 @@ extern "C" {
 #include "content/fetchers/resource.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"
-#include "desktop/browser.h"
-#include "desktop/gui_misc.h"
-#include "desktop/gui_clipboard.h"
-#include "desktop/gui_search.h"
-#include "desktop/gui_fetch.h"
-#include "desktop/netsurf.h"
+#include "core/browser/browser.h"
+#include "core/api/misc.h"
+#include "core/api/clipboard.h"
+#include "core/api/search.h"
+#include "core/api/fetch.h"
+#include "core/api/netsurf.h"
 
 }
 

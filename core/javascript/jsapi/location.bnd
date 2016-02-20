@@ -17,12 +17,12 @@ hdrcomment "        http://www.opensource.org/licenses/mit-license";
 
 preamble %{
 
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
         
 #include "utils/config.h"
 #include "utils/log.h"
 #include "javascript/jsapi.h"
-#include "render/html_internal.h"
+#include "core/html/html_internal.h"
 
 #include "location.h"
 

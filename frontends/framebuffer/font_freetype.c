@@ -27,9 +27,9 @@
 #include "utils/utf8.h"
 #include "utils/log.h"
 #include "utils/nsoption.h"
-#include "desktop/gui_utf8.h"
-#include "desktop/font.h"
-#include "desktop/browser.h"
+#include "core/api/utf8.h"
+#include "core/browser/font.h"
+#include "core/browser/browser.h"
 
 #include "framebuffer/gui.h"
 #include "framebuffer/font.h"

@@ -31,7 +31,7 @@
 #include <String.h>
 #include <View.h>
 extern "C" {
-#include "desktop/font.h"
+#include "core/browser/font.h"
 #include "utils/utils.h"
 #include "utils/log.h"
 #include "utils/nsoption.h"

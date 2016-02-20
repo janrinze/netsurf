@@ -20,7 +20,7 @@
 #define COCOA_PLOTTER_H
 
 #import <Cocoa/Cocoa.h>
-#import "desktop/plot_style.h"
+#import "core/browser/plot_style.h"
 #import "cocoa/coordinates.h"
 
 extern const struct plotter_table cocoa_plotters;

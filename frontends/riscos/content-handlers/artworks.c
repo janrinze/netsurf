@@ -33,7 +33,7 @@
 #include "oslib/wimp.h"
 #include "utils/config.h"
 #include "content/content_protected.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "riscos/content-handlers/artworks.h"
 #include "riscos/gui.h"
 #include "riscos/wimputils.h"

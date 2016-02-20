@@ -32,7 +32,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include "desktop/plot_style.h"
+#include "core/browser/plot_style.h"
 #include "utils/errors.h"
 #include "utils/log.h"
 #include "utils/utils.h"
@@ -58,7 +58,7 @@ struct nsoption_s *nsoptions_default = NULL;
 
 /** The table of compiled in default options */
 static struct nsoption_s defaults[] = {
-#include "desktop/options.h"
+#include "core/browser/options.h"
 
 #if defined(riscos)
 #include "riscos/options.h"

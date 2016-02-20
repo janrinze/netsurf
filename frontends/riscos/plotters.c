@@ -28,7 +28,7 @@
 
 #include "utils/log.h"
 #include "utils/utils.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 #include "riscos/bitmap.h"
 #include "riscos/image.h"

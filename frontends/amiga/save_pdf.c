@@ -26,9 +26,9 @@
 
 #include <stdbool.h>
 #include "content/content.h"
-#include "desktop/print.h"
-#include "desktop/save_pdf/font_haru.h"
-#include "desktop/save_pdf/pdf_plotters.h"
+#include "core/browser/print.h"
+#include "core/browser/save_pdf/font_haru.h"
+#include "core/browser/save_pdf/pdf_plotters.h"
 #include "amiga/save_pdf.h"
 #include "utils/log.h"
 #include "utils/config.h"

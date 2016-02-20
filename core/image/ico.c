@@ -27,7 +27,7 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "content/content_protected.h"
-#include "desktop/gui_internal.h"
+#include "core/browser/api_internal.h"
 
 #include "image/image.h"
 #include "image/bitmap.h"

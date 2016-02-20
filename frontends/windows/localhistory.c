@@ -22,8 +22,8 @@
 #include <windowsx.h>
 #include <commctrl.h>
 
-#include "desktop/browser_history.h"
-#include "desktop/plotters.h"
+#include "core/browser/browser_history.h"
+#include "core/browser/plotters.h"
 #include "utils/utils.h"
 #include "utils/log.h"
 #include "utils/messages.h"

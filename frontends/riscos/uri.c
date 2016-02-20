@@ -30,7 +30,7 @@
 #include "utils/nsurl.h"
 #include "utils/utils.h"
 #include "content/fetch.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #include "riscos/gui.h"
 #include "riscos/uri.h"

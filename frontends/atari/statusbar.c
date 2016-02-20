@@ -28,8 +28,8 @@
 #include <math.h>
 
 #include "utils/log.h"
-#include "desktop/mouse.h"
-#include "desktop/plotters.h"
+#include "core/browser/mouse.h"
+#include "core/browser/plotters.h"
 
 #include "atari/gui.h"
 #include "atari/statusbar.h"

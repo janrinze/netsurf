@@ -28,8 +28,8 @@
 #include "utils/nsurl.h"
 #include "utils/messages.h"
 #include "utils/nsoption.h"
-#include "desktop/download.h"
-#include "desktop/gui_download.h"
+#include "core/browser/download.h"
+#include "core/api/download.h"
 
 #include "gtk/scaffolding.h"
 #include "gtk/window.h"

@@ -32,8 +32,8 @@
 #include "utils/log.h"
 #include "utils/utf8.h"
 
-#include "desktop/gui_utf8.h"
-#include "desktop/gui_internal.h"
+#include "api/utf8.h"
+#include "browser/api_internal.h"
 
 
 /* exported interface documented in utils/utf8.h */

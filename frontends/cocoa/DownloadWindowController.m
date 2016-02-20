@@ -21,8 +21,8 @@
 
 #import "utils/log.h"
 #import "utils/nsurl.h"
-#import "desktop/download.h"
-#import "desktop/gui_download.h"
+#import "core/browser/download.h"
+#import "core/api/download.h"
 
 @interface DownloadWindowController ()
 

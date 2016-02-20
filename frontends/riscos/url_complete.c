@@ -31,7 +31,7 @@
 #include "utils/nsoption.h"
 #include "utils/utils.h"
 #include "content/urldb.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #include "riscos/global_history.h"
 #include "riscos/gui.h"

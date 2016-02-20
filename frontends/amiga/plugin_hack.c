@@ -26,7 +26,7 @@
 #include "amiga/plugin_hack.h"
 #include "content/content_protected.h"
 #include "content/hlcache.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 

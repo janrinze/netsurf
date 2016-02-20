@@ -26,8 +26,8 @@
 #include "utils/file.h"
 #include "utils/log.h"
 #include "utils/nsurl.h"
-#include "desktop/browser.h"
-#include "desktop/searchweb.h"
+#include "core/browser/browser.h"
+#include "core/browser/searchweb.h"
 
 #include "gtk/compat.h"
 #include "gtk/window.h"

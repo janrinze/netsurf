@@ -22,7 +22,7 @@
 #include "cflib.h"
 #include "content/content.h"
 #include "content/hlcache.h"
-#include "desktop/textinput.h"
+#include "core/browser/textinput.h"
 #include "atari/gui.h"
 
 #define SBUF8_TO_LBUF8(sbuf,lbuf)\

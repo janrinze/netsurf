@@ -13,9 +13,9 @@ class Window {
 	private struct html_content * htmlc;
 	prologue %{
 #include "utils/nsurl.h"
-#include "desktop/browser.h"
-#include "render/html.h"
-#include "render/html_internal.h"
+#include "core/browser/browser.h"
+#include "core/html/html.h"
+#include "core/html/html_internal.h"
 %};
 };
 

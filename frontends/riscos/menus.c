@@ -40,9 +40,9 @@
 #include "content/content.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/browser.h"
-#include "desktop/textinput.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/browser/browser.h"
+#include "core/browser/textinput.h"
 
 #include "riscos/dialog.h"
 #include "riscos/configure.h"

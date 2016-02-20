@@ -19,8 +19,8 @@
 #import "cocoa/FormSelectMenu.h"
 #import "cocoa/coordinates.h"
 
-#import "desktop/browser.h"
-#import "render/form.h"
+#import "core/browser/browser.h"
+#import "core/html/form.h"
 
 static inline NSRect cocoa_rect_for_control( struct browser_window *bw, struct form_control *control)
 {

@@ -37,7 +37,7 @@
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "utils/nsurl.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #include "riscos/gui.h"
 #include "riscos/configure.h"

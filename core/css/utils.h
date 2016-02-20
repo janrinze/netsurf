@@ -20,7 +20,7 @@
 #define NETSURF_CSS_UTILS_H_
 
 #include "css/css.h"
-#include "desktop/plot_style.h"
+#include "core/browser/plot_style.h"
 
 /* DPI of the screen, in fixed point units */
 extern css_fixed nscss_screen_dpi;

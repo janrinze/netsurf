@@ -26,7 +26,7 @@
 
 #include "utils/config.h"
 #include "utils/utsname.h"
-#include "desktop/version.h"
+#include "core/browser/version.h"
 
 #include "utils/log.h"
 

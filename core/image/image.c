@@ -22,8 +22,8 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "content/content.h"
-#include "desktop/plotters.h"
-#include "desktop/gui_internal.h"
+#include "core/browser/plotters.h"
+#include "core/browser/api_internal.h"
 
 #include "image/bitmap.h"
 #include "image/bmp.h"

@@ -21,9 +21,9 @@
 #import "cocoa/BrowserWindowController.h"
 #import "cocoa/fetch.h"
 
-#import "desktop/browser_history.h"
-#import "desktop/browser.h"
-#import "desktop/textinput.h"
+#import "core/browser/browser_history.h"
+#import "core/browser/browser.h"
+#import "core/browser/textinput.h"
 #import "utils/nsoption.h"
 
 #import "utils/corestrings.h"

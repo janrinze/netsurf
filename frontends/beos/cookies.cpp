@@ -21,12 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 extern "C" {
-#include "desktop/mouse.h"
+#include "core/browser/mouse.h"
 #include "utils/log.h"
-#include "desktop/cookie_manager.h"
-#include "desktop/plotters.h"
-#include "desktop/tree.h"
-#include "desktop/textinput.h"
+#include "core/widgets/cookie_manager.h"
+#include "core/browser/plotters.h"
+#include "core/widgets/tree.h"
+#include "core/browser/textinput.h"
 #include "content/urldb.h"
 }
 #include "beos/cookies.h"

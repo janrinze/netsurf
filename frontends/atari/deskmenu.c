@@ -22,8 +22,8 @@
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/nsoption.h"
-#include "desktop/browser.h"
-#include "desktop/save_complete.h"
+#include "core/browser/browser.h"
+#include "core/browser/save_complete.h"
 
 #include "atari/res/netsurf.rsh"
 #include "atari/gemtk/gemtk.h"

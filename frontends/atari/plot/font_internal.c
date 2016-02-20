@@ -23,8 +23,8 @@
 
 #include "utils/utf8.h"
 #include "utils/log.h"
-#include "desktop/mouse.h"
-#include "desktop/plot_style.h"
+#include "core/browser/mouse.h"
+#include "core/browser/plot_style.h"
 
 #include "atari/gui.h"
 #include "atari/bitmap.h"

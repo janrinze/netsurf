@@ -32,8 +32,8 @@
 #include "utils/log.h"
 #include "utils/utf8.h"
 #include "utils/utils.h"
-#include "desktop/tree.h"
-#include "desktop/plotters.h"
+#include "core/widgets/tree.h"
+#include "core/browser/plotters.h"
 
 #include "gtk/compat.h"
 #include "gtk/gui.h"

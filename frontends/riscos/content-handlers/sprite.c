@@ -28,7 +28,7 @@
 #include "oslib/osspriteop.h"
 #include "utils/config.h"
 #include "content/content_protected.h"
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 #include "riscos/gui.h"
 #include "riscos/image.h"
 #include "riscos/content-handlers/sprite.h"

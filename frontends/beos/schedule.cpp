@@ -26,7 +26,7 @@ extern "C" {
 #include "utils/errors.h"
 #include "beos/schedule.h"
 #include "content/content.h"
-#include "desktop/browser.h"
+#include "core/browser/browser.h"
 
 #ifdef DEBUG_BEOS_SCHEDULE
 #include "utils/log.h"

@@ -35,7 +35,7 @@
 #include "utils/utils.h"
 #include "utils/nsoption.h"
 #include "content/hlcache.h"
-#include "desktop/mouse.h"
+#include "core/browser/mouse.h"
 
 #include "amiga/bitmap.h"
 #include "amiga/clipboard.h"

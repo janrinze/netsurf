@@ -21,7 +21,7 @@
 #include "utils/nsoption.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
-#include "desktop/plot_style.h"
+#include "core/browser/plot_style.h"
 
 #include "riscos/gui.h"
 #include "riscos/font.h"

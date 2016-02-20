@@ -49,8 +49,8 @@
 #include "utils/log.h"
 #include "utils/utils.h"
 #include "utils/messages.h"
-#include "desktop/gui_internal.h"
-#include "desktop/gui_misc.h"
+#include "core/browser/api_internal.h"
+#include "core/api/misc.h"
 
 #include "content/backing_store.h"
 

@@ -30,9 +30,9 @@
 #include "content/hlcache.h"
 #include "content/urldb.h"
 #include "utils/nsoption.h"
-#include "desktop/hotlist.h"
-#include "desktop/tree.h"
-#include "desktop/core_window.h"
+#include "core/widgets/hotlist.h"
+#include "core/widgets/tree.h"
+#include "core/browser/core_window.h"
 
 #include "atari/gui.h"
 #include "atari/misc.h"

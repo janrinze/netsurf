@@ -1,4 +1,4 @@
-#include "desktop/plotters.h"
+#include "core/browser/plotters.h"
 
 extern const struct plotter_table fb_plotters;
 

@@ -28,8 +28,8 @@
 #include "utils/errors.h"
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "render/form.h"
-#include "desktop/mouse.h"
+#include "core/html/form.h"
+#include "core/browser/mouse.h"
 
 #include "amiga/gui.h"
 #include "amiga/selectmenu.h"
