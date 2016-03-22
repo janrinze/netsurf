@@ -30,6 +30,7 @@
 #include <proto/intuition.h>
 #include <proto/utility.h>
 #ifdef __amigaos4__
+#include <exec/extmem.h>
 #include <sys/param.h>
 #endif
 #include "assert.h"
@@ -51,6 +52,8 @@ struct bitmap {
 	int width;
 	int height;
 	UBYTE *pixdata;
+	struct ExtMemIFace *iextmem;
+	uint32 size;
 	bool opaque;
 	int native;
 	struct BitMap *nativebm;
@@ -81,7 +84,25 @@ void *amiga_bitmap_create(int width, int height, unsigned int state)
 	bitmap = ami_misc_itempool_alloc(pool_bitmap, sizeof(struct bitmap));
 	if(bitmap == NULL) return NULL;
 
-	bitmap->pixdata = ami_misc_allocvec_clear(width*height*4, 0xff);
+	bitmap->size = width * height * 4;
+
+#ifdef __amigaos4__
+	if(nsoption_bool(use_extmem) == true) {
+		uint64 size64 = bitmap->size;
+		bitmap->iextmem = AllocSysObjectTags(ASOT_EXTMEM,
+								ASOEXTMEM_Size, &size64,
+								ASOEXTMEM_AllocationPolicy, EXTMEMPOLICY_IMMEDIATE,
+								TAG_END);
+
+		bitmap->pixdata = NULL;
+		UBYTE *pixdata = amiga_bitmap_get_buffer(bitmap);
+		memset(pixdata, 0xff, bitmap->size);
+	} else
+#endif
+	{
+		bitmap->pixdata = ami_misc_allocvec_clear(bitmap->size, 0xff);
+	}
+
 	bitmap->width = width;
 	bitmap->height = height;
 
@@ -101,11 +122,27 @@ void *amiga_bitmap_create(int width, int height, unsigned int state)
 	return bitmap;
 }
 
+static inline void amiga_bitmap_unmap_buffer(struct bitmap *bm)
+{
+#ifdef __amigaos4__
+	if((nsoption_bool(use_extmem) == true) && (bm->pixdata != NULL)) {
+		bm->iextmem->Unmap(bm->pixdata, bm->size);
+		bm->pixdata = NULL;
+	}
+#endif
+}
 
 /* exported function documented in amiga/bitmap.h */
 unsigned char *amiga_bitmap_get_buffer(void *bitmap)
 {
 	struct bitmap *bm = bitmap;
+
+#ifdef __amigaos4__
+	if((nsoption_bool(use_extmem) == true) && (bm->pixdata == NULL)) {
+		bm->pixdata = bm->iextmem->Map(NULL, bm->size, 0LL, 0);
+	}
+#endif
+
 	return bm->pixdata;
 }
 
@@ -142,7 +179,16 @@ void amiga_bitmap_destroy(void *bitmap)
 		}
 
 		if(bm->native_mask) FreeRaster(bm->native_mask, bm->width, bm->height);
-		FreeVec(bm->pixdata);
+
+#ifdef __amigaos4__
+		if(nsoption_bool(use_extmem) == true) {
+			amiga_bitmap_unmap_buffer(bm);
+			FreeSysObject(ASOT_EXTMEM, bm->iextmem);
+		} else
+#endif
+		{
+			FreeVec(bm->pixdata);
+		}
 
 		if(bm->url) nsurl_unref(bm->url);
 		if(bm->title) free(bm->title);
@@ -189,6 +235,10 @@ bool amiga_bitmap_save(void *bitmap, const char *path, unsigned flags)
 void amiga_bitmap_modified(void *bitmap)
 {
 	struct bitmap *bm = bitmap;
+
+#ifdef __amigaos4__
+	amiga_bitmap_unmap_buffer(bm);
+#endif
 
 	if((bm->nativebm) && (bm->native == AMI_NSBM_TRUECOLOUR))
 		ami_rtg_freebitmap(bm->nativebm);
@@ -351,6 +401,10 @@ Object *ami_datatype_object_from_bitmap(struct bitmap *bitmap)
 					bitmap_get_width(bitmap), bitmap_get_height(bitmap));
 	}
 
+#ifdef __amigaos4__
+	amiga_bitmap_unmap_buffer(bitmap);
+#endif
+
 	return dto;
 }
 
@@ -379,6 +433,10 @@ struct bitmap *ami_bitmap_from_datatype(char *filename)
 		}
 		DisposeDTObject(dto);
 	}
+
+#ifdef __amigaos4__
+	amiga_bitmap_unmap_buffer(bm);
+#endif
 
 	return bm;
 }
@@ -488,6 +546,10 @@ static inline struct BitMap *ami_bitmap_get_truecolour(struct bitmap *bitmap,int
 			bitmap->native = AMI_NSBM_TRUECOLOUR;
 		}
 	}
+
+#ifdef __amigaos4__
+	amiga_bitmap_unmap_buffer(bitmap);
+#endif
 
 	return tbm;
 }
@@ -636,6 +698,10 @@ static nserror bitmap_render(struct bitmap *bitmap, hlcache_handle *content)
 
 	ami_free_layers(&bm_globals);
 	amiga_bitmap_set_opaque(bitmap, true);
+
+#ifdef __amigaos4__
+	amiga_bitmap_unmap_buffer(bitmap);
+#endif
 
 	/* Restore previous render area.  This is set when plotting starts,
 	 * but if bitmap_render is called *during* a browser render then
