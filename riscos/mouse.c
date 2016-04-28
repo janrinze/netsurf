@@ -35,11 +35,14 @@
  *    - when the pointer leaves the window.
  */
 
-#include "oslib/wimp.h"
+#include <assert.h>
+#include <oslib/wimp.h>
 
-#include "riscos/mouse.h"
 #include "utils/log.h"
 #include "utils/utils.h"
+
+#include "riscos/mouse.h"
+#include "riscos/gui.h"
 
 /* Data for the wimp drag handler. */
 
@@ -80,7 +83,7 @@ void ro_mouse_poll(void)
 	error = xwimp_get_pointer_info(&pointer);
 	if (error) {
 		LOG("xwimp_get_pointer_info: 0x%x: %s", error->errnum, error->errmess);
-		warn_user("WimpError", error->errmess);
+		ro_warn_user("WimpError", error->errmess);
 		return;
 	}
 
@@ -145,7 +148,7 @@ void ro_mouse_drag_end(wimp_dragged *dragged)
 	if (ro_mouse_drag_end_callback != NULL)
 		ro_mouse_drag_end_callback(dragged, ro_mouse_drag_data);
 	else
-		warn_user("WimpError", "No callback");
+		ro_warn_user("WimpError", "No callback");
 
 	/* Wimp_DragEnd is a one-shot event, so clear the data ready for
 	 * another claimant.

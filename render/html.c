@@ -17,7 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** \file
+/**
+ * \file
  * Content for text/html (implementation).
  */
 
@@ -27,6 +28,7 @@
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <nsutils/time.h>
 
 #include "utils/config.h"
 #include "utils/corestrings.h"
@@ -37,6 +39,7 @@
 #include "utils/talloc.h"
 #include "utils/utf8.h"
 #include "utils/nsoption.h"
+#include "utils/string.h"
 #include "content/content_protected.h"
 #include "content/fetch.h"
 #include "content/hlcache.h"
@@ -46,8 +49,9 @@
 #include "image/bitmap.h"
 #include "javascript/js.h"
 #include "desktop/browser.h"
-#include "desktop/font.h"
 #include "desktop/gui_utf8.h"
+#include "desktop/gui_layout.h"
+#include "desktop/gui_misc.h"
 #include "desktop/gui_internal.h"
 
 #include "render/box.h"
@@ -841,7 +845,7 @@ html_create_html_data(html_content *c, const http_parameter *params)
 	c->frameset = NULL;
 	c->iframe = NULL;
 	c->page = NULL;
-	c->font_func = &nsfont;
+	c->font_func = guit->layout;
 	c->drag_type = HTML_DRAG_NONE;
 	c->drag_owner.no_owner = true;
 	c->selection_type = HTML_SELECTION_NONE;
@@ -1373,9 +1377,11 @@ static void html_reformat(struct content *c, int width, int height)
 {
 	html_content *htmlc = (html_content *) c;
 	struct box *layout;
-	unsigned int time_before, time_taken;
+	uint64_t ms_before;
+	uint64_t ms_after;
+	uint64_t ms_interval;
 
-	time_before = wallclock();
+	nsu_getmonotonic_ms(&ms_before);
 
 	htmlc->reflowing = true;
 
@@ -1384,11 +1390,11 @@ static void html_reformat(struct content *c, int width, int height)
 
 	/* width and height are at least margin box of document */
 	c->width = layout->x + layout->padding[LEFT] + layout->width +
-			layout->padding[RIGHT] + layout->border[RIGHT].width +
-			layout->margin[RIGHT];
+		layout->padding[RIGHT] + layout->border[RIGHT].width +
+		layout->margin[RIGHT];
 	c->height = layout->y + layout->padding[TOP] + layout->height +
-			layout->padding[BOTTOM] + layout->border[BOTTOM].width +
-			layout->margin[BOTTOM];
+		layout->padding[BOTTOM] + layout->border[BOTTOM].width +
+		layout->margin[BOTTOM];
 
 	/* if boxes overflow right or bottom edge, expand to contain it */
 	if (c->width < layout->x + layout->descendant_x1)
@@ -1400,10 +1406,14 @@ static void html_reformat(struct content *c, int width, int height)
 
 	htmlc->reflowing = false;
 
-	time_taken = wallclock() - time_before;
-	c->reformat_time = wallclock() +
-		((time_taken * 3 < nsoption_uint(min_reflow_period) ?
-		  nsoption_uint(min_reflow_period) : time_taken * 3));
+	/* calculate next reflow time at three times what it took to reflow */
+	nsu_getmonotonic_ms(&ms_after);
+
+	ms_interval = (ms_before - ms_after) * 3;
+	if (ms_interval < (nsoption_uint(min_reflow_period) * 10)) {
+		ms_interval = nsoption_uint(min_reflow_period) * 10;
+	}
+	c->reformat_time = ms_after + ms_interval;
 }
 
 
@@ -2069,7 +2079,7 @@ static bool html_drop_file_at_point(struct content *c, int x, int y, char *file)
 			assert(ret != NSERROR_BAD_ENCODING);
 			LOG("local to utf8 encoding failed");
 			free(buffer);
-			warn_user("NoMemory", NULL);
+			guit->misc->warning("NoMemory", NULL);
 			return true;
 		}
 

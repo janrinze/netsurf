@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 James Bursa <bursa@users.sourceforge.net>
+ * Copyright 2016 Vincent Sanders <vince@netsurf-browser.org>
  *
  * This file is part of NetSurf, http://www.netsurf-browser.org/
  *
@@ -16,22 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** \file
- * Font handling (GTK interface).
+#ifndef GTK_WARN_H
+#define GTK_WARN_H
+
+/**
+ * Warn the user of an event.
+ *
+ * \param[in] warning A warning looked up in the message translation table
+ * \param[in] detail Additional text to be displayed or NULL.
+ * \return NSERROR_OK on success or error code if there was a
+ *           faliure displaying the message to the user.
  */
+nserror nsgtk_warning(const char *warning, const char *detail);
 
-#ifndef _NETSURF_GTK_FONT_PANGO_H_
-#define _NETSURF_GTK_FONT_PANGO_H_
-
-#include <stdbool.h>
-
-#include "desktop/plot_style.h"
-
-bool nsfont_paint(int x, int y, const char *string, size_t length,
-		const plot_font_style_t *fstyle);
-
-PangoFontDescription *nsfont_style_to_description(
-		const plot_font_style_t *fstyle);
-		
-		
 #endif

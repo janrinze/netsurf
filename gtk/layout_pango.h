@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Daniel Silverstone <dsilvers@digital-scurf.org>
+ * Copyright 2005 James Bursa <bursa@users.sourceforge.net>
  *
  * This file is part of NetSurf, http://www.netsurf-browser.org/
  *
@@ -16,15 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/**
+ * \file
+ * Interface to GTK layout handling using pango.
+ */
 
-#include "utils/config.h"
-#include "utils/utils.h"
+#ifndef _NETSURF_GTK_LAYOUT_PANGO_H_
+#define _NETSURF_GTK_LAYOUT_PANGO_H_
 
-void warn_user(const char *warning, const char *detail)
-{
-  fprintf(stderr, "WARN %s %s\n", warning, detail);
-}
+#include <stdbool.h>
 
+struct plot_font_style;
+
+extern struct gui_layout_table *nsgtk_layout_table;
+
+bool nsfont_paint(int x, int y, const char *string, size_t length, const struct plot_font_style *fstyle);
+
+/**
+ * Convert a plot style to a PangoFontDescription.
+ *
+ * \param fstyle plot style for this text
+ * \return A new Pango font description
+ */
+PangoFontDescription *nsfont_style_to_description(const struct plot_font_style *fstyle);
+
+#endif

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <librosprite.h>
 
+#include "utils/utils.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "content/content_protected.h"
@@ -60,7 +61,7 @@ typedef struct nssprite_content {
 
 
 static nserror nssprite_create(const content_handler *handler,
-		lwc_string *imime_type, const http_parameter *params,
+		lwc_string *imime_type, const struct http_parameter *params,
 		llcache_handle *llcache, const char *fallback_charset,
 		bool quirks, struct content **c)
 {

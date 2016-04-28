@@ -19,6 +19,7 @@
  */
 
 #define __STDBOOL_H__	1
+#include <stdlib.h>
 #include <assert.h>
 extern "C" {
 #include "content/content.h"
@@ -27,7 +28,6 @@ extern "C" {
 #include "desktop/mouse.h"
 #include "utils/nsoption.h"
 #include "desktop/textinput.h"
-#include "desktop/font.h"
 #include "utils/log.h"
 #include "utils/utf8.h"
 #include "utils/utils.h"

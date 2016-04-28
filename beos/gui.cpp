@@ -82,6 +82,7 @@ extern "C" {
 #include "beos/fetch_rsrc.h"
 #include "beos/scaffolding.h"
 #include "beos/bitmap.h"
+#include "beos/font.h"
 
 //TODO: use resources
 // enable using resources instead of files
@@ -111,6 +112,29 @@ static int sEventPipe[2];
 
 // #pragma mark - class NSBrowserFrameView
 
+
+/**
+ * Display a warning for a serious problem (eg memory exhaustion).
+ *
+ * \param  warning  message key for warning message
+ * \param  detail   additional message, or 0
+ */
+static nserror beos_warn_user(const char *warning, const char *detail)
+{
+	LOG("warn_user: %s (%s)", warning, detail);
+	BAlert *alert;
+	BString text(warning);
+	if (detail)
+		text << ":\n" << detail;
+
+	alert = new BAlert("NetSurf Warning", text.String(), "Debug", "Ok",
+                           NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT);
+	if (alert->Go() < 1) {
+		debugger("warn_user");
+        }
+        
+        return NSERROR_OK;
+}
 
 NSBrowserApplication::NSBrowserApplication()
 	: BApplication("application/x-vnd.NetSurf")
@@ -671,7 +695,7 @@ static void gui_init(int argc, char** argv)
 		nsurl_unref(url);
 	}
 	if (error != NSERROR_OK) {
-		warn_user(messages_get_errorcode(error), 0);
+		beos_warn_user(messages_get_errorcode(error), 0);
 	}
 
 	if (gFirstRefsReceived) {
@@ -803,7 +827,7 @@ void nsbeos_gui_view_source(struct hlcache_handle *content)
 	const char *source = content_get_source_data(content, &size);
 
 	if (!content || !source) {
-		warn_user("MiscError", "No document source");
+		beos_warn_user("MiscError", "No document source");
 		return;
 	}
 
@@ -825,7 +849,7 @@ void nsbeos_gui_view_source(struct hlcache_handle *content)
 		 * filename. */
 		const char *filename = filename_request();
 		if (!filename) {
-			warn_user("NoMemory", 0);
+			beos_warn_user("NoMemory", 0);
 			return;
 		}
 		path.SetTo(TEMP_FILENAME_PREFIX);
@@ -833,12 +857,12 @@ void nsbeos_gui_view_source(struct hlcache_handle *content)
 		BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE);
 		err = file.InitCheck();
 		if (err < B_OK) {
-			warn_user("IOError", strerror(err));
+			beos_warn_user("IOError", strerror(err));
 			return;
 		}
 		err = file.Write(source, size);
 		if (err < B_OK) {
-			warn_user("IOError", strerror(err));
+			beos_warn_user("IOError", strerror(err));
 			return;
 		}
 		lwc_string *mime = content_get_mime_type(content);
@@ -908,31 +932,11 @@ static nserror gui_launch_url(struct nsurl *url)
 	char *args[2] = { (char *)nsurl_access(url), NULL };
 	status = be_roster->Launch(mimeType.String(), 1, args);
 	if (status < B_OK)
-		warn_user("Cannot launch url", strerror(status));
+		beos_warn_user("Cannot launch url", strerror(status));
         return NSERROR_OK;
 }
 
 
-/**
- * Display a warning for a serious problem (eg memory exhaustion).
- *
- * \param  warning  message key for warning message
- * \param  detail   additional message, or 0
- */
-
-void warn_user(const char *warning, const char *detail)
-{
-	LOG("warn_user: %s (%s)", warning, detail);
-	BAlert *alert;
-	BString text(warning);
-	if (detail)
-		text << ":\n" << detail;
-
-	alert = new BAlert("NetSurf Warning", text.String(), "Debug", "Ok", NULL, 
-		B_WIDTH_AS_USUAL, B_WARNING_ALERT);
-	if (alert->Go() < 1)
-		debugger("warn_user");
-}
 
 void die(const char * const error)
 {
@@ -962,13 +966,13 @@ static struct gui_fetch_table beos_fetch_table = {
 	NULL, // fetch_mimetype
 };
 
-static struct gui_browser_table beos_browser_table = {
+static struct gui_misc_table beos_misc_table = {
 	beos_schedule,
+        beos_warn_user,
 	gui_quit,
 	gui_launch_url,
 	NULL, //cert_verify
 	gui_401login_open,
-	NULL, // warning
 	NULL, // pdf_password (if we have Haru support)
 };
 
@@ -979,7 +983,7 @@ int main(int argc, char** argv)
 	nserror ret;
 	BPath options;
 	struct netsurf_table beos_table = {
-		&beos_browser_table,
+		&beos_misc_table,
 		beos_window_table,
 		beos_download_table,
 		&beos_clipboard_table,
@@ -989,7 +993,8 @@ int main(int argc, char** argv)
                 NULL, /* default search */
                 NULL, /* default web search */
                 NULL, /* default low level cache persistant storage */
-                beos_bitmap_table
+                beos_bitmap_table,
+                beos_layout_table
 	};
 
         ret = netsurf_register(&beos_table);
@@ -1059,7 +1064,7 @@ int gui_init_replicant(int argc, char** argv)
 	nserror ret;
 	BPath options;
 	struct netsurf_table beos_table = {
-		&beos_browser_table,
+		&beos_misc_table,
 		beos_window_table,
 		beos_download_table,
 		&beos_clipboard_table,
@@ -1069,7 +1074,8 @@ int gui_init_replicant(int argc, char** argv)
                 NULL, /* default search */
                 NULL, /* default web search */
                 NULL, /* default low level cache persistant storage */
-                beos_bitmap_table
+                beos_bitmap_table,
+                beos_layout_table
 	};
 
         ret = netsurf_register(&beos_table);

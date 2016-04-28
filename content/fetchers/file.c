@@ -24,32 +24,27 @@
 
 #include "utils/config.h"
 
+#include <stdlib.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
-#include <inttypes.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
 #include <stdio.h>
-#include <dirent.h>
-#include <limits.h>
 #include <stdarg.h>
-
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
-
 #include <libwapcaplet/libwapcaplet.h>
 
+#include "utils/nsurl.h"
+#include "utils/dirent.h"
 #include "utils/corestrings.h"
-#include "utils/nsoption.h"
-#include "utils/errors.h"
-#include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/utils.h"
 #include "utils/ring.h"
@@ -60,7 +55,6 @@
 #include "content/dirlist.h"
 #include "content/fetch.h"
 #include "content/fetchers.h"
-#include "content/urldb.h"
 #include "content/fetchers/file.h"
 
 /* Maximum size of read buffer */
@@ -599,6 +593,48 @@ process_dir_ent(struct fetch_file_context *ctx,
 	free(urlpath);
 
 	return NSERROR_OK;
+}
+
+/**
+ * Comparison function for sorting directories.
+ *
+ * Correctly orders non zero-padded numerical parts.
+ * ie. produces "file1, file2, file10" rather than "file1, file10, file2".
+ *
+ * \param d1 first directory entry
+ * \param d2 second directory entry
+ */
+static int dir_sort_alpha(const struct dirent **d1, const struct dirent **d2)
+{
+	const char *s1 = (*d1)->d_name;
+	const char *s2 = (*d2)->d_name;
+
+	while (*s1 != '\0' && *s2 != '\0') {
+		if ((*s1 >= '0' && *s1 <= '9') &&
+				(*s2 >= '0' && *s2 <= '9')) {
+			int n1 = 0,  n2 = 0;
+			while (*s1 >= '0' && *s1 <= '9') {
+				n1 = n1 * 10 + (*s1) - '0';
+				s1++;
+			}
+			while (*s2 >= '0' && *s2 <= '9') {
+				n2 = n2 * 10 + (*s2) - '0';
+				s2++;
+			}
+			if (n1 != n2) {
+				return n1 - n2;
+			}
+			if (*s1 == '\0' || *s2 == '\0')
+				break;
+		}
+		if (tolower(*s1) != tolower(*s2))
+			break;
+
+		s1++;
+		s2++;
+	}
+
+	return tolower(*s1) - tolower(*s2);
 }
 
 static void fetch_file_process_dir(struct fetch_file_context *ctx,

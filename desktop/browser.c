@@ -38,6 +38,7 @@
 #include <string.h>
 #include <strings.h>
 #include <math.h>
+#include <nsutils/time.h>
 
 #include "utils/corestrings.h"
 #include "utils/log.h"
@@ -47,6 +48,7 @@
 #include "utils/utf8.h"
 #include "utils/nsoption.h"
 #include "content/content.h"
+#include "content/content_debug.h"
 #include "content/fetch.h"
 #include "content/hlcache.h"
 #include "content/urldb.h"
@@ -841,8 +843,10 @@ nserror browser_window_create(enum browser_window_create_flags flags,
 	ret->scrolling = BW_SCROLLING_YES;
 	ret->border = true;
 	ret->no_resize = true;
-	ret->last_action = wallclock();
 	ret->focus = ret;
+
+	/* initialise last action with creation time */
+	nsu_getmonotonic_ms(&ret->last_action);
 
 	/* The existing gui_window is on the top-level existing
 	 * browser_window. */
@@ -958,7 +962,7 @@ browser_window_download(struct browser_window *bw,
 					NULL, NULL, &l);
 	if (error == NSERROR_NO_FETCH_HANDLER) {
 		/* no internal handler for this type, call out to frontend */
-		error = guit->browser->launch_url(url);
+		error = guit->misc->launch_url(url);
 	} else if (error != NSERROR_OK) {
 		LOG("Failed to fetch download: %d", error);
 	} else {
@@ -1201,7 +1205,7 @@ browser_window_callback_errorcode(hlcache_handle *c,
 
 	/* Only warn the user about errors in top-level windows */
 	if (bw->browser_window_type == BROWSER_WINDOW_NORMAL) {
-		warn_user(message, 0);
+		guit->misc->warning(message, NULL);
 	}
 
 	if (c == bw->loading_content) {
@@ -1307,6 +1311,7 @@ static nserror browser_window_callback(hlcache_handle *c,
 		const hlcache_event *event, void *pw)
 {
 	struct browser_window *bw = pw;
+	nserror res = NSERROR_OK;
 
 	switch (event->type) {
 	case CONTENT_MSG_DOWNLOAD:
@@ -1410,10 +1415,11 @@ static nserror browser_window_callback(hlcache_handle *c,
 		}
 
 		/* frames */
-		if (content_get_type(c) == CONTENT_HTML &&
-				html_get_frameset(c) != NULL)
-			browser_window_create_frameset(bw,
+		if ((content_get_type(c) == CONTENT_HTML) &&
+		    (html_get_frameset(c) != NULL)) {
+			res = browser_window_create_frameset(bw,
 					html_get_frameset(c));
+		}
 		if (content_get_type(c) == CONTENT_HTML &&
 				html_get_iframe(c) != NULL)
 			browser_window_create_iframes(bw, html_get_iframe(c));
@@ -1440,7 +1446,7 @@ static nserror browser_window_callback(hlcache_handle *c,
 		hotlist_update_url(hlcache_handle_get_url(c));
 
 		if (bw->refresh_interval != -1) {
-			guit->browser->schedule(bw->refresh_interval * 10,
+			guit->misc->schedule(bw->refresh_interval * 10,
 					browser_window_refresh, bw);
 		}
 		break;
@@ -1453,8 +1459,9 @@ static nserror browser_window_callback(hlcache_handle *c,
 		browser_window_set_status(bw, event->data.error);
 
 		/* Only warn the user about errors in top-level windows */
-		if (bw->browser_window_type == BROWSER_WINDOW_NORMAL)
-			warn_user(event->data.error, 0);
+		if (bw->browser_window_type == BROWSER_WINDOW_NORMAL) {
+			guit->misc->warning(event->data.error, NULL);
+		}
 
 		if (c == bw->loading_content)
 			bw->loading_content = NULL;
@@ -1700,7 +1707,7 @@ static nserror browser_window_callback(hlcache_handle *c,
 		break;
 	}
 
-	return NSERROR_OK;
+	return res;
 }
 
 
@@ -1759,12 +1766,12 @@ static void browser_window_destroy_internal(struct browser_window *bw)
 	}
 
 	/* clear any pending callbacks */
-	guit->browser->schedule(-1, browser_window_refresh, bw);
+	guit->misc->schedule(-1, browser_window_refresh, bw);
 	/* The ugly cast here is so the reformat function can be
 	 * passed a gui window pointer in its API rather than void*
 	 */
 	LOG("Clearing schedule %p(%p)", guit->window->reformat, bw->window);
-	guit->browser->schedule(-1, (void(*)(void*))guit->window->reformat, bw->window);
+	guit->misc->schedule(-1, (void(*)(void*))guit->window->reformat, bw->window);
 
 	/* If this brower window is not the root window, and has focus, unset
 	 * the root browser window's focus pointer. */
@@ -2061,13 +2068,13 @@ nserror browser_window_navigate(struct browser_window *bw,
 		/** \todo does this always try and download even
 		 * unverifiable content?
 		 */
-		error = guit->browser->launch_url(url);
+		error = guit->misc->launch_url(url);
 		break;
 
 	default: /* report error to user */
 		browser_window_set_status(bw, messages_get_errorcode(error));
 		/** @todo should the caller report the error? */
-		warn_user(messages_get_errorcode(error), 0);
+		guit->misc->warning(messages_get_errorcode(error), NULL);
 		break;
 
 	}
@@ -2078,7 +2085,7 @@ nserror browser_window_navigate(struct browser_window *bw,
 	}
 
 	/* Record time */
-	bw->last_action = wallclock();
+	nsu_getmonotonic_ms(&bw->last_action);
 
 	return error;
 }
@@ -2383,7 +2390,7 @@ void browser_window_stop(struct browser_window *bw)
 		assert(error == NSERROR_OK);
 	}
 
-	guit->browser->schedule(-1, browser_window_refresh, bw);
+	guit->misc->schedule(-1, browser_window_refresh, bw);
 
 	if (bw->children) {
 		children = bw->rows * bw->cols;
@@ -2491,25 +2498,29 @@ void browser_window_set_pointer(struct browser_window *bw,
 	struct browser_window *root = browser_window_get_root(bw);
 	gui_pointer_shape gui_shape;
 	bool loading;
+	uint64_t ms_now;
 
 	assert(root);
 	assert(root->window);
 
-	loading = (bw->loading_content != NULL || (bw->current_content &&
-			content_get_status(bw->current_content) ==
-			CONTENT_STATUS_READY));
+	loading = ((bw->loading_content != NULL) ||
+		   ((bw->current_content != NULL) &&
+		    (content_get_status(bw->current_content) == CONTENT_STATUS_READY)));
 
-	if (wallclock() - bw->last_action < 100 && loading) {
+	nsu_getmonotonic_ms(&ms_now);
+
+	if (loading && ((ms_now - bw->last_action) < 1000)) {
 		/* If loading and less than 1 second since last link followed,
 		 * force progress indicator pointer */
 		gui_shape = GUI_POINTER_PROGRESS;
 
 	} else if (shape == BROWSER_POINTER_AUTO) {
 		/* Up to browser window to decide */
-		if (loading)
+		if (loading) {
 			gui_shape = GUI_POINTER_PROGRESS;
-		else
+		} else {
 			gui_shape = GUI_POINTER_DEFAULT;
+		}
 
 	} else {
 		/* Use what we were told */
@@ -2525,7 +2536,7 @@ nserror browser_window_schedule_reformat(struct browser_window *bw)
 	/* The ugly cast here is so the reformat function can be
 	 * passed a gui window pointer in its API rather than void*
 	 */
-	guit->browser->schedule(0, (void(*)(void*))guit->window->reformat, bw->window);
+	guit->misc->schedule(0, (void(*)(void*))guit->window->reformat, bw->window);
 	return NSERROR_OK;
 }
 
@@ -2804,7 +2815,7 @@ struct browser_window *browser_window_find_target(struct browser_window *bw,
 	if (target[0] != '_') {
 		bw_target->name = strdup(target);
 		if (!bw_target->name)
-			warn_user("NoMemory", 0);
+			guit->misc->warning("NoMemory", NULL);
 	}
 	return bw_target;
 }

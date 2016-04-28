@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Sven Weidauer <sven.weidauer@gmail.com>
+ * Copyright 2016 Vincent Sanders <vince@netsurf-browser.org>
  *
  * This file is part of NetSurf, http://www.netsurf-browser.org/
  *
@@ -16,15 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#import <Cocoa/Cocoa.h>
+#ifndef NS_MONKEY_LAYOUT_H
+#define NS_MONKEY_LAYOUT_H
 
-#import "utils/utils.h"
+extern struct gui_layout_table *monkey_layout_table;
 
-void warn_user(const char *warning, const char *detail)
-{
-	NSRunAlertPanel( NSLocalizedString( @"Warning", @"Warning title" ), 
-					NSLocalizedString( @"Warning %s%s%s", @"Warning message" ), 
-					NSLocalizedString( @"OK", @"" ), nil, nil, 
-					warning, detail != NULL ? ": " : "",
-					detail != NULL ? detail : "" );
-}
+#endif /* NS_MONKEY_LAYOUT_H */

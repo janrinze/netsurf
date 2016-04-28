@@ -49,6 +49,8 @@
 #include "amiga/rtg.h"
 #include "amiga/utf8.h"
 
+//#define AMI_PLOTTER_DEBUG 1
+
 HOOKF(void, ami_bitmap_tile_hook, struct RastPort *, rp, struct BackFillMessage *);
 
 struct bfbitmap {
@@ -153,6 +155,8 @@ void ami_init_layers(struct gui_globals *gg, ULONG width, ULONG height, bool for
 		/* Screen depth is reported as 24 even when it's actually 32-bit.
 		 * We get freezes and other problems on OS4 if we befriend at any
 		 * other depths, hence this check.
+		 * \todo use friend BitMaps but avoid CompositeTags() at non-32-bit
+		 * as that seems to be the cause of the problems.
 		 */
 		if((depth >= 24) && (force32bit == false)) friend = scrn->RastPort.BitMap;
 #endif
@@ -190,6 +194,8 @@ void ami_init_layers(struct gui_globals *gg, ULONG width, ULONG height, bool for
 
 	gg->apen = 0x00000000;
 	gg->open = 0x00000000;
+	gg->apen_num = -1;
+	gg->open_num = -1;
 
 	init_layers_count++;
 	LOG("Layer initialised (total: %d)", init_layers_count);
@@ -275,6 +281,8 @@ void ami_plot_release_pens(struct MinList *shared_pens)
 
 	glob->apen = 0x00000000;
 	glob->open = 0x00000000;
+	glob->apen_num = -1;
+	glob->open_num = -1;
 }
 
 static void ami_plot_setapen(struct RastPort *rp, ULONG colr)
@@ -290,7 +298,7 @@ static void ami_plot_setapen(struct RastPort *rp, ULONG colr)
 #endif
 	{
 		LONG pen = ami_plot_obtain_pen(glob->shared_pens, colr);
-		if(pen != -1) SetAPen(rp, pen);
+		if((pen != -1) && (pen != glob->apen_num)) SetAPen(rp, pen);
 	}
 
 	glob->apen = colr;
@@ -309,7 +317,7 @@ static void ami_plot_setopen(struct RastPort *rp, ULONG colr)
 #endif
 	{
 		LONG pen = ami_plot_obtain_pen(glob->shared_pens, colr);
-		if(pen != -1) SetOPen(rp, pen);
+		if((pen != -1) && (pen != glob->open_num)) SetOPen(rp, pen);
 	}
 
 	glob->open = colr;
@@ -609,8 +617,7 @@ static bool ami_bitmap(int x, int y, int width, int height, struct bitmap *bitma
 #endif
 	}
 
-	if((ami_bitmap_has_dto(bitmap) == false) && (ami_bitmap_is_nativebm(bitmap, tbm) == false)) {
-		/**\todo is this logic logical? */
+	if((ami_bitmap_is_nativebm(bitmap, tbm) == false)) {
 		ami_rtg_freebitmap(tbm);
 	}
 
@@ -715,7 +722,7 @@ static bool ami_bitmap_tile(int x, int y, int width, int height,
 #endif
 		FreeVec(bfh);
 
-	if((ami_bitmap_has_dto(bitmap) == false) && (ami_bitmap_is_nativebm(bitmap, tbm) == false)) {
+	if((ami_bitmap_is_nativebm(bitmap, tbm) == false)) {
 		/**\todo is this logic logical? */
 		ami_rtg_freebitmap(tbm);
 	}

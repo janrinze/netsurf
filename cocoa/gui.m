@@ -52,6 +52,17 @@ NSString * const kAlwaysCloseMultipleTabs = @"AlwaysCloseMultipleTabs";
 
 struct browser_window;
 
+static nserror cocoa_warn_user(const char *warning, const char *detail)
+{
+	NSRunAlertPanel( NSLocalizedString( @"Warning", @"Warning title" ), 
+					NSLocalizedString( @"Warning %s%s%s", @"Warning message" ), 
+					NSLocalizedString( @"OK", @"" ), nil, nil, 
+					warning, detail != NULL ? ": " : "",
+					detail != NULL ? detail : "" );
+        return NSERROR_OK;
+}
+
+
 static struct gui_window *
 gui_window_create(struct browser_window *bw,
                   struct gui_window *existing,
@@ -279,7 +290,7 @@ static struct gui_window_table window_table = {
 	.set_scroll = gui_window_set_scroll,
 	.get_dimensions = gui_window_get_dimensions,
 	.update_extent = gui_window_update_extent,
-    .reformat = cocoa_window_reformat,
+	.reformat = cocoa_window_reformat,
 
 	.set_title = gui_window_set_title,
 	.set_url = gui_window_set_url,
@@ -288,7 +299,7 @@ static struct gui_window_table window_table = {
 	.set_pointer = gui_window_set_pointer,
 	.place_caret = gui_window_place_caret,
 	.remove_caret = gui_window_remove_caret,
-    .new_content = gui_window_new_content,
+	.new_content = gui_window_new_content,
 	.start_throbber = gui_window_start_throbber,
 	.stop_throbber = gui_window_stop_throbber,
 	.create_form_select_menu = gui_create_form_select_menu,
@@ -297,11 +308,12 @@ static struct gui_window_table window_table = {
 struct gui_window_table *cocoa_window_table = &window_table;
 
 
-static struct gui_browser_table browser_table = {
-    .schedule = cocoa_schedule,
+static struct gui_misc_table browser_table = {
+	.schedule = cocoa_schedule,
+        .warning = cocoa_warn_user,
 
 	.launch_url = gui_launch_url,
 	.cert_verify = gui_cert_verify,
 };
 
-struct gui_browser_table *cocoa_browser_table = &browser_table;
+struct gui_misc_table *cocoa_misc_table = &browser_table;

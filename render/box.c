@@ -28,19 +28,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <dom/dom.h>
+
+#include "utils/nsoption.h"
+#include "utils/log.h"
+#include "utils/talloc.h"
+#include "utils/utils.h"
 #include "content/content_protected.h"
 #include "content/hlcache.h"
 #include "css/css.h"
 #include "css/utils.h"
 #include "css/dump.h"
 #include "desktop/scrollbar.h"
-#include "utils/nsoption.h"
+#include "desktop/gui_misc.h"
+#include "desktop/gui_internal.h"
+
 #include "render/box.h"
 #include "render/form_internal.h"
 #include "render/html_internal.h"
-#include "utils/log.h"
-#include "utils/talloc.h"
-#include "utils/utils.h"
 
 #define box_is_float(box) (box->type == BOX_FLOAT_LEFT || \
 		box->type == BOX_FLOAT_RIGHT)
@@ -1146,16 +1150,17 @@ bool box_handle_scrollbars(struct content *c, struct box *box,
 			data = malloc(sizeof(struct html_scrollbar_data));
 			if (data == NULL) {
 				LOG("malloc failed");
-				warn_user("NoMemory", 0);
+				guit->misc->warning("NoMemory", 0);
 				return false;
 			}
 			data->c = c;
 			data->box = box;
-			if (!scrollbar_create(false, visible_height,
+			if (scrollbar_create(false, visible_height,
 					full_height, visible_height,
 					data, html_overflow_scroll_callback,
-					&(box->scroll_y)))
+					     &(box->scroll_y)) != NSERROR_OK) {
 				return false;
+			}
 		} else  {
 			scrollbar_set_extents(box->scroll_y, visible_height,
 					visible_height, full_height);
@@ -1166,18 +1171,19 @@ bool box_handle_scrollbars(struct content *c, struct box *box,
 			data = malloc(sizeof(struct html_scrollbar_data));
 			if (data == NULL) {
 				LOG("malloc failed");
-				warn_user("NoMemory", 0);
+				guit->misc->warning("NoMemory", 0);
 				return false;
 			}
 			data->c = c;
 			data->box = box;
-			if (!scrollbar_create(true,
+			if (scrollbar_create(true,
 					visible_width -
 					(right ? SCROLLBAR_WIDTH : 0),
 					full_width, visible_width,
 					data, html_overflow_scroll_callback,
-					&box->scroll_x))
+					     &box->scroll_x) != NSERROR_OK) {
 				return false;
+			}
 		} else {
 			scrollbar_set_extents(box->scroll_x,
 					visible_width -

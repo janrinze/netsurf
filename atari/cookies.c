@@ -16,29 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ctype.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <assert.h>
 
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "utils/utils.h"
-#include "utils/nsoption.h"
-#include "content/content.h"
-#include "content/hlcache.h"
-#include "content/urldb.h"
+#include "desktop/mouse.h"
+#include "desktop/plotters.h"
 #include "desktop/cookie_manager.h"
-#include "desktop/tree.h"
 #include "desktop/core_window.h"
 
-#include "atari/gui.h"
-#include "atari/misc.h"
 #include "atari/treeview.h"
 #include "atari/cookies.h"
-#include "atari/findfile.h"
 #include "atari/gemtk/gemtk.h"
 #include "atari/res/netsurf.rsh"
 
@@ -71,35 +59,45 @@ static struct atari_treeview_callbacks atari_cookie_manager_treeview_callbacks =
 };
 
 
-static nserror atari_cookie_manager_init_phase2(struct core_window *cw,
-								struct core_window_callback_table *cb_t)
+static nserror
+atari_cookie_manager_init_phase2(struct core_window *cw,
+                                 struct core_window_callback_table *cb_t)
 {
-	LOG("");
+	LOG("cw %p",cw);
 	return(cookie_manager_init(cb_t, cw));
 }
 
-static void atari_cookie_manager_finish(struct core_window *cw)
+
+static void
+atari_cookie_manager_finish(struct core_window *cw)
 {
-	LOG("");
+	LOG("cw %p",cw);
 	cookie_manager_fini();
 }
 
-static void atari_cookie_manager_draw(struct core_window *cw, int x,
-											int y, struct rect *clip,
-											const struct redraw_context *ctx)
+
+static void
+atari_cookie_manager_draw(struct core_window *cw,
+                          int x, int y,
+                          struct rect *clip,
+                          const struct redraw_context *ctx)
 {
 	cookie_manager_redraw(x, y, clip, ctx);
 }
 
-static void atari_cookie_manager_keypress(struct core_window *cw, uint32_t ucs4)
+
+static void
+atari_cookie_manager_keypress(struct core_window *cw, uint32_t ucs4)
 {
-	LOG("ucs4: %lu\n", ucs4);
+	LOG("ucs4: %"PRIu32, ucs4);
 	cookie_manager_keypress(ucs4);
 }
 
-static void atari_cookie_manager_mouse_action(struct core_window *cw,
-												browser_mouse_state mouse,
-												int x, int y)
+
+static void
+atari_cookie_manager_mouse_action(struct core_window *cw,
+                                  browser_mouse_state mouse,
+                                  int x, int y)
 {
 	cookie_manager_mouse_action(mouse, x, y);
 }
@@ -110,9 +108,9 @@ static short handle_event(GUIWIN *win, EVMULT_OUT *ev_out, short msg[8])
 {
 	short retval = 0;
 
-	LOG("");
+	LOG("win %p", win);
 
-	if(ev_out->emo_events & MU_MESAG){
+	if (ev_out->emo_events & MU_MESAG) {
 		switch (msg[0]) {
 
 			case WM_TOOLBAR:

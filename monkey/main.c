@@ -20,11 +20,11 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <sys/select.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "utils/config.h"
+#include "utils/sys_time.h"
 #include "utils/log.h"
 #include "utils/messages.h"
 #include "utils/filepath.h"
@@ -44,6 +44,7 @@
 #include "monkey/fetch.h"
 #include "monkey/schedule.h"
 #include "monkey/bitmap.h"
+#include "monkey/layout.h"
 
 /** maximum number of languages in language vector */
 #define LANGV_SIZE 32
@@ -222,6 +223,13 @@ static nserror set_defaults(struct nsoption_s *defaults)
   return NSERROR_OK;
 }
 
+static nserror monkey_warn_user(const char *warning, const char *detail)
+{
+  fprintf(stderr, "WARN %s %s\n", warning, detail);
+  return NSERROR_OK;
+}
+
+
 /**
  * Ensures output logging stream is correctly configured
  */
@@ -233,8 +241,9 @@ static bool nslog_stream_configure(FILE *fptr)
   return true;
 }
 
-static struct gui_browser_table monkey_browser_table = {
+static struct gui_misc_table monkey_misc_table = {
   .schedule = monkey_schedule,
+  .warning = monkey_warn_user,
 
   .quit = monkey_quit,
   .launch_url = gui_launch_url,
@@ -314,11 +323,12 @@ main(int argc, char **argv)
   char buf[PATH_MAX];
   nserror ret;
   struct netsurf_table monkey_table = {
-    .browser = &monkey_browser_table,
+    .misc = &monkey_misc_table,
     .window = monkey_window_table,
     .download = monkey_download_table,
     .fetch = monkey_fetch_table,
     .bitmap = monkey_bitmap_table,
+    .layout = monkey_layout_table,
   };
 
   ret = netsurf_register(&monkey_table);

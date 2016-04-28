@@ -24,30 +24,18 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <time.h>
-#include <limits.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdbool.h>
-#include <hubbub/hubbub.h>
 
 #include "utils/log.h"
 #include "utils/messages.h"
-#include "utils/utils.h"
-#include "utils/nsoption.h"
 #include "utils/corestrings.h"
 #include "content/urldb.h"
-#include "content/fetch.h"
-#include "content/fetchers/resource.h"
+#include "content/content.h"
 #include "content/backing_store.h"
-#include "desktop/mouse.h"
-#include "desktop/plotters.h"
-#include "desktop/save_complete.h"
-#include "desktop/textinput.h"
+#include "content/hlcache.h"
 #include "desktop/treeview.h"
 #include "desktop/browser.h"
-#include "desktop/font.h"
+#include "desktop/gui_layout.h"
 #include "desktop/gui_window.h"
 #include "desktop/gui_clipboard.h"
 #include "desktop/gui_fetch.h"
@@ -78,6 +66,7 @@
 #include "atari/file.h"
 #include "atari/filetype.h"
 #include "atari/bitmap.h"
+#include "atari/font.h"
 #include "cflib.h"
 
 static bool atari_quit = false;
@@ -766,19 +755,19 @@ static void gui_set_clipboard(const char *buffer, size_t length,
 static void gui_401login_open(nsurl *url, const char *realm,
 			      nserror (*cb)(bool proceed, void *pw), void *cbpw)
 {
-    bool bres;
-    char * out = NULL;
-    bres = login_form_do( url, (char*)realm, &out);
-    if (bres) {
-	LOG("url: %s, realm: %s, auth: %s\n", url, realm, out);
-	urldb_set_auth_details(url, realm, out);
-    }
-    if (out != NULL) {
-	free( out );
-    }
-    if (cb != NULL) {
-	cb(bres, cbpw);
-    }
+        bool bres;
+        char * out = NULL;
+        bres = login_form_do( url, (char*)realm, &out);
+        if (bres) {
+                LOG("url: %s, realm: %s, auth: %s\n", nsurl_access(url), realm, out);
+                urldb_set_auth_details(url, realm, out);
+        }
+        if (out != NULL) {
+                free( out );
+        }
+        if (cb != NULL) {
+                cb(bres, cbpw);
+        }
 
 }
 
@@ -787,25 +776,25 @@ gui_cert_verify(nsurl *url, const struct ssl_cert_info *certs,
 		unsigned long num, nserror (*cb)(bool proceed, void *pw),
 		void *cbpw)
 {
-    struct sslcert_session_data *data;
-    LOG("");
+        struct sslcert_session_data *data;
+        LOG("url %s", nsurl_access(url));
 
-    // TODO: localize string
-    int b = form_alert(1, "[2][SSL Verify failed, continue?][Continue|Abort|Details...]");
-    if(b == 1){
-	// Accept
-	urldb_set_cert_permissions(url, true);
-	cb(true, cbpw);
-    } else if(b == 2) {
-    	// Reject
-	urldb_set_cert_permissions(url, false);
-	cb(false, cbpw);
-    } else if(b == 3) {
-    	// Inspect
-    	sslcert_viewer_create_session_data(num, url, cb, cbpw, certs,
-					   &data);
-	atari_sslcert_viewer_open(data);
-    }
+        // TODO: localize string
+        int b = form_alert(1, "[2][SSL Verify failed, continue?][Continue|Abort|Details...]");
+        if(b == 1){
+                // Accept
+                urldb_set_cert_permissions(url, true);
+                cb(true, cbpw);
+        } else if(b == 2) {
+                // Reject
+                urldb_set_cert_permissions(url, false);
+                cb(false, cbpw);
+        } else if(b == 3) {
+                // Inspect
+                sslcert_viewer_create_session_data(num, url, cb, cbpw, certs,
+                                                   &data);
+                atari_sslcert_viewer_open(data);
+        }
 
 }
 
@@ -822,10 +811,10 @@ struct gui_window * gui_get_input_window(void)
 
 static void gui_quit(void)
 {
-    LOG("");
+    LOG("quitting");
 
-    struct gui_window * gw = window_list;
-    struct gui_window * tmp = window_list;
+    struct gui_window *gw = window_list;
+    struct gui_window *tmp = window_list;
 
     /* Destroy all remaining browser windows: */
     while (gw) {
@@ -1094,8 +1083,9 @@ static struct gui_fetch_table atari_fetch_table = {
     .get_resource_url = gui_get_resource_url,
 };
 
-static struct gui_browser_table atari_browser_table = {
+static struct gui_misc_table atari_misc_table = {
     .schedule = atari_schedule,
+    .warning = atari_warn_user,
 
     .quit = gui_quit,
     .cert_verify = gui_cert_verify,
@@ -1121,7 +1111,7 @@ int main(int argc, char** argv)
     nserror ret;
 
     struct netsurf_table atari_table = {
-	.browser = &atari_browser_table,
+	.misc = &atari_misc_table,
 	.window = &atari_window_table,
 	.clipboard = &atari_clipboard_table,
 	.download = atari_download_table,
@@ -1130,7 +1120,8 @@ int main(int argc, char** argv)
 	.utf8 = atari_utf8_table,
 	.search = atari_search_table,
 	.llcache = filesystem_llcache_table,
-	.bitmap = atari_bitmap_table
+	.bitmap = atari_bitmap_table,
+	.layout = atari_layout_table
     };
 
     ret = netsurf_register(&atari_table);
@@ -1203,7 +1194,7 @@ int main(int argc, char** argv)
 	nsurl_unref(url);
     }
     if (ret != NSERROR_OK) {
-	warn_user(messages_get_errorcode(ret), 0);
+	atari_warn_user(messages_get_errorcode(ret), 0);
     } else {
 	LOG("Entering Atari event mainloop...");
 	while (!atari_quit) {

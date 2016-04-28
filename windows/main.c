@@ -21,6 +21,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <windows.h>
+#include <io.h>
 
 #include "utils/utils.h"
 #include "utils/log.h"
@@ -62,6 +63,7 @@ static void die(const char *error)
 {
 	exit(1);
 }
+
 
 static nsurl *gui_get_resource_url(const char *path)
 {
@@ -132,8 +134,9 @@ static nserror set_defaults(struct nsoption_s *defaults)
 }
 
 
-static struct gui_browser_table win32_browser_table = {
+static struct gui_misc_table win32_misc_table = {
 	.schedule = win32_schedule,
+	.warning = win32_warning,
 };
 
 
@@ -152,7 +155,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hLastInstance, LPSTR lpcli, int ncmd)
 	const char *addr;
 	nsurl *url;
 	struct netsurf_table win32_table = {
-		.browser = &win32_browser_table,
+		.misc = &win32_misc_table,
 		.window = win32_window_table,
 		.clipboard = win32_clipboard_table,
 		.download = win32_download_table,
@@ -160,6 +163,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hLastInstance, LPSTR lpcli, int ncmd)
 		.file = win32_file_table,
 		.utf8 = win32_utf8_table,
 		.bitmap = win32_bitmap_table,
+		.layout = win32_layout_table,
 	};
 	win32_fetch_table->get_resource_url = gui_get_resource_url;
 
@@ -254,7 +258,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hLastInstance, LPSTR lpcli, int ncmd)
 
 	}
 	if (ret != NSERROR_OK) {
-		warn_user(messages_get_errorcode(ret), 0);
+		win32_warning(messages_get_errorcode(ret), 0);
 	} else {
 		win32_run();
 	}

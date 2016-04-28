@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <sys/types.h>
 #include <stdint.h>
 #include <string.h>
@@ -32,6 +33,7 @@
 #include "desktop/plotters.h"
 #include "desktop/mouse.h"
 
+#include "atari/gui.h"
 #include "atari/osspec.h"
 #include "atari/misc.h"
 #include "atari/bitmap.h"

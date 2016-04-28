@@ -21,6 +21,7 @@
  * Generic tree handling (implementation).
  */
 
+#include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
 #include <limits.h>
@@ -35,6 +36,7 @@
 #include "desktop/tree.h"
 #include "desktop/plotters.h"
 
+#include "gtk/warn.h"
 #include "gtk/compat.h"
 #include "gtk/gui.h"
 #include "gtk/plotters.h"
@@ -535,7 +537,7 @@ struct nsgtk_treeview *nsgtk_treeview_create(unsigned int flags,
 	tv = malloc(sizeof(struct nsgtk_treeview));
 	if (tv == NULL) {
 		LOG("malloc failed");
-		warn_user("NoMemory", 0);
+		nsgtk_warning("NoMemory", 0);
 		return NULL;
 	}
 	

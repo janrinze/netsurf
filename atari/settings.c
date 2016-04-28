@@ -17,9 +17,9 @@
  *
  */
 
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <dirent.h>
 #include <fcntl.h>
 #include <time.h>
 #include <limits.h>
@@ -29,10 +29,12 @@
 #include <cflib.h>
 #include <gem.h>
 
+#include "utils/dirent.h"
 #include "utils/nsoption.h"
 #include "utils/log.h"
 #include "desktop/plot_style.h"
 
+#include "atari/gui.h"
 #include "atari/res/netsurf.rsh"
 #include "atari/settings.h"
 #include "atari/deskmenu.h"
@@ -977,7 +979,7 @@ void open_settings(void)
 
 void close_settings(void)
 {
-    LOG("");
+    LOG("closing");
     gemtk_wm_remove(settings_guiwin);
     settings_guiwin = NULL;
     wind_close(h_aes_win);

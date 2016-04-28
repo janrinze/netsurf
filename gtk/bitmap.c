@@ -26,9 +26,11 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 #include <cairo.h>
 #include <gtk/gtk.h>
 
+#include "utils/utils.h"
 #include "utils/log.h"
 #include "content/content.h"
 #include "image/bitmap.h"

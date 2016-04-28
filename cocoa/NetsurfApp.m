@@ -25,6 +25,7 @@
 #import "cocoa/selection.h"
 #import "cocoa/fetch.h"
 #import "cocoa/bitmap.h"
+#import "cocoa/font.h"
 
 #import "utils/filename.h"
 #import "utils/log.h"
@@ -228,13 +229,14 @@ int main( int argc, char **argv )
         nsurl *url;
         nserror error;
         struct netsurf_table cocoa_table = {
-                .browser = cocoa_browser_table,
+                .misc = cocoa_misc_table,
                 .window = cocoa_window_table,
                 .clipboard = cocoa_clipboard_table,
                 .download = cocoa_download_table,
                 .fetch = cocoa_fetch_table,
                 .search = cocoa_search_table,
                 .bitmap = cocoa_bitmap_table,
+                .layout = cocoa_layout_table,
         };
 
         error = netsurf_register(&cocoa_table);

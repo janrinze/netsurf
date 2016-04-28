@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <stdio.h>
+
 #include "utils/config.h"
 #include "content/content.h"
 #include "content/content_factory.h"
@@ -38,15 +40,17 @@ struct bitmap;
 struct content;
 struct rect;
 struct redraw_context;
+struct http_parameter;
 
 struct content_handler {
 	void (*fini)(void);
 
 	nserror (*create)(const content_handler *handler,
-			lwc_string *imime_type, const http_parameter *params,
-			llcache_handle *llcache, 
-			const char *fallback_charset, bool quirks, 
-			struct content **c);
+                          lwc_string *imime_type,
+                          const struct http_parameter *params,
+                          llcache_handle *llcache,
+                          const char *fallback_charset, bool quirks,
+                          struct content **c);
 
 	bool (*process_data)(struct content *c, 
 			const char *data, unsigned int size);
@@ -104,7 +108,7 @@ struct content_user
 
 /** Corresponds to a single URL. */
 struct content {
-	llcache_handle *llcache;	/**< Low-level cache object */
+	llcache_handle *llcache; /**< Low-level cache object */
 
 	lwc_string *mime_type;	/**< Original MIME type of data */
 
@@ -122,13 +126,14 @@ struct content {
 
 	struct content_rfc5988_link *links; /**< list of metadata links */
 
-	unsigned int time;		/**< Creation time,
-					  if LOADING or READY,
-					  otherwise total time. */
+	/** Creation timestamp when LOADING or READY.
+	 * Total time in ms when DONE.
+	 */
+	uint64_t time;
 
-	unsigned int reformat_time;	/**< Earliest time to attempt a
-					  period reflow while fetching a
-					  page's objects. */
+	uint64_t reformat_time;	/**< Earliest time to attempt a period
+                                 * reflow while fetching a page's objects.
+                                 */
 
 	unsigned int size;		/**< Estimated size of all data
 					  associated with this content */
@@ -157,7 +162,7 @@ extern const char * const content_type_name[];
 extern const char * const content_status_name[];
 
 nserror content__init(struct content *c, const content_handler *handler,
-		lwc_string *imime_type, const http_parameter *params,
+		lwc_string *imime_type, const struct http_parameter *params,
 		struct llcache_handle *llcache, const char *fallback_charset,
 		bool quirks);
 nserror content__clone(const struct content *c, struct content *nc);

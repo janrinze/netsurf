@@ -147,10 +147,11 @@ void browser_window_handle_scrollbars(struct browser_window *bw)
 
 		if (bw->scroll_y == NULL) {
 			/* create vertical scrollbar */
-			if (!scrollbar_create(false, length, c_height, visible,
-					bw, browser_window_scroll_callback,
-					&(bw->scroll_y)))
+			if (scrollbar_create(false, length, c_height, visible,
+					     bw, browser_window_scroll_callback,
+					     &(bw->scroll_y)) != NSERROR_OK) {
 				return;
+			}
 		} else {
 			/* update vertical scrollbar */
 			scrollbar_set_extents(bw->scroll_y, length,
@@ -164,10 +165,11 @@ void browser_window_handle_scrollbars(struct browser_window *bw)
 
 		if (bw->scroll_x == NULL) {
 			/* create horizontal scrollbar */
-			if (!scrollbar_create(true, length, c_width, visible,
-					bw, browser_window_scroll_callback,
-					&(bw->scroll_x)))
+			if (scrollbar_create(true, length, c_width, visible,
+					     bw, browser_window_scroll_callback,
+					     &(bw->scroll_x)) != NSERROR_OK) {
 				return;
+			}
 		} else {
 			/* update horizontal scrollbar */
 			scrollbar_set_extents(bw->scroll_x, length,
@@ -291,14 +293,8 @@ void browser_window_recalculate_iframes(struct browser_window *bw)
 }
 
 
-/**
- * Create and open a frameset for a browser window.
- *
- * \param bw       The browser window to create the frameset for
- * \param frameset The frameset to create
- */
-
-void browser_window_create_frameset(struct browser_window *bw,
+/* exported interface documented in desktop/frames.h */
+nserror browser_window_create_frameset(struct browser_window *bw,
 		struct content_html_frames *frameset)
 {
 	int row, col, index;
@@ -313,8 +309,10 @@ void browser_window_create_frameset(struct browser_window *bw,
 	assert(frameset->cols + frameset->rows != 0);
 
 	bw->children = calloc((frameset->cols * frameset->rows), sizeof(*bw));
-	if (!bw->children)
-		return;
+	if (!bw->children) {
+		return NSERROR_NOMEM;
+	}
+
 	bw->cols = frameset->cols;
 	bw->rows = frameset->rows;
 	for (row = 0; row < bw->rows; row++) {
@@ -344,8 +342,11 @@ void browser_window_create_frameset(struct browser_window *bw,
 			window->margin_height = frame->margin_height;
 			if (frame->name) {
 				window->name = strdup(frame->name);
-				if (!window->name)
-					warn_user("NoMemory", 0);
+				if (!window->name) {
+					free(bw->children);
+					bw->children = NULL;
+					return NSERROR_NOMEM;
+				}
 			}
 
 			window->scale = bw->scale;
@@ -406,6 +407,8 @@ void browser_window_create_frameset(struct browser_window *bw,
 			}
 		}
 	}
+
+	return NSERROR_OK;
 }
 
 

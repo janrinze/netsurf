@@ -1,6 +1,6 @@
 /*
  * Copyright 2004-2010 James Bursa <bursa@users.sourceforge.net>
- * Copyright 2010 Vincent Sanders <vince@debian.org>
+ * Copyright 2010-2016 Vincent Sanders <vince@netsurf-browser.org>
  * Copyright 2004-2009 John-Mark Bell <jmb@netsurf-browser.org>
  * Copyright 2009 Paul Blokus <paul_pl@users.sourceforge.net>
  * Copyright 2006-2009 Daniel Silverstone <dsilvers@netsurf-browser.org>
@@ -52,6 +52,7 @@
 #include "desktop/netsurf.h"
 
 #include "gtk/compat.h"
+#include "gtk/warn.h"
 #include "gtk/completion.h"
 #include "gtk/cookies.h"
 #include "gtk/download.h"
@@ -69,6 +70,7 @@
 #include "gtk/bitmap.h"
 #include "gtk/resources.h"
 #include "gtk/login.h"
+#include "gtk/layout_pango.h"
 
 bool nsgtk_complete = false;
 
@@ -473,13 +475,14 @@ static nserror gui_launch_url(struct nsurl *url)
 	}
 
 	if (error) {
-		warn_user(messages_get("URIOpenError"), error->message);
+		nsgtk_warning(messages_get("URIOpenError"), error->message);
 		g_error_free(error);
 	}
 	return NSERROR_NO_FETCH_HANDLER;
 }
 
-void warn_user(const char *warning, const char *detail)
+/* exported function documented in gtk/warn.h */
+nserror nsgtk_warning(const char *warning, const char *detail)
 {
 	char buf[300];	/* 300 is the size the RISC OS GUI uses */
 	static GtkWindow *nsgtk_warning_window;
@@ -499,6 +502,8 @@ void warn_user(const char *warning, const char *detail)
 	gtk_label_set_text(WarningLabel, buf);
 
 	gtk_widget_show_all(GTK_WIDGET(nsgtk_warning_window));
+
+	return NSERROR_OK;
 }
 
 
@@ -1010,8 +1015,9 @@ static nserror nsgtk_option_init(int *pargc, char** argv)
 	return NSERROR_OK;
 }
 
-static struct gui_browser_table nsgtk_browser_table = {
+static struct gui_misc_table nsgtk_misc_table = {
 	.schedule = nsgtk_schedule,
+	.warning = nsgtk_warning,
 
 	.quit = gui_quit,
 	.launch_url = gui_launch_url,
@@ -1049,7 +1055,7 @@ int main(int argc, char** argv)
 	char *cache_home = NULL;
 	nserror ret;
 	struct netsurf_table nsgtk_table = {
-		.browser = &nsgtk_browser_table,
+		.misc = &nsgtk_misc_table,
 		.window = nsgtk_window_table,
 		.clipboard = nsgtk_clipboard_table,
 		.download = nsgtk_download_table,
@@ -1058,6 +1064,7 @@ int main(int argc, char** argv)
 		.search = nsgtk_search_table,
 		.search_web = nsgtk_search_web_table,
 		.bitmap = nsgtk_bitmap_table,
+		.layout = nsgtk_layout_table,
 	};
 
 	ret = netsurf_register(&nsgtk_table);

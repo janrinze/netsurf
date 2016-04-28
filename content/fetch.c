@@ -31,6 +31,7 @@
  * fetches are stored in the ::queue_ring waiting for use.
  */
 
+#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -277,7 +278,7 @@ static void fetcher_poll(void *unused)
 		}
 
 		/* schedule active fetchers to run again in 10ms */
-		guit->browser->schedule(SCHEDULE_TIME, fetcher_poll, NULL);
+		guit->misc->schedule(SCHEDULE_TIME, fetcher_poll, NULL);
 	}
 }
 
@@ -428,7 +429,7 @@ nserror fetcher_fdset(fd_set *read_fd_set,
 		 * select on. All the other fetchers continue to need
 		 * polling frequently.
 		 */
-		guit->browser->schedule(FDSET_TIMEOUT, fetcher_poll, NULL);
+		guit->misc->schedule(FDSET_TIMEOUT, fetcher_poll, NULL);
 	}
 
 	*maxfd_out = maxfd;
@@ -565,7 +566,7 @@ fetch_start(nsurl *url,
 	if (fetch_dispatch_jobs()) {
 		FETCH_LOG("scheduling poll");
 		/* schedule active fetchers to run again in 10ms */
-		guit->browser->schedule(10, fetcher_poll, NULL);
+		guit->misc->schedule(10, fetcher_poll, NULL);
 	}
 
 	*fetch_out = fetch;

@@ -16,15 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "testament.h"
+/**
+ * \file directory traversal and entry
+ *
+ * This allows the obtaining of standard directory entry routines
+ * functions in a uniform way despite any oddities in headers and
+ * supported API between OS.
+ *
+ * \note This functionality was previously provided as a side effect of the
+ *  utils config header include.
+ */
 
-#include "desktop/version.h"
+#ifndef _NETSURF_UTILS_DIRENT_H_
+#define _NETSURF_UTILS_DIRENT_H_
 
-const char * const netsurf_version = "3.6 (Dev"
-#if defined(CI_BUILD)
-	" CI #" CI_BUILD
+#include "utils/config.h"
+
+#include <dirent.h>
+
+#ifndef HAVE_SCANDIR
+
+int alphasort(const struct dirent **d1, const struct dirent **d2);
+int scandir(const char *dir, struct dirent ***namelist,
+		int (*sel)(const struct dirent *),
+		int (*compar)(const struct dirent **, const struct dirent **));
 #endif
-	")"
-	;
-const int netsurf_version_major = 3;
-const int netsurf_version_minor = 6;
+
+#endif

@@ -16,12 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
 #include <limits.h>
 #include <getopt.h>
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <nsutils/time.h>
 
 #include <libnsfb.h>
 #include <libnsfb_plot.h>
@@ -104,6 +106,21 @@ static void die(const char *error)
 {
 	fprintf(stderr, "%s\n", error);
 	exit(1);
+}
+
+
+/**
+ * Warn the user of an event.
+ *
+ * \param[in] message A warning looked up in the message translation table
+ * \param[in] detail Additional text to be displayed or NULL.
+ * \return NSERROR_OK on success or error code if there was a
+ *           faliure displaying the message to the user.
+ */
+static nserror fb_warn_user(const char *warning, const char *detail)
+{
+	LOG("%s %s", warning, detail);
+	return NSERROR_OK;
 }
 
 /* queue a redraw operation, co-ordinates are relative to the window */
@@ -611,10 +628,10 @@ fb_browser_window_click(fbtk_widget_t *widget, fbtk_callback_info *cbi)
 	float scale = browser_window_get_scale(gw->bw);
 	int x = (cbi->x + bwidget->scrollx) / scale;
 	int y = (cbi->y + bwidget->scrolly) / scale;
-	unsigned int time_now;
+	uint64_t time_now;
 	static struct {
 		enum { CLICK_SINGLE, CLICK_DOUBLE, CLICK_TRIPLE } type;
-		unsigned int time;
+		uint64_t time;
 	} last_click;
 
 	if (cbi->event->type != NSFB_EVENT_KEY_DOWN &&
@@ -667,7 +684,7 @@ fb_browser_window_click(fbtk_widget_t *widget, fbtk_callback_info *cbi)
 	case NSFB_EVENT_KEY_UP:
 
 		mouse = 0;
-		time_now = wallclock();
+		nsu_getmonotonic_ms(&time_now);
 
 		switch (cbi->event->value.keycode) {
 		case NSFB_KEY_MOUSE_1:
@@ -719,10 +736,11 @@ fb_browser_window_click(fbtk_widget_t *widget, fbtk_callback_info *cbi)
 		}
 
 		/* Determine if it's a double or triple click, allowing
-		 * 0.5 seconds (50cs) between clicks */
-		if (time_now < last_click.time + 50 &&
-				cbi->event->value.keycode != NSFB_KEY_MOUSE_4 &&
-				cbi->event->value.keycode != NSFB_KEY_MOUSE_5) {
+		 * 0.5 seconds (500ms) between clicks
+		 */
+		if ((time_now < (last_click.time + 500)) &&
+		    (cbi->event->value.keycode != NSFB_KEY_MOUSE_4) &&
+		    (cbi->event->value.keycode != NSFB_KEY_MOUSE_5)) {
 			if (last_click.type == CLICK_SINGLE) {
 				/* Set double click */
 				mouse |= BROWSER_MOUSE_DOUBLE_CLICK;
@@ -740,8 +758,9 @@ fb_browser_window_click(fbtk_widget_t *widget, fbtk_callback_info *cbi)
 			last_click.type = CLICK_SINGLE;
 		}
 
-		if (mouse)
+		if (mouse) {
 			browser_window_mouse_click(gw->bw, mouse, x, y);
+		}
 
 		last_click.time = time_now;
 
@@ -1099,7 +1118,7 @@ fb_url_enter(void *pw, char *text)
 
 	error = nsurl_create(text, &url);
 	if (error != NSERROR_OK) {
-		warn_user(messages_get_errorcode(error), 0);
+		fb_warn_user(messages_get_errorcode(error), 0);
 	} else {
 		browser_window_navigate(bw, url, NULL, BW_NAVIGATE_HISTORY,
 				NULL, NULL, NULL);
@@ -2050,8 +2069,9 @@ static struct gui_window_table framebuffer_window_table = {
 };
 
 
-static struct gui_browser_table framebuffer_browser_table = {
+static struct gui_misc_table framebuffer_misc_table = {
 	.schedule = framebuffer_schedule,
+	.warning = fb_warn_user,
 
 	.quit = gui_quit,
 };
@@ -2072,12 +2092,13 @@ main(int argc, char** argv)
 	nserror ret;
 	nsfb_t *nsfb;
 	struct netsurf_table framebuffer_table = {
-		.browser = &framebuffer_browser_table,
+		.misc = &framebuffer_misc_table,
 		.window = &framebuffer_window_table,
 		.clipboard = framebuffer_clipboard_table,
 		.fetch = framebuffer_fetch_table,
 		.utf8 = framebuffer_utf8_table,
 		.bitmap = framebuffer_bitmap_table,
+		.layout = framebuffer_layout_table,
 	};
 
         ret = netsurf_register(&framebuffer_table);
@@ -2151,7 +2172,7 @@ main(int argc, char** argv)
 		nsurl_unref(url);
 	}
 	if (ret != NSERROR_OK) {
-		warn_user(messages_get_errorcode(ret), 0);
+		fb_warn_user(messages_get_errorcode(ret), 0);
 	} else {
 		framebuffer_run();
 
