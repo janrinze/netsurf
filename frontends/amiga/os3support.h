@@ -24,6 +24,8 @@
 #ifndef AMIGA_OS3SUPPORT_H_
 #define AMIGA_OS3SUPPORT_H_
 
+#include "amiga/fortify/fortify.h"
+
 #ifndef __amigaos4__
 
 #include <stdint.h>

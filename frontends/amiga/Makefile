@@ -38,6 +38,7 @@ else
 
   CFLAGS += -I$(GCCSDK_INSTALL_ENV)/include
   CFLAGS += $(shell $(PKG_CONFIG) --cflags tre)
+  CFLAGS += -DFORTIFY
 
   LDFLAGS += $(shell $(PKG_CONFIG) --static --libs libcurl openssl)
   LDFLAGS += $(shell $(PKG_CONFIG) --libs tre)
@@ -70,7 +71,7 @@ S_FRONTEND := gui.c tree.c history.c hotlist.c schedule.c file.c	\
 	stringview/stringview.c stringview/urlhistory.c rtg.c		\
 	agclass/amigaguide_class.c os3support.c font_diskfont.c		\
 	selectmenu.c hash/xxhash.c font_cache.c font_bullet.c	\
-	fortify.c
+	fortify/fortify.c
 
 # This is the final source build list
 # Note this is deliberately *not* expanded here as common and image
