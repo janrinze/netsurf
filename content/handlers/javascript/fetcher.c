@@ -208,7 +208,7 @@ nserror fetch_javascript_register(void)
 		.setup = fetch_javascript_setup,
 		.start = fetch_javascript_start,
 		.abort = fetch_javascript_abort,
-		.free = fetch_javascript_free,
+		.ffree = fetch_javascript_free,
 		.poll = fetch_javascript_poll,
 		.finalise = fetch_javascript_finalise
 	};

@@ -327,7 +327,7 @@ nserror fetch_data_register(void)
 		.setup = fetch_data_setup,
 		.start = fetch_data_start,
 		.abort = fetch_data_abort,
-		.free = fetch_data_free,
+		.ffree = fetch_data_free,
 		.poll = fetch_data_poll,
 		.finalise = fetch_data_finalise
 	};

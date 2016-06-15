@@ -461,7 +461,7 @@ nserror fetch_resource_register(void)
 		.setup = fetch_resource_setup,
 		.start = fetch_resource_start,
 		.abort = fetch_resource_abort,
-		.free = fetch_resource_free,
+		.ffree = fetch_resource_free,
 		.poll = fetch_resource_poll,
 		.finalise = fetch_resource_finalise
 	};

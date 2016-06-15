@@ -853,7 +853,7 @@ nserror fetch_about_register(void)
 		.setup = fetch_about_setup,
 		.start = fetch_about_start,
 		.abort = fetch_about_abort,
-		.free = fetch_about_free,
+		.ffree = fetch_about_free,
 		.poll = fetch_about_poll,
 		.finalise = fetch_about_finalise
 	};

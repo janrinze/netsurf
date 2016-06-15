@@ -1282,7 +1282,7 @@ nserror fetch_curl_register(void)
 		.setup = fetch_curl_setup,
 		.start = fetch_curl_start,
 		.abort = fetch_curl_abort,
-		.free = fetch_curl_free,
+		.ffree = fetch_curl_free,
 		.poll = fetch_curl_poll,
 		.finalise = fetch_curl_finalise
 	};

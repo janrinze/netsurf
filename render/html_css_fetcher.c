@@ -283,7 +283,7 @@ nserror html_css_fetcher_register(void)
 		.setup = html_css_fetcher_setup,
 		.start = html_css_fetcher_start,
 		.abort = html_css_fetcher_abort,
-		.free = html_css_fetcher_free,
+		.ffree = html_css_fetcher_free,
 		.poll = html_css_fetcher_poll,
 		.finalise = html_css_fetcher_finalise
 	};

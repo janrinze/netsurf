@@ -822,7 +822,7 @@ nserror fetch_file_register(void)
 		.setup = fetch_file_setup,
 		.start = fetch_file_start,
 		.abort = fetch_file_abort,
-		.free = fetch_file_free,
+		.ffree = fetch_file_free,
 		.poll = fetch_file_poll,
 		.finalise = fetch_file_finalise
 	};

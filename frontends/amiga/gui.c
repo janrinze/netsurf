@@ -334,7 +334,7 @@ bool ami_gui_map_filename(char **remapped, const char *path, const char *file, c
 static bool ami_gui_check_resource(char *fullpath, const char *file)
 {
 	bool found = false;
-	char *remapped;
+	char *remapped = NULL;
 	BPTR lock = 0;
 	size_t fullpath_len = 1024;
 

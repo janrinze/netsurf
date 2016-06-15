@@ -587,7 +587,7 @@ void fetch_free(struct fetch *f)
 {
 	FETCH_LOG("Freeing fetch %p, fetcher %p", f, f->fetcher_handle);
 
-	fetchers[f->fetcherd].ops.free(f->fetcher_handle);
+	fetchers[f->fetcherd].ops.ffree(f->fetcher_handle);
 
 	fetch_unref_fetcher(f->fetcherd);
 

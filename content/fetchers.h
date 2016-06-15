@@ -83,7 +83,7 @@ struct fetcher_operation_table {
 	/**
 	 * free a fetch allocated through the setup method.
 	 */
-	void (*free)(void *fetch);
+	void (*ffree)(void *fetch);
 
 	/**
 	 * poll a fetcher to let it make progress.

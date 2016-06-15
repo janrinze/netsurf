@@ -20,7 +20,7 @@
 #define AMIGA_OPTIONS_H
 
 /* currently nothing here */
-
+#include "frontends/amiga/fortify/fortify.h"
 #endif
 
 
